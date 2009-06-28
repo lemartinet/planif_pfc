@@ -1,0 +1,155 @@
+==============
+Revision ???
+==============
+- rythme theta sur 8 bins de 15 ms : 1 step faible, 2 forts, 1 faible puis 4 nulles
+- scripts ...
+	
+==============
+Revision 2954
+==============
+- merge entre mypuck et mypuck_r2502
+- implementation de sleep ok
+- sauvegarde des poids ts les 3 essais
+- rythme theta module l'activité des HPC (2 steps on, 2 off), 1 step = 30ms, 4 step = 1 période theta = 120 ms = 8 Hz
+- tous les 3 essais on sleep (à la fin de l'essai), grâce à l'envoi d'un msg depuis le superviseur
+- En début de chaque essai on sauvergarde les poids
+
+==============
+Revision 2943
+==============
+- apprentissage lent pour les lieux et les transitions
+- premiere implementation du méca de sleep dans le controleur, reste à faire dans le superviseur
+
+==============
+Revision 2926
+==============
+Gros changements !
+- neuralnet est mergee dans columns et minicol (pour lateral_learning)
+- suppression des liens avec QT pour hippo & columns : controlrobot s'occupe d'ajouter seul les elts graphiques
+- suppression des fonctions d'appr inutiles dans synapse & neurone
+- suppression des variables (et fonction get/set) liees a l'appr : maintenant, tout se fait en parallele
+- column: synch et connect_pop_to_neuron sont scindees pour lvl 0 et 1
+
+
+==============
+Revision 2892
+==============
+- ajout d'une population de minicolumns dans columns et déplacement de certaines fonctions de column vers columns
+
+
+==============
+Revision 2884
+==============
+- résolution d'un bug du au gui et simplification des classes de gui
+- suppression de repere_converter (fusionné dans Coord)
+
+==============
+Revision 2880
+==============
+- tools/script: 
+	- suppression des scripts inutiles comme ceux lies a R (utilisation de matlab)
+	- ajout des scripts pour le calcul lié à la reward et à la prospection
+	- ... plein de changements
+- hippo & cell: adaptation du code au donnees de Denis
+- column: changement du code pour le calcul du centre de champ recepteur
+- gros changement dans le code pour créer des populations de N unités dès le début, avec recrutement incrémental progressif
+- ajout des classes Log et Logger chargée de faie toutes les sorties
+- ...
+
+==============
+Revision 2781
+==============
+
+recompilation de mypuck_r2502
+
+==============
+Revision 2778-2780
+==============
+
+- params: 
+	- maintenant on ne donne de nom de repertoire que dans mypuck, ensuite il est sauvegarde pour plus de coherence
+	- ajout params LOAD_PC 0/1
+- hippo & cell: ajout de la possibilite de charger des places cells plutot que de les generer
+- device: correction de la mise à jour du nb de trial
+
+
+==============
+Revision 2777
+==============
+
+- math: ajout d'une fonction pour mettre les angles entre -pi et pi
+- minicol: desactivation de l'appr des actions, car il ne semble pas stable
+- behavior: extraction de selection_action de trois algo d'exploration (egreedy, qgreedy et softmax)
+- params/params_base: ajout du choix de l'algo d'exploration
+
+
+==============
+Revision 2776
+==============
+
+- superviseur:
+	- ajout d'un mécanisme pour rester au goal qqes sec
+- behavior: 
+	- ajout d'un mécanisme pour rester au goal qqes sec
+- neurosolver:
+	- suppression de learn_or_not et inclusion dans learn_set d'une part et dans behavior::compute_next_action d'une part
+- petites corrections au launcher et aux params
+
+==============
+Revision 2774
+==============
+
+- launcher: creation des repertoires de log
+- superviseur: correction bug qui faisait rester à day1
+
+
+==============
+Revision 2772
+==============
+
+- launcher: ajout du choix du laby
+- superviseur: suppression de la ligne pour passer de day2 à day15
+
+
+==============
+Revision 2771
+==============
+
+Petite corrections & jeu sur les params
+
+
+==============
+Revision 2770
+==============
+
+mypuck_r2502:
+- behavior
+	- changement important de la structure pour simplifier
+	- plusieurs algos de selection de l'action implémentés (eps-greedy, softmax, "q-greedy")
+	- les fonctions analyse_cross_road & freeways sont plus logiquement déplacées dans la nouvelle classe ObstacleAvoidance
+	- le meca epsilon-greedy est modifiee pr produire les proba de select des actions comme les autres mécas
+- neurosolver
+	- ajout d'un timer pour supprimer l'artefact de col lvl1 de fin de laby qui apprend aussi au début du laby
+	- l'appr des col lvl1 se fait en parallèle en utilisant un critère basé sur la somme d'activité state des lvl0
+	- j'ai commenté le critère pour stopper l'appr: maintenant on apprend en continu
+	- la fonction synch a été simplifiée, et appelle maintenant state_learning & topology_learning
+	- on apprend maintenant la topology dans la pop lvl1
+	- ajout d'une fonction pour retourner les "q-values"
+	- on calcule plus la "qval" à partir du meilleur état mais de tous les noeuds suffisamment activés
+- params: maintenant on ne crée plus d'instance, mais on a un ensemble de fonctions static
+- math: ajout d'une fonction angle_equal
+- testy: cette classe disparait, et les fonctions de log sont reparties dans les classes adequates 
+(Neurosolver appelle toutes ces fonctions)
+
+mypuck_supervisor:
+- maintenant je ne guide plus que les 3 premiers essais
+
+params.txt / params_base.txt:
+- propagation latérale à 0.9 (comme dans article SC2008)
+- nouveaux params :
+	- LOG 0 ou 1
+	- THRESH_ADD_LVL1 1.33
+	- LEARN_PC_COL 1
+	- LVL1_MODULATION 0.0
+	- LVL0_TO_LVL1 0.7
+	- EGO_MODULATION 0.3
