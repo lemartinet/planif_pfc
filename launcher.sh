@@ -44,6 +44,7 @@ done
 # on remet le monde par defaut pour pas ecraser les fichiers
 $WEBOTS_HOME/webots $WEBOTS_HOME/projects/default/worlds/new.wbt &
 sleep 10
-kill `ps aux | grep new.wbt | grep webots | cut -d " " -f 2`
+PID=`ps -eo pid,args | grep new.wbt | grep webots | cut -d "/" -f 1`
+kill -9 $PID
 echo "All computations finiched !"
 

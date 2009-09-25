@@ -42,19 +42,19 @@ for i = exp
 	printf ('Computation of vars for the days & trials (exp %d)\n',i);fflush(stdout);
 	filename = sprintf ('%s/data_raw/%d/vars.txt', data_path, i);
 	[vars, step_idx] = load_vars (filename, days, trials);
-	goal_dist = @(x) sqrt(sum((x .- repmat(goal, size(x, 1), 1)).**2, 2));
+	goal_dist = @(x) sqrt(sum((x - repmat(goal, size(x, 1), 1)).**2, 2));
 	vars = [vars goal_dist([vars(:,2),vars(:,3)])];
 	
 	printf ('Computation of the proba for selected vars (exp %d)\n',i);fflush(stdout);
 	filename = sprintf ('%s/proba_%s.mat', folder_out, mat2str(nbvars));
-	probav = proba_var (filename, vars, nbvars, step, vspace);
+	[probav, v] = proba_var (filename, vars(:, nbvars), step, vspace);
 
 	filename = sprintf ('%s/data_raw/%d/type.txt', data_path, i);
 	listn = load(filename);
 	
 	printf ('Computation of firing rates and associated values (exp %d)\n',i);fflush(stdout);
 	folder_in = sprintf ('%s/data_raw/%d/frs/', data_path, i);
-	frs = load_fr (folder_in, folder_out, listn(:,1), step, vspace, step_idx, vars, nbvars, probav);
+	frs = load_fr (folder_in, folder_out, listn(:,1), step_idx, v, probav);
 
 %	printf ('Computation for population kurtosis (exp %d)\n',i);fflush(stdout);
 %	filename = sprintf ('%s/pks_%s.mat', folder_out, mat2str(nbvars));
@@ -73,7 +73,7 @@ for i = exp
 	frs_vect = load_fr_vect (folder_in, folder_out, listn(:,1), step, vspace, vars, nbvars, probav);
 	for k = an_type
 		units = listn(find(listn(:,2) == k), 1);
-		load("../../data/data_raw/list", 'list');
+		load('../../data/data_raw/list', 'list');
 		printf ('Computation of information (exp %d)\n',i);fflush(stdout);
 		filename = sprintf ('%s/info_%s_%d', folder_out, mat2str(nbvars), k);
 		% on enleve les unites considerees comme silencieuse

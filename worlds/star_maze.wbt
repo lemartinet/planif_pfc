@@ -1,0 +1,1604 @@
+#VRML_SIM V5.0 utf8
+#000000
+#!mainWindow: 0 0.295898 0.5 0.700195
+#!sceneTreeWindow: 0.5 0.607422 0.5 0.388672 0.222656
+#!textEditorWindow: 0.5 0.0585938 0.5 0.725586 0.370312
+#!logWindow: 0.460938 0.693359 0.5 0.299805
+
+WorldInfo {
+  info [
+    "Description"
+    "Author: first name last name <e-mail>"
+    "Date: DD MMM YYYY"
+  ]
+  physics ""
+  runRealTime TRUE
+}
+Viewpoint {
+  orientation 0.181475 0.776824 0.603001 3.61352
+  position -0.849178 5.65094 -1.27197
+}
+Background {
+  skyColor [
+    0.4 0.7 1
+  ]
+}
+DEF LIGHTS Group {
+  children [
+    PointLight {
+      ambientIntensity 1
+      attenuation 1 1 1
+      location -0.890001 1 -0.26
+    }
+    PointLight {
+      ambientIntensity 1
+      attenuation 1 1 1
+      location 0.749999 1 0.17
+    }
+    PointLight {
+      ambientIntensity 1
+      attenuation 1 1 1
+      location 0.210004 1 -0.86
+    }
+    PointLight {
+      ambientIntensity 1
+      attenuation 1 1 1
+      location -0.600001 1 0.779991
+    }
+  ]
+}
+DEF BreAkIngTheWalls Group {
+  children [
+    DEF FIFTH_OF_WALLS Solid {
+      children [
+        Group {
+          children [
+            DEF ZONE_DE_MUR Group {
+              children [
+                Transform {
+                  translation 0 0 0.64
+                  children [
+                    Shape {
+                      appearance Appearance {
+                        material Material {
+                          diffuseColor 0.545098 0.411765 0.0784314
+                          specularColor 0.545098 0.411765 0.0784314
+                        }
+                      }
+                      geometry Extrusion {
+                        crossSection [
+                          -0.47 0
+                          0.47 0
+                          0.47 0.01
+                          -0.47 0.01
+                          -0.47 0
+                        ]
+                        spine [
+                          0 0 0
+                          0 0.1 0
+                        ]
+                      }
+                    }
+                  ]
+                }
+                Transform {
+                  translation 0 0 1.02
+                  children [
+                    Shape {
+                      appearance Appearance {
+                        material Material {
+                          diffuseColor 0.545098 0.411765 0.0784314
+                          specularColor 0.545098 0.411765 0.0784314
+                        }
+                      }
+                      geometry Extrusion {
+                        crossSection [
+                          -0.47 0
+                          0.47 0
+                          0.47 0.01
+                          -0.47 0.01
+                          -0.47 0
+                        ]
+                        spine [
+                          0 0 0
+                          0 0.1 0
+                        ]
+                      }
+                    }
+                  ]
+                }
+                Transform {
+                  translation 0.48 0 1.03
+                  rotation 0 1 0 0.628
+                  children [
+                    Shape {
+                      appearance Appearance {
+                        material Material {
+                          diffuseColor 0.545098 0.411765 0.0784314
+                          specularColor 0.545098 0.411765 0.0784314
+                        }
+                      }
+                      geometry Extrusion {
+                        crossSection [
+                          -0.01 -0.01
+                          0.01 -0.01
+                          0.01 1
+                          -0.01 1
+                          -0.01 -0.01
+                        ]
+                        spine [
+                          0 0 0
+                          0 0.1 0
+                        ]
+                      }
+                    }
+                  ]
+                }
+                Transform {
+                  translation -0.47 0 1.03
+                  rotation 0 1 0 -0.628
+                  children [
+                    Shape {
+                      appearance Appearance {
+                        material Material {
+                          diffuseColor 0.545098 0.411765 0.0784314
+                          specularColor 0.545098 0.411765 0.0784314
+                        }
+                      }
+                      geometry Extrusion {
+                        crossSection [
+                          -0.01 -0.01
+                          0.01 -0.01
+                          0.01 1
+                          -0.01 1
+                          -0.01 -0.01
+                        ]
+                        spine [
+                          0 0 0
+                          0 0.1 0
+                        ]
+                      }
+                    }
+                  ]
+                }
+                Transform {
+                  translation 1.13 0 1.78
+                  rotation 0 1 0 0.6
+                  scale 0.3 1 1
+                  children [
+                    Shape {
+                      appearance Appearance {
+                        material Material {
+                          diffuseColor 0.545098 0.411765 0.0784314
+                          specularColor 0.545098 0.411765 0.0784314
+                        }
+                      }
+                      geometry Extrusion {
+                        crossSection [
+                          -0.47 0
+                          0.47 0
+                          0.47 0.01
+                          -0.47 0.01
+                          -0.47 0
+                        ]
+                        spine [
+                          0 0 0
+                          0 0.1 0
+                        ]
+                      }
+                    }
+                  ]
+                }
+                Transform {
+                  translation -1.13 0 1.78
+                  rotation 0 1 0 -0.6
+                  scale 0.3 1 1
+                  children [
+                    Shape {
+                      appearance Appearance {
+                        material Material {
+                          diffuseColor 0.545098 0.411765 0.0784314
+                          specularColor 0.545098 0.411765 0.0784314
+                        }
+                      }
+                      geometry Extrusion {
+                        crossSection [
+                          -0.47 0
+                          0.47 0
+                          0.47 0.01
+                          -0.47 0.01
+                          -0.47 0
+                        ]
+                        spine [
+                          0 0 0
+                          0 0.1 0
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    Transform {
+      rotation 0 1 0 1.25664
+      children [
+        DEF FIFTH_OF_WALLS Solid {
+          children [
+            Group {
+              children [
+                DEF ZONE_DE_MUR Group {
+                  children [
+                    Transform {
+                      translation 0 0 0.64
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0 0 1.02
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0.48 0 1.03
+                      rotation 0 1 0 0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -0.47 0 1.03
+                      rotation 0 1 0 -0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 1.13 0 1.78
+                      rotation 0 1 0 0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -1.13 0 1.78
+                      rotation 0 1 0 -0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    Transform {
+      rotation 0 1 0 2.51327
+      children [
+        DEF FIFTH_OF_WALLS Solid {
+          children [
+            Group {
+              children [
+                DEF ZONE_DE_MUR Group {
+                  children [
+                    Transform {
+                      translation 0 0 0.64
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0 0 1.02
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0.48 0 1.03
+                      rotation 0 1 0 0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -0.47 0 1.03
+                      rotation 0 1 0 -0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 1.13 0 1.78
+                      rotation 0 1 0 0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -1.13 0 1.78
+                      rotation 0 1 0 -0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    Transform {
+      rotation 0 1 0 3.76991
+      children [
+        DEF FIFTH_OF_WALLS Solid {
+          children [
+            Group {
+              children [
+                DEF ZONE_DE_MUR Group {
+                  children [
+                    Transform {
+                      translation 0 0 0.64
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0 0 1.02
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0.48 0 1.03
+                      rotation 0 1 0 0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -0.47 0 1.03
+                      rotation 0 1 0 -0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 1.13 0 1.78
+                      rotation 0 1 0 0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -1.13 0 1.78
+                      rotation 0 1 0 -0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    Transform {
+      rotation 0 1 0 5.02655
+      children [
+        DEF FIFTH_OF_WALLS Solid {
+          children [
+            Group {
+              children [
+                DEF ZONE_DE_MUR Group {
+                  children [
+                    Transform {
+                      translation 0 0 0.64
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0 0 1.02
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 0.48 0 1.03
+                      rotation 0 1 0 0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -0.47 0 1.03
+                      rotation 0 1 0 -0.628
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.01 -0.01
+                              0.01 -0.01
+                              0.01 1
+                              -0.01 1
+                              -0.01 -0.01
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation 1.13 0 1.78
+                      rotation 0 1 0 0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                    Transform {
+                      translation -1.13 0 1.78
+                      rotation 0 1 0 -0.6
+                      scale 0.3 1 1
+                      children [
+                        Shape {
+                          appearance Appearance {
+                            material Material {
+                              diffuseColor 0.545098 0.411765 0.0784314
+                              specularColor 0.545098 0.411765 0.0784314
+                            }
+                          }
+                          geometry Extrusion {
+                            crossSection [
+                              -0.47 0
+                              0.47 0
+                              0.47 0.01
+                              -0.47 0.01
+                              -0.47 0
+                            ]
+                            spine [
+                              0 0 0
+                              0 0.1 0
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+DEF SOL Solid {
+  translation 0 -0.05 0
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 0.901961 0.901961 0.980392
+          specularColor 1 1 1
+        }
+      }
+      geometry Cylinder {
+        height 0.1
+        radius 2.11
+        subdivision 60
+      }
+    }
+  ]
+  boundingObject Cylinder {
+    height 0.0900011
+    radius 2.21
+  }
+}
+DEF OBJETS_ENVIRONNEMENT Group {
+  children [
+    Transform {
+      translation -2.28 0.6 1.15
+      rotation 0 1 0 5.88319
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 1 0 0
+              specularColor 1 0 0
+            }
+          }
+          geometry Box {
+            size 0.68 2.63 0.68
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 0.99 0.33 -3.22
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 1 1 0
+              specularColor 1 1 0
+            }
+          }
+          geometry Sphere {
+            radius 0.6
+            subdivision 2
+          }
+        }
+      ]
+    }
+    Transform {
+      translation -1.01 0.62 3.11
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 0 1 0
+              specularColor 0 1 0
+            }
+          }
+          geometry Box {
+            size 0.7 0.7 0.7
+          }
+        }
+      ]
+    }
+    Transform {
+      translation 3.06 0.42 0.49
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 0 0 1
+              specularColor 0 0 1
+            }
+          }
+          geometry Cone {
+            bottomRadius 0.65
+            height 1.18
+          }
+        }
+      ]
+    }
+  ]
+}
+DEF PLATEFORME Solid {
+  translation 0 -0.05 -1.91
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 0 0
+          specularColor 1 0 0
+        }
+      }
+      geometry Cylinder {
+        height 0.1
+        radius 0.15
+        subdivision 60
+      }
+    }
+  ]
+}
+DEF mybot DifferentialWheels {
+  translation 0.680145 -0.00585051 0.39189
+  rotation -0.0086653 0.99996 0.00226126 -0.441667
+  children [
+    Transform {
+      translation 0 0.0415 0
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 0.0820075 0.364731 0.8
+            }
+          }
+          geometry DEF BODY Cylinder {
+            height 0.08
+            radius 0.045
+          }
+        }
+      ]
+    }
+    Solid {
+      translation -0.0459156 0.0252091 -0.000134618
+      rotation 0.999896 0.0137942 0.00419225 0.484097
+      children [
+        DEF WHEEL Transform {
+          rotation 0 0 1 1.57
+          children [
+            Shape {
+              appearance Appearance {
+                material Material {
+                  diffuseColor 1 0 0
+                }
+              }
+              geometry Cylinder {
+                height 0.01
+                radius 0.025
+              }
+            }
+          ]
+        }
+      ]
+      name "left wheel"
+      boundingObject DEF WHEEL Transform {
+        rotation 0 0 1 1.57
+        children [
+          Shape {
+            appearance Appearance {
+              material Material {
+                diffuseColor 1 0 0
+              }
+            }
+            geometry Cylinder {
+              height 0.01
+              radius 0.025
+            }
+          }
+        ]
+      }
+      physics DEF PHYSICS_WHEEL Physics {
+        density -1
+        mass 0.05
+      }
+      joint Joint {
+      }
+    }
+    Solid {
+      translation 0.0459288 0.025204 0.000137869
+      rotation 0.999606 0.0194479 0.0202151 1.69531
+      children [
+        DEF WHEEL Transform {
+          rotation 0 0 1 1.57
+          children [
+            Shape {
+              appearance Appearance {
+                material Material {
+                  diffuseColor 1 0 0
+                }
+              }
+              geometry Cylinder {
+                height 0.01
+                radius 0.025
+              }
+            }
+          ]
+        }
+      ]
+      name "right wheel"
+      boundingObject USE WHEEL
+      physics DEF PHYSICS_WHEEL Physics {
+        density -1
+        mass 0.05
+      }
+      joint Joint {
+      }
+    }
+    DistanceSensor {
+      translation -0.02 0.063 -0.042
+      rotation 0 1 0 1.77
+      children [
+        DEF INFRARED Transform {
+          rotation 0 0 1 1.57
+          children [
+            Shape {
+              appearance Appearance {
+                material Material {
+                  diffuseColor 0.975691 0.981481 0.0252992
+                }
+              }
+              geometry Cylinder {
+                height 0.004
+                radius 0.008
+              }
+            }
+          ]
+        }
+      ]
+      name "ir0"
+      lookupTable [
+        0 1024 0
+        0.05 1024 0
+        0.15 0 0
+      ]
+      numberOfRays 2
+      aperture 0.53
+    }
+    DistanceSensor {
+      translation 0.02 0.063 -0.042
+      rotation 0 1 0 1.37
+      children [
+        DEF INFRARED Transform {
+          rotation 0 0 1 1.57
+          children [
+            Shape {
+              appearance Appearance {
+                material Material {
+                  diffuseColor 0.975691 0.981481 0.0252992
+                }
+              }
+              geometry Cylinder {
+                height 0.004
+                radius 0.008
+              }
+            }
+          ]
+        }
+      ]
+      name "ir1"
+      lookupTable [
+        0 1024 0
+        0.05 1024 0
+        0.15 0 0
+      ]
+      numberOfRays 2
+      aperture 0.53
+    }
+    Shape {
+      appearance Appearance {
+        texture ImageTexture {
+          url [
+            "textures/mybot.png"
+          ]
+        }
+      }
+      geometry IndexedFaceSet {
+        coord Coordinate {
+          point [
+            0.015 0.038 -0.041
+            0.015 0.023 -0.041
+            0 0.023 -0.0455
+            -0.015 0.023 -0.041
+            -0.015 0.038 -0.041
+            0 0.038 -0.0455
+          ]
+        }
+        texCoord TextureCoordinate {
+          point [
+            0 0
+            0.5 0
+            1 0
+            1 1
+            0.5 1
+            0 1
+          ]
+        }
+        coordIndex [
+          0, 1, 2, 5, -1, 5, 2, 3, 4, -1
+        ]
+        texCoordIndex [
+          5, 0, 1, 4, -1, 4, 1, 2, 3, -1
+        ]
+        creaseAngle 0.9
+      }
+    }
+    Camera {
+      translation 0 0.0915 -0.04
+      rotation 0 0 -1 0
+      children [
+        Transform {
+          translation 0 0 0.015
+          rotation 1 0 0 1.57
+          children [
+            Shape {
+              appearance Appearance {
+                material Material {
+                  diffuseColor 1 1 1
+                }
+              }
+              geometry Cylinder {
+                height 0.03
+                radius 0.01
+              }
+            }
+          ]
+        }
+      ]
+      name "camera"
+      fieldOfView 1.047
+      width 320
+      height 240
+    }
+  ]
+  name "mybot"
+  boundingObject Transform {
+    translation 0 0.0415 0
+    children [
+      USE BODY
+    ]
+  }
+  physics Physics {
+    density -1
+    mass 0.5
+  }
+  controller "mybot_camera"
+  axleLength 0.09
+  wheelRadius 0.025
+}
+Solid {
+  boundingObject DEF ZONE_DE_MUR_BLOQUAGE Group {
+    children [
+      Transform {
+        translation -1.12 0 1.8
+        rotation 0 1 0 -5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 1.2 0 1.8
+        rotation 0 1 0 5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 0.75 0 1.42
+        rotation 0 1 0 0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation -0.75 0 1.42
+        rotation 0 1 0 -0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 0.67
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 1.02
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+    ]
+  }
+}
+Solid {
+  rotation 0 1 0 1.25664
+  boundingObject DEF ZONE_DE_MUR_BLOQUAGE Group {
+    children [
+      Transform {
+        translation -1.12 0 1.8
+        rotation 0 1 0 -5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 1.2 0 1.8
+        rotation 0 1 0 5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 0.75 0 1.42
+        rotation 0 1 0 0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation -0.75 0 1.42
+        rotation 0 1 0 -0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 0.67
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 1.02
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+    ]
+  }
+}
+Solid {
+  rotation 0 1 0 2.51328
+  boundingObject DEF ZONE_DE_MUR_BLOQUAGE Group {
+    children [
+      Transform {
+        translation -1.12 0 1.8
+        rotation 0 1 0 -5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 1.2 0 1.8
+        rotation 0 1 0 5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 0.75 0 1.42
+        rotation 0 1 0 0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation -0.75 0 1.42
+        rotation 0 1 0 -0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 0.67
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 1.02
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+    ]
+  }
+}
+Solid {
+  rotation 0 1 0 3.76992
+  boundingObject DEF ZONE_DE_MUR_BLOQUAGE Group {
+    children [
+      Transform {
+        translation -1.12 0 1.8
+        rotation 0 1 0 -5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 1.2 0 1.8
+        rotation 0 1 0 5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 0.75 0 1.42
+        rotation 0 1 0 0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation -0.75 0 1.42
+        rotation 0 1 0 -0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 0.67
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 1.02
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+    ]
+  }
+}
+Solid {
+  rotation 0 1 0 5.02656
+  boundingObject DEF ZONE_DE_MUR_BLOQUAGE Group {
+    children [
+      Transform {
+        translation -1.12 0 1.8
+        rotation 0 1 0 -5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 1.2 0 1.8
+        rotation 0 1 0 5.31119
+        children [
+          Box {
+            size 0.01 0.5 0.280001
+          }
+        ]
+      }
+      Transform {
+        translation 0.75 0 1.42
+        rotation 0 1 0 0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation -0.75 0 1.42
+        rotation 0 1 0 -0.628
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 0.67
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+      Transform {
+        translation 0 0 1.02
+        rotation 0 1 0 4.68319
+        children [
+          Box {
+            size 0.01 0.5 0.940001
+          }
+        ]
+      }
+    ]
+  }
+}
+Supervisor {
+  children [
+    Emitter {
+      name "emitter"
+      range 10
+      baudRate 115200
+    }
+  ]
+  controller "starmaze_supervisor"
+}

@@ -8,8 +8,8 @@ function [vars, step_idx] = load_vars (file, days, trials)
 vars_all = load(file);
 vars = [];
 step_idx = [];
-for d=days
-	for t=trials
+for d = days
+	for t = trials
 		idx = find (vars_all(:,2) == d & vars_all(:,3) == t);
 		if ~isempty(idx)
 			vars_tmp = [vars_all(idx,1) vars_all(idx,4) vars_all(idx,5) vars_all(idx,6)];

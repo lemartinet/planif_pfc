@@ -1,14 +1,11 @@
-function [frs] = load_fr (folder_in, folder_out, listn, step, vspace, step_idx, vars, nbvars, probav)
+function [frs] = load_fr (folder_in, folder_out, listn, step_idx, v, probav)
 % function [frs] = load_fr (folder_in, folder_out, listn, step, vspace, vars, nbvars, probav)
 %
 % Param:
 % folder_in = path to data_raw/exp/cells for example
 % folder_out = path to data_extracted/exp/cells for example
 % listn = list of neurones
-% step = step to discretize each var (e.g., [0.05 0.01] for two vars)
-% vspace = size of the space for each var (e.g., [xMax yMax tMax; xMin yMin tMin])
-% vars = matrix of all the variable (e.g., x y theta ...)
-% nbvars = column number of the vars used for the fr
+% v = matrix of all the discretized variables (e.g., x y theta ...)
 % probav = matrix of the proba for the var, e.g occupancy grid for x,y vars
 %
 % Return:
@@ -35,8 +32,8 @@ end
 % we compute the firing rates for the positive probav
 for i = 1:size(listn,2)
 	printf ("Computation of firing rates for %d\n", listn(i)); fflush(stdout);
-	filename = sprintf ("%s/%d.txt", folder_in, listn(i));
-	[fr] = firing_rate (filename, step_idx, vars, nbvars, step, vspace);
+	load(sprintf('%s/%d.mat', folder_in, listn(i)), 'fr');
+	[fr] = firing_rate (fr(step_idx), v, size(probav));
 	[centers(i,:), fsizes(i), m_frs(i), s_frs(i)] = field_properties (fr, probav);
 	frs(i,:) = transpose(fr(idx));
 end
