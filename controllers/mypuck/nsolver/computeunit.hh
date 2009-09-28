@@ -22,6 +22,7 @@ public:
 	virtual ~ComputeUnit () { --nb_computeunits; };
 	
 	double output () const { return output_; }
+	void output_set (double output) { output_ = output; }
 	bool spiking () const;
 	int no_get () const { return no_; }
 	static int nb_computeunits_get () { return nb_computeunits; }

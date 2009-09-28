@@ -48,6 +48,8 @@ public:
     QPoint& mouse_pos_get () { return mouse_pos_; }
     void type_del (NodeType type);
     void edge_type_del (NodeType type);
+    void edge_hide (NodeType type, int to);
+    void edge_show (NodeType type, int to);
     
 	void trigger_sig_node_clicked (NodeType type, int no);
 	void itemMoved();

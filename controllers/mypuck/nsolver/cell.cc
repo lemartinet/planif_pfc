@@ -6,7 +6,7 @@
 #include <numeric>
 #include <algorithm>
 
-#define NB_STEP 4
+#define NB_STEP 8
 
 Cell::Cell () : ComputeUnit(PC), pos_(0), lastTidx_(0) 
 {
@@ -50,9 +50,9 @@ void Cell::pos_set (const Coord& pos)
 	}
 }
 
-void Cell::compute (const Coord& pos, bool peak)
+void Cell::compute (const Coord& pos, double peak)
 {
-	if (pos_ == 0 || !peak) {
+	if (pos_ == 0) {
 		output_ = 0;
 	}
 	else if (r_.size () == 0) {
@@ -82,6 +82,8 @@ void Cell::compute (const Coord& pos, bool peak)
 		}
 		output_ = r_[min];
 	}
+	output_ *= peak;
+//	cout << output_ << " ";	
 	if (output_ < 0.05) {
 		output_ = 0.05 + bruit(2 * 0.05);	
 	}
@@ -101,10 +103,11 @@ void Cell::draw (ostream& os) const
     os << "c" << &cell_output << " [label=\"" << no_ << ":" << output () << "\"]" << endl;
 }
 
-double Cell::lastT_recent () const
+const vector<double>& Cell::lastT_recent () const
 {
 //	double total = accumulate (lastTrecent_.begin(), lastTrecent_.end(), 0.0);
 //	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
 //	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
-	return * max_element (lastTrecent_.begin(), lastTrecent_.end());
+//	return * max_element (lastTrecent_.begin(), lastTrecent_.end());
+	return lastTrecent_;
 }

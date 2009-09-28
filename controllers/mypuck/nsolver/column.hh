@@ -8,13 +8,14 @@
 class ComputeUnit;
 class Columns;
 class Coord;
+class Cell;
 
 using namespace std; 
 
 class Column
 {
 public:
-	Column (Columns& columns, int no, const vector<ComputeUnit*>& hippo_pop);
+	Column (Columns& columns, int no);
 	~Column ();
 	
 	double inf_activation () const { return inf_.output (); }
@@ -27,19 +28,13 @@ public:
 	int no_get () const { return no_; }
 	const Coord* pos_get () const { return pos_; }
 	int level_get () const { return level_; }
-	void winner_set (bool winner) { winner_ = winner; }
 	double maxr_get () { return maxr; }
 	double lastT_recent () const;
 	double lastT_old () const;
 
-	void synch (bool learn, const vector<ComputeUnit*>& pop_state);
-	void synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& pop_state);
-	void synch (bool learn, const vector<ComputeUnit*>& pop_state, const ComputeUnit& ego_action);
-
-private:
-	void connect_pop_to_neuron (const vector<ComputeUnit*>& pop_state, bool newcol = false);
-	void connect_pop_to_neuron (const vector<ComputeUnit*>& pop_state, const ComputeUnit& ego_action);
-	void center_rf (const Coord& pos);
+	void synch ();
+	void center_rf (const Coord& pos, bool winner);
+	double weight_change (const Cell* cell, double old_w, Column* winner);
 
 private:
 	const int no_;
@@ -48,14 +43,12 @@ private:
 	Neuron& inf_;
 	Columns& columns_;
 	int level_; // niveau de la colonne dans la carte
-	bool winner_;
 	Coord* pos_;
 	double maxr;
 	
 	vector<double> lastTrecent_;
 	vector<double> lastTold_;
 	int lastTidx_;
-	int learn_rythm_;
 };
 
 bool operator== (const Column& c1, const Column& c2);

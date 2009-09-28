@@ -26,7 +26,7 @@ public:
 
 	void cell_add (const Coord& pos);
 	bool synch (const Coord& position);
-	bool synch (int numcell);
+	void sleep (int ripples);
 	int nb_spiking_cells () const;
 	bool theta_new () const;
 
@@ -34,6 +34,7 @@ public:
 
 private:
 	vector<ComputeUnit*> cellmap_;
+	vector<double> activ_;
 	int nb_used_pc_; 
 	int step_;
 };

@@ -99,7 +99,7 @@ void Neuron::compute ()
 	double br = bruit (2 * NEURON_ACTIVATION_NOISE);
 		
 	if (!synapses_.empty ()) {
-		syndrive_ = max_ ? syndrive_max () : syndrive_sum ();
+		syndrive_ = max_ ? syndrive_max () : syndrive_sum (synapses_) + syndrive_sum (synapsesI_);
 		pot_ += DELTA_T * (-pot_ + thresh_ + syndrive_) / NEURON_TAU;
 
 		output_next_ = pot_;
@@ -112,7 +112,7 @@ void Neuron::compute ()
 	else {
 		output_next_ = 0;
 	}
-	
+
 	// bruit additif
 //	output_next_ += br;
 	// bruit multiplicatif
@@ -124,11 +124,11 @@ void Neuron::compute ()
 	}
 }
 
-double Neuron::syndrive_sum () const
+double Neuron::syndrive_sum (const map<const int, Synapse *>& syn) const
 {
 	double res = 0.0;
 	map<const int, Synapse *>::const_iterator iter;
-	for (iter = synapses_.begin (); iter != synapses_.end (); iter++) {
+	for (iter = syn.begin (); iter != syn.end (); iter++) {
 		res += iter->second->drive ();	
 	}
 	return res;
@@ -157,9 +157,28 @@ double Neuron::syndrive_wta () const
 
 Synapse* Neuron::syn_get (const ComputeUnit& from) const
 {
+	return syn_get (from.no_get ());
+}
+
+Synapse* Neuron::syn_get (int from_no) const
+{
 	map<const int, Synapse *>::const_iterator iter;
-	iter = synapses_.find (from.no_get ());
-	return (iter == synapses_.end ()) ? 0 : iter->second;
+	iter = synapses_.find (from_no);
+	return (iter == synapses_.end ()) ? 0 : iter->second;	
+}
+
+Synapse* Neuron::max_syn_get () const
+{
+	map<const int, Synapse *>::const_iterator iter;
+	double max_w = 0;
+	Synapse* max_s = 0;
+	for (iter = synapses_.begin (); iter != synapses_.end (); iter++) {
+		if (max_w < iter->second->w_get ()) {
+			max_w = iter->second->w_get ();
+			max_s = iter->second;
+		}
+	}
+	return max_s;
 }
 
 void Neuron::draw_graph (ostream& os) const

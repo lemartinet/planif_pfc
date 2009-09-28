@@ -6,7 +6,9 @@
 #include "obstacleavoidance.hh"
 #include <sstream>
 
-class Action;;
+class Action;
+
+enum behabiorAutomate { GO_ON, DECIDE, DECIDED, GOAL, BLOCK, SLEEP };
 
 class Behavior
 {
@@ -16,29 +18,24 @@ public:
 
 	void synch ();
 	Neurosolver& neurosolver_get () { return neurosolver_; }
-	RobotDevice& robot_get () { return robot_; }
-	double lastT_meanaction () const;
+	string automate_state ();
   	
 private:
 	void compute_next_action ();
 	void do_action ();
-	Action* select_action ();
-	void e_greedy (const vector<double>& dirs, double* pa, stringstream& s);
-	void q_greedy (const vector<double>& dirs, double* pa);
-	void softmax (const vector<double>& dirs, double* pa);
+	double select_action (const vector<double>& dirs);
+	bool e_greedy (const vector<double>& dirs, double* pa, stringstream& s);
+	bool q_greedy (const vector<double>& dirs, double* pa);
+	bool softmax (const vector<double>& dirs, double* pa);
 	double qval (double angle) const;
 
 private:
 	RobotDevice robot_;
 	Neurosolver neurosolver_;
 	ObstacleAvoidance avoid_;
-	bool action_done_;
-	int wait_; // attente entre les décisions
-	int wait_at_goal_;
 	double current_;
-	
-	vector<double> lastT_action_;
-	int lastTidx_;
+	int wait_; // temporisation de l'automate	
+	behabiorAutomate automate_; // état de l'automate
 };
 
 #endif

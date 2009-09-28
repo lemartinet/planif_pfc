@@ -55,7 +55,7 @@ double last_x = 0, last_y = 0;
 
 
 ObstacleAvoidance::ObstacleAvoidance (RobotDevice& robot):
-	left_near_(false), right_near_(false)
+	left_near_(false), right_near_(false), bloque_(false)
 {
 	static const int TIME_STEP = Params::get_int("TIME_STEP");
 	ps_ = new DistanceSensor*[NB_SENSORS];
@@ -76,9 +76,9 @@ void ObstacleAvoidance::avoid_block (const Coord& position)
 {
   	double x = position.x_get ();
 	double y = position.y_get ();
-	// Attention ce code est dépendant de TIME_STEP = 30ms
+	// Attention ce code est dépendant de TIME_STEP = 15ms
 	// puisqu'il mesure l'avancée depuis le dernier step 
-  	if (fabs (last_x - x) < 0.0005 && fabs (last_y - y) < 0.0005) {
+  	if (fabs (last_x - x) < 0.00025 && fabs (last_y - y) < 0.00025) {
     	blocked++;
   	}
   	else {
@@ -104,7 +104,7 @@ void ObstacleAvoidance::update_info ()
 	}
 }
 
-bool ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_speed, int& right_speed)
+void ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_speed, int& right_speed)
 {
 	update_info ();
 	
@@ -189,7 +189,7 @@ bool ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_sp
 	//cout << "speed: " << oam_speed[LEFT] << " " << oam_speed[RIGHT] << endl; 
   	left_speed = oam_speed[LEFT];
   	right_speed = oam_speed[RIGHT];
-  	return bloque;
+  	bloque_ = bloque;
 }
 
 int ObstacleAvoidance::dist_sensor_get () const 

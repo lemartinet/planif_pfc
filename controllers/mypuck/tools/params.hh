@@ -9,7 +9,7 @@ using namespace std;
 class Params
 {
 public:
-	static bool load (const string & path);
+	static void load ();
 
   	static string get (string name);
 	static double get_double (string name);
@@ -21,6 +21,7 @@ public:
 
 private:
   	static map<string, string> params_;
+  	static bool loaded_;
 };
 
 #endif

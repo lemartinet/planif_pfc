@@ -9,8 +9,8 @@
 #include "params.hh"
 #include "edge.h"
 
-ControlRobot::ControlRobot (const RobotDevice& robot_device, const Hippo& hippo, Neurosolver& neuro) :
-	robot_device_(robot_device), hippo_(hippo), neuro_(neuro)
+ControlRobot::ControlRobot (const Hippo& hippo, Neurosolver& neuro) :
+	robot_device_(RobotDevice::robot_get()), hippo_(hippo), neuro_(neuro), refresh_(0)
 {
 	robot_ = widget_.add_node (ROBOT, 1, 20);
 	show_inf_sup_or_state_ = 0;
@@ -25,6 +25,8 @@ void ControlRobot::update ()
 	update_mincols ();
 	robot_->move (robot_device_.position_get ());
 	update_cells ();
+	// maj de la position tous les 66 step * 15ms = 1s
+	refresh_ = ++refresh_ % 66;
 }
 
 void ControlRobot::update_cells ()
@@ -44,7 +46,9 @@ void ControlRobot::update_cells ()
 			node->show ();
 		}
 		if (node != 0) {
-			node->move (*(cell.pos_get ()));
+			if (refresh_ == 0) {
+				node->move (*(cell.pos_get ()));
+			}
 			node->color_set (cell.output ());
 		}
 	}
@@ -58,7 +62,7 @@ void ControlRobot::update_cols ()
 	int size = neuro_.cols_get ().size ();
 	for (int i = 0; i < size; i++) {
 		Column* col = neuro_.cols_get ().col_get (i);
-		if (col->pos_get () == 0) {
+		if (col->level_get () != 0) {
 			continue;
 		}
 		Node* node = widget_.node_get (COL, col->no_get ());
@@ -66,7 +70,30 @@ void ControlRobot::update_cols ()
 			node = widget_.add_node (COL, col->no_get (), 20);
 		}
 		if (node != 0) {
-			node->move (*col->pos_get ());
+			if (refresh_ == 0) {
+				Synapse* max_s = col->state_get ().max_syn_get (); 
+				if (max_s != 0 && max_s->w_get () > 0.5) {
+					Coord moy (0,0);
+					double norm = 0;		
+					for (int j = 0; j < col->state_get ().size (); j++) {
+						Synapse* s = col->state_get ().syn_get (j);
+						Cell* cell = dynamic_cast<Cell*> (&(s->from_get ()));
+						if (s->w_get () < 0.5 || cell->pos_get () == 0) {
+							continue;
+						}
+						Coord tmp = *cell->pos_get ();
+						tmp *= s->w_get ();
+						moy += tmp;
+						norm += s->w_get ();
+					}
+					moy /= norm;
+					node->move (moy);
+					node->show ();
+				}
+				else {
+					node->hide ();
+				}
+			}
 			update_col_appearance (*node, *col);
 		}
 	}
@@ -88,8 +115,17 @@ void ControlRobot::update_mincols ()
 		if (edge == 0) {
 			edge = widget_.add_edge (COL, minicol->from_get ().no_get (), minicol->to_get ().no_get ());
 		}
-		if (edge) {
-			update_mincol_appearance (*edge, *minicol);
+		if (edge != 0) {
+			edge->best_set (false);
+			Node* node1 = widget_.node_get (COL, minicol->from_get ().no_get ());
+			Node* node2 = widget_.node_get (COL, minicol->to_get ().no_get ());
+			if (node1 != 0 && node2 != 0 && node1->isVisible () && node2->isVisible ()) {
+				edge->color_set (minicol->state_activation ());
+				edge->show ();
+			}
+			else {
+				edge->hide ();
+			}
 		}
 	}
 	highlight_current_mincol ();
@@ -106,12 +142,6 @@ void ControlRobot::update_col_appearance (Node& node, Column& col)
     else if (show_inf_sup_or_state_ == 0) {
     	node.color_set (col.state_activation ());
     }
-}
-
-void ControlRobot::update_mincol_appearance (Edge& edge, Minicol& mincol)
-{
-	edge.color_set (mincol.state_activation ());
-	edge.best_set (false);
 }
 
 void ControlRobot::highlight_current_mincol ()

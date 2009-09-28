@@ -26,10 +26,11 @@ public:
 	float obstacle_left_front_get () const { return obstacle_left_front; }
 	float obstacle_right_front_get () const { return obstacle_right_front; }
 	int dist_sensor_get () const;
+	bool bloque_get () const { return bloque_; }
 	
 	void update_info ();
 	void avoid_block (const Coord& position);
-	bool avoid (double angle, const Coord& position, int& left_speed, int& right_speed);
+	void avoid (double angle, const Coord& position, int& left_speed, int& right_speed);
 	int analyse_cross_road (bool& left, bool& straight, bool& right);
 	void free_ways (vector<double>& dirs, double robot_angle);
 	
@@ -45,6 +46,7 @@ private:
 	float obstacle_right_back;
 	bool left_near_;
 	bool right_near_;
+	bool bloque_;
 };
 
 #endif /*OBSTACLEAVOIDANCE_HH_*/

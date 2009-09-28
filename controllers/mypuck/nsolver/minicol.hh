@@ -37,7 +37,7 @@ public:
 	
 	void update_value ();
 	void adapt_action (const Action& action);
-	void lateral_learning (bool increase);
+	void lateral_learning (bool increase, double factor = 1);
 
 private:
 	const int no_;

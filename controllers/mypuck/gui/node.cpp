@@ -143,7 +143,7 @@ void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 	    qs1.append(s);
 	    painter->drawText(-15, -11, qs1);
 	    painter->setPen(QPen(Qt::white, 0));
-	    sprintf(s, "%d", no_);
+	    sprintf(s, "%d", no_+1);
 	    QString qs2;
 	    qs2.append(s);
 	    painter->drawText(-10, 4, qs2);

@@ -21,8 +21,8 @@ public:
 	const Coord* pos_get () const { return pos_; }
 	void pos_set (const Coord& pos);
 
-	void compute (const Coord& pos, bool peak);
-	double lastT_recent () const;
+	void compute (const Coord& pos, double peak);
+	const vector<double>& lastT_recent () const;
 
 	void draw (ostream& os) const;
 

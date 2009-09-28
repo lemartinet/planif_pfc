@@ -11,17 +11,22 @@ bool Logger::open_logs ()
 	try {
 		logs_["fr"] = new Log("fr");
 		free_logs_["decision"] = new Log("decision");
+		free_logs_["decision"]->log("% step | decision | action | proba");
+		free_logs_["decision"]->log("% decision: 0=exploration, 1=planning, -0=exploration because of no action available");	
+		free_logs_["weight_save"] = new Log("weight_save");
 		free_logs_["network"] = new Log("network");
+		free_logs_["network"]->log("% step | event | from_nb | to_nb | action (real or encoded)");
+		free_logs_["network"]->log("% event: 0=wrong_topology, 1=update_minicol, 2=new_minicol, 3=best_minicol");
 		free_logs_["weight"] = new Log("weight", true);
 		free_logs_["type"] = new Log("type");
-		free_logs_["type"]->log("% neurone number (starts at 0) | type");
+		free_logs_["type"]->log("% neurone number | type");
 		free_logs_["type"]->log("% type: 0=state, 1=inf, 2=lat, 3=sup, 4=maxsup, 10=pc, 11=dircell, 12=motiv");		
 		free_logs_["col"] = new Log("col");
-		free_logs_["col"]->log("% neurone number | column number (both numbers start at 0)");
+		free_logs_["col"]->log("% neurone number | column number");
 		free_logs_["minicol"] = new Log("minicol");
-		free_logs_["minicol"]->log("% neurone number | minicolumn number (both numbers start at 0)");
+		free_logs_["minicol"]->log("% neurone number | minicolumn number");
 		free_logs_["minicol_col"] = new Log("minicol_col");
-		free_logs_["minicol_col"]->log("% minicol number | column number (both numbers start at 0)");		
+		free_logs_["minicol_col"]->log("% minicol number | column number");		
 	}
 	catch (string s) {
 		cout << s << endl;

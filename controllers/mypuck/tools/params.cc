@@ -1,20 +1,26 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 #include "params.hh"
 #include "mystr.hh"
 
-map<string, string> Params::params_;
+#define PARAMS_PATH "../../data/"
 
-bool Params::load (const string & path)
+map<string, string> Params::params_;
+bool Params::loaded_ = false;
+
+void Params::load ()
 {
+	string path = PARAMS_PATH;
 	params_["data_path"] = path;
 	ostringstream filename;
 	filename << path << "/params.txt";
 	ifstream file (filename.str ().c_str ());
 	if (!file) {
 		cout << "Mypuck: impossible to open: " << filename.str () << endl;
-		return false;
+		cout << "Mypuck: erreur d'init. Exit !" << endl;
+		exit (-1);	
     }
     else {
     	cout << "Mypuck: loading params from file: " << filename.str () << endl;
@@ -26,8 +32,8 @@ bool Params::load (const string & path)
       params_[key] = value;
     }
     file.close ();
-//	params->show ();
-	return true;
+	Params::loaded_ = true;
+//	Params::show ();
 }
 
 void Params::show ()
@@ -39,7 +45,12 @@ void Params::show ()
 }
 
 string Params::get (string name) 
-{ 
+{
+	if (! Params::loaded_) {
+		Params::loaded_ = true;
+		Params::load ();
+//		cout << "loaded" << endl;
+	}
 	if (params_.count(name) > 0) {
 		return params_[name];
 	} 

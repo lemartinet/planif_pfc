@@ -115,6 +115,32 @@ Edge* GraphWidget::edge_get (NodeType type, int from, int to)
   return 0;
 }
 
+void GraphWidget::edge_hide (NodeType type, int to)
+{
+  Edge*  edge = 0;
+
+  foreach (QGraphicsItem *item, scene()->items())
+    {
+      if ((edge = qgraphicsitem_cast<Edge *>(item)) 
+      		&& ((edge->destNode ()->nodetype_get () == type && edge->destNode ()->no_get () == to)
+      			|| (edge->sourceNode ()->nodetype_get () == type && edge->sourceNode ()->no_get () == to)))
+		edge->hide ();
+    }
+}
+
+void GraphWidget::edge_show (NodeType type, int to)
+{
+  Edge*  edge = 0;
+
+  foreach (QGraphicsItem *item, scene()->items())
+    {
+      if ((edge = qgraphicsitem_cast<Edge *>(item)) 
+      		&& ((edge->destNode ()->nodetype_get () == type && edge->destNode ()->no_get () == to)
+      			|| (edge->sourceNode ()->nodetype_get () == type && edge->sourceNode ()->no_get () == to)))
+		edge->show ();
+    }
+}
+
 Node* GraphWidget::add_node (NodeType type, int no, int size)
 {
 	Node* node = new Node (this);

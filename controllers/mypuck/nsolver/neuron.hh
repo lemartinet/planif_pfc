@@ -22,7 +22,10 @@ public:
 	// Getting the number of synapses
 	int size () const { return synapses_.size (); }
 	Synapse* syn_get (const ComputeUnit& from) const;
+	Synapse* syn_get (int from_no) const;
+	Synapse* max_syn_get () const;
 	const map<const int, Synapse *>& all_syn_get () const { return synapses_; }
+	const map<const int, Synapse *>& all_syn_getI () const { return synapsesI_; }
 	double a_get () const { return a_; }
 	double b_get () const { return b_; }
 	double pot_get () const { return pot_; }
@@ -44,7 +47,7 @@ public:
 	 */
 	void compute ();
 	void update () { output_ = output_next_; }
-	double syndrive_sum () const;
+	double syndrive_sum (const map<const int, Synapse *>& syn) const;
 	double syndrive_max () const;
 	double syndrive_wta () const;
 	double compute_sum_wi () const;
@@ -64,7 +67,8 @@ private:
 	double syndrive_;
 	const double ip_step_;
 	const double ip_mu_;
-	map<const int, Synapse *>   synapses_; ///< Collection of synapses connected to neuron.
+	map<const int, Synapse *>   synapses_;
+	map<const int, Synapse *>   synapsesI_; 
 	double output_next_;
 	double thetaM_; // BCM threshold
 };

@@ -2,6 +2,8 @@
 #include "params.hh"
 #include "computeunit.hh"
 #include "neuron.hh"
+#include "logger.hh"
+#include "device.hh"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -45,6 +47,7 @@ void Log::logw () const
 {
 	static const double LOGW = Params::get_int("LOGW");
 	if(wlog_ && LOGW == 1) {
+		Logger::log ("weight_save", RobotDevice::robot_get ().cpt_total_get (), "");
 		int nb_all = ComputeUnit::nb_computeunits_get ();
 		double** w_all = new double* [nb_all];
 		for (int i = 0; i < nb_all; i++) {
@@ -59,7 +62,8 @@ void Log::logw () const
 			if (n == 0) {
 				continue;
 			}
-			const map<const int, Synapse *>& mw = n->all_syn_get ();			
+			map<const int, Synapse *> mw = n->all_syn_get ();
+			mw.insert (n->all_syn_getI ().begin (), n->all_syn_getI ().end ());
 			map<const int, Synapse *>::const_iterator it2;
 			for (it2 = mw.begin (); it2 != mw.end (); it2++) {
 				int no = it2->first;
@@ -77,7 +81,6 @@ void Log::logw () const
 			*file_ << endl;
 			delete [] w_all[i];
 		}
-		*file_ << endl << endl;
 		delete [] w_all;
 	}	
 }

@@ -6,6 +6,8 @@
 #include <sstream>
 #include <cstdlib>
 
+RobotDevice* RobotDevice::the_robot_ = 0;
+
 // camera
 int camera_enabled = 0; // mettre à 1 pour activer la camera
 
@@ -36,6 +38,8 @@ RobotDevice::RobotDevice () :
   	orientation_ = -atan2 (orient[0], orient[2]) + M_PI/2;
   	orientation_ = orientation_ > M_PI ? orientation_ - 2*M_PI : orientation_;
   	orientation_ = orientation_ < -M_PI ? orientation_ + 2*M_PI : orientation_;
+  	
+  	the_robot_ = this;
 }
 
 RobotDevice::~RobotDevice () 
@@ -114,7 +118,6 @@ void RobotDevice::synch ()
 	
 	goal_reached_ = false;
 	sleep_ = false;
-	static const int SLEEP = Params::get_int ("SLEEP");
 	while (receiver_->getQueueLength () > 0) {
 		const string message = static_cast<const char*>(receiver_->getData ());
 //		cout << message << endl;
@@ -122,9 +125,9 @@ void RobotDevice::synch ()
 		if (message == "goal") {
 			goal_reached_ = true;
 		}
-		else if (message == "sleep" && SLEEP) {
-//			sleep_ = true;
-			cout << "sleep !!!" << endl; 
+		else if (message == "sleep") {
+			sleep_ = true;
+//			cout << "sleep !!!" << endl; 
 		}
 //		else {
 //			dist_goal_ = atoi(message.c_str());	

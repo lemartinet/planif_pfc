@@ -3,7 +3,7 @@
 #include <iostream>
 
 BoardWidget::BoardWidget (Behavior& behavior) : 
-	robotgui_(behavior.robot_get (), behavior.neurosolver_get ().hippo_get (), behavior.neurosolver_get ())
+	robotgui_(behavior.neurosolver_get ().hippo_get (), behavior.neurosolver_get ())
 { 
 	setupUi (this);
 

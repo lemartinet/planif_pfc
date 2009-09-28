@@ -18,7 +18,7 @@ class ControlRobot : private QObject
 	Q_OBJECT
 	
 public:
-	ControlRobot (const RobotDevice& robot_device, const Hippo& hippo, Neurosolver& neuro);
+	ControlRobot (const Hippo& hippo, Neurosolver& neuro);
 	~ControlRobot () {};
 
 	void update ();
@@ -31,7 +31,6 @@ public:
 	
 private:
 	void update_col_appearance (Node& node, Column& col);
-	void update_mincol_appearance (Edge& edge, Minicol& mincol);
 	void update_mincols ();
 	void highlight_current_mincol ();
 	void update_cols ();	
@@ -46,6 +45,7 @@ private:
 	int show_inf_sup_or_state_;
 	bool show_pc_;
 	bool show_col_;
+	int refresh_;
   
 private slots:
 	void slot_setgoalcol (int no);

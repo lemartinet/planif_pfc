@@ -25,8 +25,11 @@ public:
 	void synch ();
 	float process_camera_image(const unsigned char *image, int *npixels);
 	bool goal_reached () const;
+	
+	static const RobotDevice& robot_get () { return *the_robot_; }
 
 private:
+	static RobotDevice* the_robot_;
 	Camera* camera_;
 	GPS* gps_;
 	Compass* compass_;

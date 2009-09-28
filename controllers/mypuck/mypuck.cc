@@ -9,9 +9,7 @@
 int main (int argc, char** argv)
 {
 	srand (time (0));
-	// les cout suivants n'apparaissent pas ds les logs, car le robot n'est pas encore créé
-	// on pourrait déplacer ca dans la classe du robot
-	if (!Params::load ("../../data/") || !Logger::open_logs ()) {
+	if (!Logger::open_logs ()) {
 		cout << "Mypuck: erreur d'init. Exit !" << endl;
 		exit (-1);	
 	}
@@ -26,7 +24,7 @@ int main (int argc, char** argv)
 		if (GUI) {
 			gui->synch ();
 		}
-	} while (behavior->robot_get ().step (TIME_STEP) != -1);
+	} while (const_cast<RobotDevice&>(RobotDevice::robot_get ()).step (TIME_STEP) != -1);
 
 	if (gui) {
 		delete gui;
