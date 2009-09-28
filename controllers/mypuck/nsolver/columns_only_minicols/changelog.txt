@@ -1,0 +1,2 @@
+- suppression de state_, goal_, inf_, et sup_ dans les colonnes
+- hippo se connecte directement aux minicols, et les minicols sont interconnectées entre elles
