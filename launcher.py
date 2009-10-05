@@ -2,7 +2,7 @@
 usage: python launcher.py [-a "first last"] [-c] [-r "first last laby"]
 -a: extract data for the raw outputs from "first" to "last"
 -c: compile the code
--r: run the simulations from "first" to "last" using the "laby" maze (tolman/tolman_big)
+-r: run the simulations from "first" to "last" using the "laby" maze (tolman_maze/tolman_maze_big)
 
 !!! ADAPT params_base.txt BEFORE IF NEEDED !!!
 """
@@ -29,7 +29,7 @@ def compute(start, end, maze):
 		os.system("mkdir data/data_raw/%d 2> /dev/null" % i)
 		os.system("echo SIMULATION_ID %d > data/params.txt" % i)
 		os.system("cat data/params_base.txt >> data/params.txt")
-		os.system("nice -19 %s/webots --mode=fast worlds/mypuck_%s.wbt" % (wp, maze))
+		os.system("nice -19 %s/webots --mode=fast worlds/%s.wbt" % (wp, maze))
 		os.system("mv data/params.txt data/data_raw/%d" % i)
 		os.system("echo %d >> data/exps" % i)
 	

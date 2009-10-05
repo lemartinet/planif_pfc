@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # modifier le fichier params_base.txt si besoin
-# utilisation : launcher.sh nb_experiments laby(tolman/tolman_big) make
+# utilisation : launcher.sh nb_experiments laby(tolman_maze/tolman_maze_big) make
 # - make : 1 ou 0 to compile the code or not
 # - first last : number of the first and the last experiment
 # - laby : type du world a charger
@@ -36,7 +36,7 @@ rm -rf data/data_raw/$i 2> /dev/null
 mkdir data/data_raw/$i 2> /dev/null
 echo SIMULATION_ID $i > data/params.txt
 cat data/params_base.txt >> data/params.txt
-nice -19 $WEBOTS_HOME/webots --mode=fast worlds/mypuck_$4.wbt
+nice -19 $WEBOTS_HOME/webots --mode=fast worlds/$4.wbt
 mv data/params.txt data/data_raw/$i
 echo $i >> data/exps
 done
