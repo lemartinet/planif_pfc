@@ -23,16 +23,22 @@ using namespace boost::lambda;
 Columns::Columns (const vector<ComputeUnit*>& hippo_pop, const ComputeUnit& ego)
 {
 	static const unsigned int SIZE_POP = Params::get_int("SIZE_POP");
-	while (columns_.size() < SIZE_POP) {
-		// TODO: a adapter à lvl1
-		Column* col = new Column (*this, columns_.size());
+	unsigned int lvl0_nb = SIZE_POP * 0.75;
+	while (columns_.size() < lvl0_nb) {
+		Column* col = new Column (*this, columns_.size(), 0);
 		columns_.push_back (col);
-		pop_.push_back (&col->state_get());
+		pop_.push_back (col);
+	}
+	while (columns_.size() < SIZE_POP) {
+		Column* col = new Column (*this, columns_.size(), 1);
+		columns_.push_back (col);
+	}
+	while (minicols_.size() < SIZE_POP) {
 		Minicol* mc = new Minicol (*this, minicols_.size());
 		minicols_.push_back(mc);
 	}
 	// ajoute une connexion aléatoire avec hippo
-	winner_takes_all_lvl0 (hippo_pop, true);
+	winner_takes_all_lvl0 (hippo_pop);
 	winner_takes_all_lvl1 (pop_, ego);
 	
 	win_col_lvl_[0] = win_col_lvl_ [1] = 0;
@@ -62,12 +68,11 @@ void Columns::winner_col (int level)
 		}
 //		else if (best_col == 0 || (best_col->state_activation () < (*it)->state_activation ())){
 		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ())){
+//		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ()
+//					&& ((*it)->state_activation () > 0.2 || (*it)->state_activation () < 0.1))){
 			best_col = *it;
 		}
 	}
-//	if (best_col != 0 && level == 0) {
-//		cout << best_col->no_get () << " " << best_col->state_get ().output() << endl;
-//	}
 	win_col_lvl_[level] = best_col;
 }
 
@@ -144,30 +149,13 @@ bool Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Co
   	winner_minicol (0);
   	winner_minicol (1);
   	if (learn) {
-  		winner_takes_all_lvl0 (hippo_pop, false);
+  		winner_takes_all_lvl0 (hippo_pop);
   		winner_takes_all_lvl1 (pop_, ego);
   		return topology_learning ();	
   	}
   	else {
   		return false;	
   	}
-  	
-//	// apprentissage d'une nouvelle colonne lvl1 si besoin	  	
-//	cout << "nb_col0 " << columns_.nb_spiking_cells (0) << endl;
-//	// ca marche pas mal avec 1.3 = .7 + .3 + .3 par ex
-//	static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
-//	if (columns_.nb_spiking_cells (0) > THRESH_ADD_LVL1) {
-//		if (!current_lvl1_ || !current_lvl1_->state_get ().spiking ()) {
-//			ComputeUnit* unit = ego_pop_.pop_get ().at (1);
-//	   		if (unit->spiking ()) { 
-//				current_lvl1_ = &(columns_.add_colomn (1, *unit));
-//				ostringstream message;
-//				message << "new_column_lvl1: " << current_lvl1_->no_get();
-//				Logger::log ("network", RobotDevice::robot_get ().cpt_total_get (), message.str ());
-//				//cout << message.str ();
-//	   		}
-//	   	}
-//	}
 
 //  	cout << "nb_spiking_cells: " << nb_spiking_cells (0) << endl;
 //	columns_.show_activities (0);
@@ -179,8 +167,7 @@ bool Columns::topology_learning ()
 {
   	bool col_changed = false;
   	Column* current_lvl0 = win_col_lvl_[0];
-  	Column* prec_lvl0 = prec_col_lvl_[0];
-	
+  	Column* prec_lvl0 = prec_col_lvl_[0];	
 //	if (current_lvl0 && prec_lvl0 && prec_lvl0 != current_lvl0) {	
 //		cout << prec_lvl0->no_get () << "/" << prec_lvl0->lastT_recent () << " -> "  
 //			<< current_lvl0->no_get () << "/" << current_lvl0->lastT_recent () 
@@ -197,14 +184,12 @@ bool Columns::topology_learning ()
   	}
 	prec_col_lvl_[0] = current_lvl0;
 	  	
-//	Column* current_lvl1 = win_col_lvl_[1];
-//	Column* prec_lvl1 = prec_col_lvl_[1];
-//  if (current_lvl1) {
-//  	if (prec_lvl1 && prec_lvl1 != current_lvl1) {
-//  		columns_.lateral_learning (*prec_lvl1, *current_lvl1, 0, true);
-//  	}
+	Column* current_lvl1 = win_col_lvl_[1];
+	Column* prec_lvl1 = prec_col_lvl_[1];
+//	if (current_lvl1 && prec_lvl1 && prec_lvl1 != current_lvl1 && nb_spiking_cells (0) < 10) {
+//		columns_.lateral_learning (*prec_lvl1, *current_lvl1, 0, true); attention pas 0 car réf
 //	}
-//	prec_col_lvl_[1] = current_lvl1;
+	prec_col_lvl_[1] = current_lvl1;
   	
   	return col_changed;	
 }
@@ -362,9 +347,9 @@ vector<Minicol*> Columns::minicol_get (int from, const Action& action) const
 //	return big_one;	
 }
 
-Neuron& Columns::add_neuron (nType type, double ip_step, double ip_mu, double a, double b)
+Neuron& Columns::add_neuron (nType type)
 {
-  Neuron* res = new Neuron (type, false, ip_step, ip_mu, a, b);
+  Neuron* res = new Neuron (type, false);
   neurons_.push_back (res);
   return *res;
 }
@@ -376,17 +361,10 @@ Neuron& Columns::add_neuron_max (nType type)
   return *res;
 }
 
-void Columns::net_draw (ostream& os) const
-{
-	os << "digraph G {" << endl;
-	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::draw_graph, _1, var (os)));
-	os << "}" << endl;
-}
-
-void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state, bool newcol)
+void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state)
 {
 	static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
-	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
+//	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
 	int nbunits = pop_state.size ();
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
@@ -399,11 +377,13 @@ void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state, bool
 		for (int i = 0; i < nbunits; i++) {
 			Cell* unit = dynamic_cast<Cell*>(pop_state.at (i));
 			Synapse* s = state.syn_get(*unit);
-			if (s == 0) {
-				double init_val = INIT_PC_COL * drand ();
+//			if (s == 0) {
+			if (s == 0 && *it == win_col_lvl_[0]) {
+//				double init_val = INIT_PC_COL * drand ();
+				double init_val = unit->spiking () ? unit->output () : 0;
 				state.add_synapse (*unit, init_val, false);
 			}
-			else {
+			else if (s != 0) {
 //				if (*it == win_col_lvl_[0]) {
 //					cout << "delta_w " << (*it)->weight_change (unit, s->w_get (), win_col_lvl_[0]);
 //				}
@@ -422,7 +402,7 @@ void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state, bool
 					}
 				}
 				else if (LEARN_RULE == "mult") {
-					// !!! j'ai *2 pour compenser l'appr plus lent da au *w
+					// !!! j'ai *2 pour compenser l'appr plus lent du au *w
 					s->w_set (s->w_get () + s->w_get () * 2 * RATE_PC_COL * new_w);
 				}
 			}
@@ -430,46 +410,54 @@ void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state, bool
 	}	
 }
 
-void Columns::winner_takes_all_lvl1 (const vector<ComputeUnit*>& pop_state, const ComputeUnit& ego_action)
+void Columns::winner_takes_all_lvl1 (const vector<Column*>& pop, const ComputeUnit& ego_action)
 {
-//	// TODO: on utilise pas pop_state mais la pop des colonnes !!! A changer !
-//	if (level_ == 1 && winner_ && ego_action.spiking ()) {
-//		int nbcols = columns_.size ();
-//		for (int i = 0; i < nbcols; i++) {
-//			Column* col = columns_.col_get (i);
-//			if (col->level_get () >= level_get ()) {
-//				continue;
-//			}
-//			
-//			Neuron& unit = col->state_get ();
-//			Synapse* s = state_.syn_get(unit);
-//			double rj = unit.output ();
-//			if (s == 0) {
-//				static const double EGO_MODULATION = Params::get_double ("EGO_MODULATION");
-//				static const double LVL0_TO_LVL1 = Params::get_double ("LVL0_TO_LVL1");
-//				state_.add_synapse (unit, ego_action, unit.spiking() ? rj : 0, LVL0_TO_LVL1, EGO_MODULATION);
-////    			cout << "new lien " << unit.no_get() << " (" << unit.level_get () 
-////    				 << ") -> " << no_ << "(" << state_.level_get () << ") : " << rj << endl; 
-//			}
-//			else if (s != 0) {
-//				s->w_set (s->w_get () + 0.2 * (((rj - s->w_get ()) > 0)?1:0) * rj * state_.output ());
-////				cout << "update lien " << unit.no_get() << " (" << unit.level_get () 
-////					 << ") -> " << no_ << " (" << state_.level_get () << ") : " << s->w_get () << endl;					
-//			}
-//			else {
-////				cout << "lien " << unit.no_get() << " (" << unit.level_get () << ") -> " 
-////					 << no_ << " (" << state_.level_get () << ") : none" << endl;
-//			}
-//				
-//			Neuron& unit_sup = col->sup_get ();
-//			s = sup_.syn_get(unit_sup);
-//			if (s == 0 && unit.spiking ()) {
-//				static const double LVL1_MODULATION = Params::get_double ("LVL1_MODULATION");
-//				sup_.add_synapse (unit_sup, 1, true); // à remplacer par un apprentissage basé sur l'activité de col-> state
-//				unit_sup.add_synapse_modulation (sup_, LVL1_MODULATION);
-//			}
+	cout << "ego: " << ego_action.output() << endl;
+	int nbunits = pop.size ();
+	vector<Column*>::iterator it;
+	for (it = columns_.begin (); it != columns_.end (); it++) {
+		if ((*it)->level_get () != 1 || win_col_lvl_[1] != *it || !ego_action.spiking ()) {
+//		if ((*it)->level_get () != 1) {
+			continue;	
+		}
+//		if ((*it)->state_get ().spiking()) {
+//			cout << (*it)->no_get () << " " << (*it)->state_get ().output() << endl;
 //		}
-//	}	
+		Neuron& state = (*it)->state_get ();
+		Neuron& sup = (*it)->sup_get ();
+		for (int i = 0; i < nbunits; i++) {
+			Column* col = pop.at (i);
+			Neuron& unit = col->state_get ();
+			Synapse* s = state.syn_get(unit);
+			double rj = unit.output ();
+			//	cout << "nb_col0 " << columns_.nb_spiking_cells (0) << endl;
+			// ca marche pas mal avec 1.3 = .7 + .3 + .3 par ex
+//			static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
+//			if (s == 0 && nb_spiking_cells (0) > THRESH_ADD_LVL1) {
+//			if (s == 0 && nb_spiking_cells (0) > 1) {
+			if (s == 0) {
+				static const double EGO_MODULATION = Params::get_double ("EGO_MODULATION");
+				static const double LVL0_TO_LVL1 = Params::get_double ("LVL0_TO_LVL1");
+				double init_val = unit.spiking () ? rj : 0;
+				state.add_synapse (unit, ego_action, init_val, LVL0_TO_LVL1, EGO_MODULATION);
+//    			cout << "new syn " << unit.no_get() << "-> " << (*it)->no_get() << " : " << rj << endl; 
+			}
+			else if (s != 0) {
+				s->w_set (s->w_get () + 0.2 * (((rj - s->w_get ()) > 0)?1:0) * rj * state.output ());
+//				cout << "update lien " << unit.no_get() << " (" << unit.level_get () 
+//					 << ") -> " << no_ << " (" << state_.level_get () << ") : " << s->w_get () << endl;					
+			}
+			
+			Neuron& unit_sup = col->sup_get ();
+			s = sup.syn_get(unit_sup);
+			if (s == 0 && unit.spiking ()) {
+				static const double LVL1_MODULATION = Params::get_double ("LVL1_MODULATION");
+				// TODO: à remplacer par un apprentissage basé sur l'activité de col-> state
+				sup.add_synapse (unit_sup, 1, true); 
+				unit_sup.add_synapse_modulation (sup, LVL1_MODULATION);
+			}
+		}
+	}
 }
 
 

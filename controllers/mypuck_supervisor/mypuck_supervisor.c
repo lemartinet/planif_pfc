@@ -21,7 +21,7 @@
 // Variables
 /////////////////////////////////
 
-const char* robot_name = "MYPUCK";
+const char* robot_name = "ICEASIM";
 
 // Webots data
 //WbDeviceTag emitter;

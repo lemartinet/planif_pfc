@@ -20,10 +20,10 @@ bool operator== (const Column& c1, const Column& c2)
   return c1.no_get() == c2.no_get();
 }
 
-Column::Column (Columns& columns, int no) :
+Column::Column (Columns& columns, int no, int lvl) :
 	no_(no), state_(columns.add_neuron_max (STATE)), 
 	sup_(columns.add_neuron_max (MAXSUP)), inf_(columns.add_neuron_max (LAT)), 
-	columns_(columns), level_(0), pos_(0), maxr(0), lastTidx_(0)
+	columns_(columns), level_(lvl), pos_(0), maxr(0), lastTidx_(0)
 {
 	stringstream s1, s2, s3;
 	s1 << state_.no_get ()+1 << " " << no+1;

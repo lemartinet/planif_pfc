@@ -49,7 +49,7 @@ void Behavior::compute_next_action ()
 	}
 	else if (automate_ != GOAL && automate_ != SLEEP && robot_.goal_reached ()) {
 		// on s'arrete au goal
-		wait_ = 10 * WAIT_BETWEEN_DECISIONS;
+		wait_ = 5 * WAIT_BETWEEN_DECISIONS;
 		automate_ = GOAL;
 		neurosolver_.goal_learning ();
 	}

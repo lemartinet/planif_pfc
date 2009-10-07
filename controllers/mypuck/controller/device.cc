@@ -8,6 +8,8 @@
 
 RobotDevice* RobotDevice::the_robot_ = 0;
 
+#define NB_SENSORS 8
+
 // camera
 int camera_enabled = 0; // mettre à 1 pour activer la camera
 
@@ -16,7 +18,7 @@ RobotDevice::RobotDevice () :
 	nb_trial_(0), goal_reached_(false),
 	cpt_trial_(0), cpt_total_(0), sleep_(false)
 {
-	const int TIME_STEP = Params::get_int ("TIME_STEP");
+	static const int TIME_STEP = Params::get_int ("TIME_STEP");
 	gps_ = getGPS ("gps");
 	gps_->enable (TIME_STEP);
 	compass_ = getCompass ("compass");
@@ -29,6 +31,13 @@ RobotDevice::RobotDevice () :
 		camera_ = getCamera ("camera");
 		camera_->enable (TIME_STEP);
   	}
+	ps_ = new DistanceSensor*[NB_SENSORS];
+	char name[4]="ps0";
+	for (int i = 0; i < NB_SENSORS; i++) {
+		ps_[i] = getDistanceSensor (name);
+		ps_[i]->enable (TIME_STEP);
+		name[2]++;
+    }
   	step (TIME_STEP); // pr la màj des capteurs
 
   	const double* pos = gps_->getValues ();
@@ -38,12 +47,14 @@ RobotDevice::RobotDevice () :
   	orientation_ = -atan2 (orient[0], orient[2]) + M_PI/2;
   	orientation_ = orientation_ > M_PI ? orientation_ - 2*M_PI : orientation_;
   	orientation_ = orientation_ < -M_PI ? orientation_ + 2*M_PI : orientation_;
+  	ps_value_ = new int[NB_SENSORS];
   	
   	the_robot_ = this;
 }
 
 RobotDevice::~RobotDevice () 
 {
+	delete [] ps_;
 } 
 
 // find goal direction in camera image (from icea_sim controller)
@@ -115,6 +126,13 @@ void RobotDevice::synch ()
 	else {
 		manually_moved_ = false;
 	} 
+	
+	// update des capteurs de distance
+	static const int PS_OFFSET_SIMULATION[NB_SENSORS] = {300,300,300,300,300,300,300,300};
+	for (int i=0; i < NB_SENSORS; i++) {
+		int val = (int)ps_[i]->getValue ();
+	  	ps_value_[i] = ((val - PS_OFFSET_SIMULATION[i]) < 0)?0:(val - PS_OFFSET_SIMULATION[i]);
+	}
 	
 	goal_reached_ = false;
 	sleep_ = false;

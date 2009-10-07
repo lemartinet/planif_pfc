@@ -15,7 +15,7 @@ using namespace std;
 class Column
 {
 public:
-	Column (Columns& columns, int no);
+	Column (Columns& columns, int no, int lvl);
 	~Column ();
 	
 	double inf_activation () const { return inf_.output (); }

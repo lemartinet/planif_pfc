@@ -15,6 +15,7 @@ public:
 	
 	double angle_get () const { return orientation_; }
 	const Coord& position_get () const { return position_; }
+	int* ps_value_get () const { return ps_value_; }
 	bool manually_moved () const { return manually_moved_; }
 	int nb_trial_get () const { return nb_trial_; }
 	int cpt_trial_get () const { return cpt_trial_; }
@@ -30,6 +31,8 @@ public:
 
 private:
 	static RobotDevice* the_robot_;
+	DistanceSensor** ps_;
+	int* ps_value_;
 	Camera* camera_;
 	GPS* gps_;
 	Compass* compass_;
