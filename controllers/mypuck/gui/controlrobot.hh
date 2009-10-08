@@ -4,7 +4,6 @@
 #include <QObject>
 #include "graphwidget.h"
 
-class RobotDevice;
 class Hippo;
 class Node;
 class Edge;
@@ -37,7 +36,6 @@ private:
 	void update_cells ();
 
 private:
-	const RobotDevice& robot_device_;
 	const Hippo& hippo_;
 	Neurosolver& neuro_;
 	GraphWidget widget_;

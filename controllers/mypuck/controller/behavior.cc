@@ -8,9 +8,13 @@
 
 #define WAIT_BETWEEN_DECISIONS 48
 
-Behavior::Behavior (): 
-	robot_(), neurosolver_(), avoid_(robot_), current_(0.0), wait_(0), automate_(GO_ON)
+Behavior* Behavior::behavior_ = 0;
+
+Behavior::Behavior (RobotDevice& robot): 
+	robot_(robot), neurosolver_(), avoid_(robot_.ps_value_get()), current_(0.0), wait_(0), 
+	automate_(GO_ON), cpt_trial_(0), cpt_total_(0), nb_trial_(0)
 {
+	behavior_ = this;
 }
 
 Behavior::~Behavior () 
@@ -26,15 +30,34 @@ void Behavior::synch ()
 void Behavior::compute_next_action ()
 {
 	static const int ONLY_INTERSECT = Params::get_int ("ONLY_INTERSECT");
-	// update des capteurs et réseau de neurones
+	cpt_trial_++;
+    cpt_total_++;
+    
+  	// save old position
+  	double old_x = robot_.position_get().x_get ();
+  	double old_y = robot_.position_get().y_get ();
+	// update des capteurs
 	robot_.synch ();
+	double x = robot_.position_get().x_get();
+	double y = robot_.position_get().y_get();
+	// le robot a-t-il ete bouge par le manipulateur
+	if ((old_x - x) * (old_x - x) + (old_y - y) * (old_y - y) > 0.5) {
+		manually_moved_ = true;
+		cpt_trial_ = 0;
+		nb_trial_++;
+	}
+	else {
+		manually_moved_ = false;
+	}
+	
 	vector<double> dirs;
 	if (automate_ == SLEEP) {
 		neurosolver_.sleep (wait_);
 	}
 	else {
 		avoid_.free_ways (dirs, robot_.angle_get ());
-		neurosolver_.synch (! robot_.manually_moved (), ONLY_INTERSECT == 1 ? automate_ == DECIDE : true);
+		// update du réseau de neurones
+		neurosolver_.synch (! manually_moved (), ONLY_INTERSECT == 1 ? automate_ == DECIDE : true);
 	}
 	
 	// màj de l'automate
@@ -93,7 +116,7 @@ void Behavior::do_action ()
 	// revoir cette fonction (peut-être deplacee dans obstacleavoid ?)
 	static const int RANDOM_MOVE = Params::get_int("RANDOM_MOVE");
 	int left_speed, right_speed;
-  	if (RANDOM_MOVE && robot_.nb_trial_get () > 6) {
+  	if (RANDOM_MOVE && nb_trial_ > 6) {
   		left_speed = right_speed = 10;
   	}
 	else if (automate_ == GOAL || automate_ == DECIDE || automate_ == SLEEP) {
@@ -155,7 +178,7 @@ double Behavior::select_action (const vector<double>& dirs)
 		}	
 	}
 	s << (explore ? "0 " : "1 ") << dirs[i] << " " << pa[i];
-	Logger::log ("decision", robot_.cpt_total_get (), s.str ());		
+	Logger::log ("decision", s.str (), true);		
 	return dirs[i];
 }
 
@@ -163,7 +186,7 @@ bool Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s
 {
 	// Mecanisme epsilon-greedy	
 	// on explore exponentiellement moins au cours des essais
-	double epsilon = 0.9 * exp (-0.1 * (robot_.nb_trial_get () - 3)) + 0.1;
+	double epsilon = 0.9 * exp (-0.1 * (nb_trial_ - 3)) + 0.1;
 	// epsilon peut dependre de la position ds laby (proche but = peu d'explo)
 //	epsilon *= robot_.distance_goal_factor();
 	// aide au cas d'une plannif mauvaise: explo augmente après 5000 steps

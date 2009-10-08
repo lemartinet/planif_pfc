@@ -12,6 +12,7 @@ public:
 	static void load ();
 
   	static string get (string name);
+//  	static void set (string name, int val);
 	static double get_double (string name);
 	static int get_int (string name);
 	static string get_path ();

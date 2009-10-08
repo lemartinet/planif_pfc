@@ -15,9 +15,8 @@ public:
 	static bool open_logs ();
 	static void close_logs ();
 	static void add (const string& type, const ComputeUnit* unit);
-	static void log (int step);
-	static void log (const string& type, int step, const string& msg);
-	static void log (const string& type, const string& msg);
+	static void log ();
+	static void log (const string& type, const string& msg, bool write_step=false);
 	static void logw (const string& type);
 	
 private:

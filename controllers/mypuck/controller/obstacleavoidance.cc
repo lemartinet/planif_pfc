@@ -1,5 +1,4 @@
 #include "obstacleavoidance.hh"
-#include "device.hh"
 #include "params.hh"
 #include "coord.hh"
 #include "math.hh"
@@ -38,11 +37,10 @@
 #define OAM_K_MAX_DELTAS 600
 #define OAM_BLOQUE 8000
 
-ObstacleAvoidance::ObstacleAvoidance (RobotDevice& robot):
-	left_near_(false), right_near_(false), bloque_(false), demi_tour(false), 
+ObstacleAvoidance::ObstacleAvoidance (int* value):
+	ps_value(value), left_near_(false), right_near_(false), bloque_(false), demi_tour(false), 
 	blocked(0), last_x(0), last_y(0)
 {
-	ps_value = robot.ps_value_get ();
 }
 
 ObstacleAvoidance::~ObstacleAvoidance ()

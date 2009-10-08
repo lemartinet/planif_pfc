@@ -1,6 +1,7 @@
 #include "logger.hh"
 #include "computeunit.hh"
 #include "params.hh"
+#include "behavior.hh"
 #include <iostream>
 
 map<string, Log*> Logger::logs_;
@@ -11,7 +12,7 @@ bool Logger::open_logs ()
 	try {
 		logs_["fr"] = new Log("fr");
 		free_logs_["decision"] = new Log("decision");
-		free_logs_["decision"]->log("% step | decision | action | proba");
+		free_logs_["decision"]->log(string("% step | decision | action | proba"));
 		free_logs_["decision"]->log("% decision: 0=exploration, 1=planning, -0=exploration because of no action available");	
 		free_logs_["weight_save"] = new Log("weight_save");
 		free_logs_["network"] = new Log("network");
@@ -58,12 +59,13 @@ void Logger::add (const string& type, const ComputeUnit* unit)
 	}	
 }
 
-void Logger::log (int step)
+void Logger::log ()
 {
 	// si on est en mode echantillonage des activites, 
 	// on enregistre ts les STEP_LOG pas de temps
 	static const int LOG = Params::get_int("LOG");
 	static const int STEP_LOG = Params::get_int("STEP_LOG");
+	int step = Behavior::behavior_get().cpt_total_get();
 	if (LOG != 1 || step % STEP_LOG != 0) {
 		return;	
 	}
@@ -73,20 +75,16 @@ void Logger::log (int step)
 	}	
 }
 
-void Logger::log (const string& type, int step, const string& msg)
+void Logger::log (const string& type, const string& msg, bool write_step)
 {
 	if (free_logs_.find (type) != free_logs_.end()) {
-		free_logs_[type]->log (step, msg);
-	} 
-	else {
-		cout << "Mypuck: error: log type " << type << " not found" << endl;
-	}
-}
-
-void Logger::log (const string& type, const string& msg)
-{
-	if (free_logs_.find (type) != free_logs_.end()) {
-		free_logs_[type]->log (msg);
+		if (write_step) {
+			int step = Behavior::behavior_get().cpt_total_get();
+			free_logs_[type]->log (msg, step);
+		}
+		else {
+			free_logs_[type]->log (msg);
+		}
 	} 
 	else {
 		cout << "Mypuck: error: log type " << type << " not found" << endl;

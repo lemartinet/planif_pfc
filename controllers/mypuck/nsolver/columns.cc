@@ -7,8 +7,8 @@
 #include "minicol.hh"
 #include "math.hh"
 #include "cell.hh"
-#include "device.hh"
 #include "logger.hh"
+#include "behavior.hh"
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -179,7 +179,7 @@ bool Columns::topology_learning ()
 		&& nb_spiking_cells (0) < 10) {
 //		cout << "update minicol" << endl;
     	col_changed = true;
-      	Action action (RobotDevice::robot_get ().angle_get());
+      	Action action (Behavior::behavior_get().angle_get());
       	lateral_learning (*prec_lvl0, *current_lvl0, action, true);
   	}
 	prec_col_lvl_[0] = current_lvl0;
@@ -199,7 +199,7 @@ void Columns::correct_transition ()
 	if (win_col_lvl_[0] == 0) {
 		return;	
 	}
-	Action a (RobotDevice::robot_get ().angle_get ());
+	Action a (Behavior::behavior_get().angle_get ());
 	vector<Minicol*> all_minicols = minicol_get (win_col_lvl_[0]->no_get (), a);
 	for (vector<Minicol*>::iterator it = all_minicols.begin (); it != all_minicols.end (); ++it) {
 		Minicol* real_minicol = *it;
@@ -207,7 +207,7 @@ void Columns::correct_transition ()
   		stringstream message;
   		message << "0 " << real_minicol->from_get().no_get()+1
   				<< " " << real_minicol->to_get().no_get()+1 << " " << a.angle_get();
-  		Logger::log ("network", RobotDevice::robot_get ().cpt_total_get (), message.str ());
+  		Logger::log ("network", message.str (), true);
   		lateral_learning (const_cast<Column&>(real_minicol->from_get()), 
   							const_cast<Column&>(real_minicol->to_get()), 
   							real_minicol->action_get(), false);
@@ -259,7 +259,7 @@ void Columns::lateral_learning (Column& from, Column& to, const Action& action, 
    				<< " " << action.angle_get ();
     }
 	if (message.str () != "") {
-		Logger::log ("network", RobotDevice::robot_get ().cpt_total_get (), message.str ());
+		Logger::log ("network", message.str (), true);
 	}
 	
 	// on ajoute la competition entre les minicols d'une meme col

@@ -4,14 +4,13 @@
 #include <vector>
 
 class Coord;
-class RobotDevice;
 
 using namespace std;
 
 class ObstacleAvoidance
 {
 public:
-	ObstacleAvoidance (RobotDevice& robot);
+	ObstacleAvoidance (int* value);
 	virtual ~ObstacleAvoidance ();
 
 	bool bloque_get () const { return bloque_; }

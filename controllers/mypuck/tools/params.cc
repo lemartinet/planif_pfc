@@ -61,7 +61,15 @@ string Params::get (string name)
 		return string();
 	} 
 }
-  
+
+
+//void Params::set (string name, int val)
+//{
+//	ostringstream str;
+//	str << val;
+//	params_[name] = str.str();
+//}
+
 double Params::get_double (string name) 
 { 
 	return str2d (get (name)); 

@@ -1,7 +1,6 @@
 #include "neurosolver.hh"
 #include "action.hh"
 #include "behavior.hh"
-#include "device.hh"
 #include "math.hh"
 #include "params.hh"
 #include "mystr.hh"
@@ -41,7 +40,7 @@ Action* Neurosolver::best_action () const
 		stringstream s; 
 		s << "3 " << best_minicol->from_get ().no_get ()+1 << " " << best_minicol->to_get ().no_get ()+1 
 			<< " " << best_minicol->action_get().angle_get();
-		Logger::log ("network", RobotDevice::robot_get ().cpt_total_get (), s.str ());	
+		Logger::log ("network", s.str (), true);	
 		return &best_minicol->action_get ();
 	}
 	return 0;
@@ -77,7 +76,7 @@ bool Neurosolver::is_goal_position (Column* col) const
 
 bool Neurosolver::synch (bool learning, bool decision_point)
 {
-	if (RobotDevice::robot_get().goal_reached ()) {
+	if (Behavior::behavior_get().goal_reached ()) {
   		// on sauvegarde les poids à chaque fin d'essai
 		Logger::logw ("weight");			
 	}
@@ -86,22 +85,22 @@ bool Neurosolver::synch (bool learning, bool decision_point)
 		// on vient d'arriver au goal, on apprend rien pendant un certain temps
 		// permet de virer le lien entre fin de P1 et début de P1
 // 		cout << "no learning" << endl;	
-	  	columns_.synch (false, hippo_.pop_get (), *ego_pop_.pop_get ().at (1), &RobotDevice::robot_get().position_get ());
+	  	columns_.synch (false, hippo_.pop_get (), *ego_pop_.pop_get ().at (1), &Behavior::behavior_get().position_get ());
   		col_changed = true;
   	}
   	else {
   		bool learn_step = learn_rythm_ % LEARN_RYTHM == LEARN_RYTHM - 1;
-	  	col_changed = columns_.synch (learn_step, hippo_.pop_get (), *ego_pop_.pop_get ().at (1), &RobotDevice::robot_get().position_get ());
+	  	col_changed = columns_.synch (learn_step, hippo_.pop_get (), *ego_pop_.pop_get ().at (1), &Behavior::behavior_get().position_get ());
 	}
 	++learn_rythm_;
 	
 	// on màj les entrées après pour avoir r_cortex(t) = F(r_subcort(t-1))
-	hippo_.synch (RobotDevice::robot_get().position_get ());
-	ego_pop_.synch (RobotDevice::robot_get().angle_get()); 
-	allo_pop_.synch (RobotDevice::robot_get().angle_get());
-	motivation_.output_set (RobotDevice::robot_get().goal_reached () || decision_point ? 1 : 0);
+	hippo_.synch (Behavior::behavior_get().position_get ());
+	ego_pop_.synch (Behavior::behavior_get().angle_get()); 
+	allo_pop_.synch (Behavior::behavior_get().angle_get());
+	motivation_.output_set (Behavior::behavior_get().goal_reached () || decision_point ? 1 : 0);
 	
-	Logger::log (RobotDevice::robot_get().cpt_total_get ());
+	Logger::log ();
   	return col_changed;
 }
 
@@ -118,7 +117,7 @@ void Neurosolver::sleep (int sleep_step)
 	}
 	columns_.synch (true, hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
 	hippo_.sleep (ripples_);
-	Logger::log (RobotDevice::robot_get().cpt_total_get ());
+	Logger::log ();
 
 	if (sleep_step == 1) {
 		Logger::logw ("weight");

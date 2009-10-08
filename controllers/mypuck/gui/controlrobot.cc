@@ -1,5 +1,4 @@
 #include "controlrobot.hh"
-#include "device.hh"
 #include "cell.hh"
 #include "hippo.hh"
 #include "neurosolver.hh"
@@ -8,9 +7,10 @@
 #include "minicol.hh"
 #include "params.hh"
 #include "edge.h"
+#include "behavior.hh"
 
 ControlRobot::ControlRobot (const Hippo& hippo, Neurosolver& neuro) :
-	robot_device_(RobotDevice::robot_get()), hippo_(hippo), neuro_(neuro), refresh_(0)
+	hippo_(hippo), neuro_(neuro), refresh_(0)
 {
 	robot_ = widget_.add_node (ROBOT, 1, 20);
 	show_inf_sup_or_state_ = 0;
@@ -23,7 +23,7 @@ void ControlRobot::update ()
 {
 	update_cols ();
 	update_mincols ();
-	robot_->move (robot_device_.position_get ());
+	robot_->move (Behavior::behavior_get().position_get ());
 	update_cells ();
 	// maj de la position tous les 66 step * 15ms = 1s
 	refresh_ = ++refresh_ % 66;

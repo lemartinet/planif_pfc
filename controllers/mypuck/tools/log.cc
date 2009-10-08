@@ -3,7 +3,6 @@
 #include "computeunit.hh"
 #include "neuron.hh"
 #include "logger.hh"
-#include "device.hh"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -47,7 +46,7 @@ void Log::logw () const
 {
 	static const double LOGW = Params::get_int("LOGW");
 	if(wlog_ && LOGW == 1) {
-		Logger::log ("weight_save", RobotDevice::robot_get ().cpt_total_get (), "");
+		Logger::log ("weight_save", "", true);
 		int nb_all = ComputeUnit::nb_computeunits_get ();
 		double** w_all = new double* [nb_all];
 		for (int i = 0; i < nb_all; i++) {
@@ -85,9 +84,10 @@ void Log::logw () const
 	}	
 }
 
-void Log::log (int step, const string& msg) const
+void Log::log (const string& msg, int step) const
 {
-	*file_ << step << " " << msg << endl;
+	*file_ << step << " ";
+	log(msg);
 }
 
 void Log::log (const string& msg) const

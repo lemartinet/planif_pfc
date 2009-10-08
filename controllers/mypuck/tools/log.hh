@@ -12,12 +12,12 @@ using namespace std;
 class Log
 {
 public:
-	Log (const string& type, bool wlog = false) throw (string);
+	Log (const string& type, bool wlog=false) throw (string);
 	virtual ~Log();
 	
 	void log (int step) const;
 	void logw () const;
-	void log (int step, const string& msg) const;
+	void log (const string& msg, int step) const;
 	void log (const string& msg) const;
 	void add (const ComputeUnit* unit);
 	

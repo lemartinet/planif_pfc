@@ -8,12 +8,13 @@
 
 int main (int argc, char** argv)
 {
+	RobotDevice* robot = new RobotDevice;
 	srand (time (0));
 	if (!Logger::open_logs ()) {
 		cout << "Mypuck: erreur d'init. Exit !" << endl;
 		exit (-1);	
 	}
-	Behavior* behavior = new Behavior;
+	Behavior* behavior = new Behavior(*robot);
 	const int GUI = Params::get_int ("GUI");
 	Gui* gui = GUI ? new Gui (argc, argv, *behavior) : 0;
 
@@ -24,12 +25,13 @@ int main (int argc, char** argv)
 		if (GUI) {
 			gui->synch ();
 		}
-	} while (const_cast<RobotDevice&>(RobotDevice::robot_get ()).step (TIME_STEP) != -1);
+	} while (robot->step (TIME_STEP) != -1);
 
 	if (gui) {
 		delete gui;
 	}
 	delete behavior;
 	Logger::close_logs ();
+	delete robot;
 	return 0;
 }

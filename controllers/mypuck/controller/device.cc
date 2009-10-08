@@ -6,8 +6,6 @@
 #include <sstream>
 #include <cstdlib>
 
-RobotDevice* RobotDevice::the_robot_ = 0;
-
 #define NB_SENSORS 8
 
 // camera
@@ -15,8 +13,7 @@ int camera_enabled = 0; // mettre à 1 pour activer la camera
 
 RobotDevice::RobotDevice () :
 	position_(0.0, -0.05), orientation_(0.0), num_pixels_goal_(0), 
-	nb_trial_(0), goal_reached_(false),
-	cpt_trial_(0), cpt_total_(0), sleep_(false)
+	goal_reached_(false), sleep_(false)
 {
 	static const int TIME_STEP = Params::get_int ("TIME_STEP");
 	gps_ = getGPS ("gps");
@@ -48,8 +45,6 @@ RobotDevice::RobotDevice () :
   	orientation_ = orientation_ > M_PI ? orientation_ - 2*M_PI : orientation_;
   	orientation_ = orientation_ < -M_PI ? orientation_ + 2*M_PI : orientation_;
   	ps_value_ = new int[NB_SENSORS];
-  	
-  	the_robot_ = this;
 }
 
 RobotDevice::~RobotDevice () 
@@ -90,13 +85,6 @@ float RobotDevice::process_camera_image(const unsigned char *image, int *npixels
 
 void RobotDevice::synch ()
 {
-    cpt_trial_++;
-    cpt_total_++;
-  	
-  	// save old position
-  	double old_x = position_.x_get ();
-  	double old_y = position_.y_get ();
-  	
   	// read the gps
   	const double* pos = gps_->getValues ();
   	position_.x_set (pos[0]);
@@ -114,19 +102,6 @@ void RobotDevice::synch ()
   	}
   	//cout << num_pixels_goal<< endl;
   	
-  	double x = position_.x_get();
-	double y = position_.y_get();
-	
-	// le robot a-t-il ete bouge par le manipulateur
-	if ((old_x - x) * (old_x - x) + (old_y - y) * (old_y - y) > 0.5) {
-		manually_moved_ = true;
-		cpt_trial_ = 0;
-		nb_trial_++;
-	}
-	else {
-		manually_moved_ = false;
-	} 
-	
 	// update des capteurs de distance
 	static const int PS_OFFSET_SIMULATION[NB_SENSORS] = {300,300,300,300,300,300,300,300};
 	for (int i=0; i < NB_SENSORS; i++) {
