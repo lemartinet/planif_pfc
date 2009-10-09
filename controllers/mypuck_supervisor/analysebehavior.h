@@ -1,18 +1,16 @@
 #ifndef ANALYSEBEHAVIOR_H_
 #define ANALYSEBEHAVIOR_H_
 
-void analyse_behavior (int day, int trial, double trial_time, int total_step);
-<<<<<<< HEAD
-void die_behavior (int day, int trial);
-=======
+enum message_type { WAY1 = 1, _WAY1 = -1,
+                    WAY2 = 2, _WAY2 = -2, 
+                    WAY3 = 3, _WAY3 = -3, 
+                    WAY4 = 4, _WAY4 = -4, 
+                    GOAL = 5, EXCEED = 6, SLEEP = 7 };
+
+void init_behavior (int simu_id, int write_step);
+void run_behavior ();
 void die_behavior ();
->>>>>>> 16cde28... First commit to git. Includes:
-void init_behavior (int simu_id);
-void message (const char* s, int total_step, int day, int trial, double trial_time);
-void new_trial_message (int trial);
-void write_step_set (int step);
-void emit_goal_found ();
-void emit_sleep ();
+void message (enum message_type s);
 void current_way_init ();
 
 #endif /*ANALYSEBEHAVIOR_H_*/

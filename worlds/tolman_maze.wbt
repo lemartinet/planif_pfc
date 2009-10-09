@@ -2061,7 +2061,7 @@ Supervisor {
           ]
         }
       ]
-      name "way2_start_servo"
+      name "servo3"
       boundingObject USE SLIDING_DOOR
       type "linear"
       maxPosition 0.06
@@ -2072,7 +2072,7 @@ Supervisor {
       children [
         USE SLIDING_DOOR
       ]
-      name "way2_end_servo"
+      name "servo4"
       boundingObject USE SLIDING_DOOR
       type "linear"
       maxPosition 0.06
@@ -2083,7 +2083,7 @@ Supervisor {
       children [
         USE SLIDING_DOOR
       ]
-      name "way3_start_servo"
+      name "servo5"
       boundingObject USE SLIDING_DOOR
       type "linear"
       maxPosition 0.06
@@ -2094,7 +2094,7 @@ Supervisor {
       children [
         USE SLIDING_DOOR
       ]
-      name "way3_end_servo"
+      name "servo6"
       boundingObject USE SLIDING_DOOR
       type "linear"
       maxPosition 0.06
@@ -2120,7 +2120,7 @@ Supervisor {
           ]
         }
       ]
-      name "way1_mid_servo"
+      name "servo1"
       boundingObject DEF BOX_WAY1 Transform {
         rotation 0 0 1 1.57
         children [
@@ -2145,7 +2145,7 @@ Supervisor {
       children [
         USE SLIDING_WAY1
       ]
-      name "way1_end_servo"
+      name "servo2"
       boundingObject USE BOX_WAY1
       type "linear"
       maxPosition 0.06
@@ -2171,7 +2171,7 @@ Supervisor {
           ]
         }
       ]
-      name "way1_start_servo"
+      name "servo0"
       boundingObject Transform {
         rotation 0 0 1 1.57
         children [
@@ -2192,7 +2192,7 @@ Supervisor {
     }
     DEF SENSOR_MID DistanceSensor {
       translation -0.04 0.03 -0.64
-      name "sensor_mid"
+      name "sensor0"
       lookupTable [
         0 0 0
         0.09 1000 0
@@ -2202,7 +2202,7 @@ Supervisor {
     }
     DEF SENSOR_END DistanceSensor {
       translation -0.04 0.03 -1.11
-      name "sensor_end"
+      name "sensor1"
       lookupTable [
         0 0 0
         0.09 1000 0
@@ -2212,7 +2212,7 @@ Supervisor {
     }
     DEF SENSOR_GOAL DistanceSensor {
       translation -0.04 0.03 -1.65
-      name "sensor_goal"
+      name "sensor2"
       lookupTable [
         0 0 0
         0.09 1000 0
@@ -2223,7 +2223,7 @@ Supervisor {
     DEF SENSOR_WAY2 DistanceSensor {
       translation -0.16 0.03 -0.82
       rotation 0 1 0 1.57
-      name "sensor_way2"
+      name "sensor3"
       lookupTable [
         0 0 0
         0.09 1000 0
@@ -2233,7 +2233,7 @@ Supervisor {
     }
     DEF SENSOR_WAY2_CLOSE DistanceSensor {
       translation -0.04 0.03 -0.76
-      name "sensor_way2_close"
+      name "sensor4"
       lookupTable [
         0 0 0
         0.09 1000 0

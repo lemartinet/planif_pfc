@@ -10,7 +10,6 @@ WbNodeRef robot;
 WbFieldRef t_field;
 WbFieldRef r_field;
 
-void run ();
 void supervisor_die ();
 
 #endif /*MYPUCKSUPERVISOR_H_*/

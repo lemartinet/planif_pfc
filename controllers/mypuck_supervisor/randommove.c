@@ -1,32 +1,28 @@
+/*
+ * This module is intended to work with tolman_maze.wbt
+ * it enables an uniform sampling of the robot position
+ * by moving it randomly
+ */
 #include "randommove.h"
 #include "mypuck_supervisor.h"
 #include <webots/supervisor.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-/*
- * This module is intended to work with mypuck_tolman.wbt
- */
-
-
-////////////////////////////////////////////
-// Functions to generate random moves
-////////////////////////////////////////////
+// geometry of the maze
+const float xMin = -0.68;  
+const float yMin = -1.7;
+const float Step = 0.049;
 
 int wait_random_move = 0;
 int nb_random_move = 0;
 int size_places = 0;
 int** places = NULL;
 
-// geometry of the maze (à mettre dans les params)
-float xMin = -0.68;  
-float yMin = -1.7;
-float Step = 0.049;
-
-// load a vector places such as places[i] = {i,j}
-// with i,j = row,col of the discretized world, visited
-// by the animat
 void init_random (char* places_path) {
+  // load a vector places such as places[i] = {i,j}
+  // with i,j = row,col of the discretized world, visited
+  // by the animat
   FILE* places_file = fopen (places_path, "r");
   char key[128];
 	char value[128];
@@ -46,7 +42,6 @@ void init_random (char* places_path) {
     places[i][0] = atoi(key);
     places[i][1] = atoi(value);
   }
-
   // we put elements of places in a random order
   for (i = 0; i < size_places; i++) {
     int d = (int)(size_places * drand48 ());
@@ -87,11 +82,9 @@ void run_random () {
     move_robots();
   }
   else if (nb_random_move == 10000) {
-    wb_supervisor_simulation_quit ();
+    supervisor_die ();
   }
   else {
     wait_random_move--;
   }
-  
-  run ();
 }

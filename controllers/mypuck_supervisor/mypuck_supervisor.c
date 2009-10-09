@@ -1,6 +1,5 @@
 /*
  * File:         mypuck_supervisor.c
- * Date:         Novembre 2008
  * Description:  Supervisor for webots 
  * Author:       louis-emmanuel.martinet@upmc.fr
  */
@@ -12,31 +11,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
 #include <webots/robot.h>
-#include <webots/emitter.h>
-#include <unistd.h>
-
-/////////////////////////////////
-// Variables
-/////////////////////////////////
 
 const char* robot_name = "ICEASIM";
 
-// Webots data
-//WbDeviceTag emitter;
-
-// Id of the simulation
-int simu_id = 1;
-
-// Type of simulation (normal or random move)
-int random_move = 0;
-
-<<<<<<< HEAD
-bool read_simulation_params (char* param_file_path, int* time_step, int* id, int* random_move) 
-=======
-bool read_simulation_params (char* param_file_path, int* time_step, int* id, int* random_move, int* final_forced) 
->>>>>>> 16cde28... First commit to git. Includes:
+bool read_simulation_params (char* param_file_path, int* time_step, int* id, int* random_move, int* final_forced, int* write_step, int* sleep_step) 
 {
 	FILE * param_file = fopen (param_file_path, "r");
 	char key[128];
@@ -55,19 +34,14 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
     else if (strcmp (key, "RANDOM_MOVE") == 0) {
       *random_move = atoi(value);
     }
-<<<<<<< HEAD
-=======
     else if (strcmp (key, "FINAL_FORCED") == 0) {
       *final_forced = atoi(value);
     }
->>>>>>> 16cde28... First commit to git. Includes:
     else if (strcmp (key, "STEP_LOG") == 0) {
-      int write_step = atoi(value);
-      write_step_set (write_step);
+      *write_step = atoi(value);
     }
     else if (strcmp (key, "SLEEP_STEP") == 0) {
-      int sleep_step = atoi(value);
-      sleep_step_set (sleep_step);
+      *sleep_step = atoi(value);
     }
     else if (strcmp (key, "TIME_STEP") == 0) {
       *time_step = atoi(value);
@@ -82,29 +56,21 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
 // Main functions
 /////////////////////////////////
 
-void init ()
+void init (int* random_move)
 {
-<<<<<<< HEAD
-  if (!read_simulation_params ("../../data/params.txt", &TIME_STEP, &simu_id, &random_move)) {
-=======
-  int final_forced = 0;
-  if (!read_simulation_params ("../../data/params.txt", &TIME_STEP, &simu_id, &random_move, &final_forced)) {
->>>>>>> 16cde28... First commit to git. Includes:
+  int simu_id = 1, final_forced = 0, write_step = 1, sleep_step = 0;
+  if (!read_simulation_params ("../../data/params.txt", 
+        &TIME_STEP, &simu_id, random_move, &final_forced, &write_step, &sleep_step)) {
 		printf ("Supervisor: erreur d'init. Exit !\n");
 		exit (-1);	
 	}
   printf("Supervisor: SIMULATION_ID %d\n", simu_id);
   
-  init_behavior (simu_id);
-  if (random_move) {
+  init_behavior (simu_id, write_step);
+  if (*random_move) {
     init_random ("../../data/index_visited");
   }
-<<<<<<< HEAD
-  init_protocol ();
-=======
-  init_protocol (simu_id, final_forced);
->>>>>>> 16cde28... First commit to git. Includes:
-  //emitter = robot_get_device("emitter");
+  init_protocol (simu_id, final_forced, sleep_step);  
   
   // We get a handler to the robot & the start position
   robot = wb_supervisor_node_get_from_def (robot_name);
@@ -116,10 +82,8 @@ void init ()
   else {
     printf ("Error: node %s not found\n", robot_name);
   }
-  
   // can be use to select another controller for a robot
   // supervisor_robot_set_controller(robot, "braitenberg");
-
   // can be use to import another robot onto the maze
   // supervisor_import_node("icea_rat.wbt", -2);
   // run an empty step in order to update the world with the imported node
@@ -127,35 +91,31 @@ void init ()
 }
 
 void supervisor_die () {
-  int day,trial;
-  die_protocol (&day, &trial);
-  die_behavior (day, trial);
+  die_protocol ();
+  die_behavior ();
   die_random ();
   wb_supervisor_simulation_quit();
 }
 
 void run ()
 {
-  static int day=1, trial=1, total_step=1;
-  static double trial_time=0;
-  analyse_behavior (day, trial, trial_time, total_step);
-  run_protocol (&day, &trial, &trial_time, &total_step);
+  run_behavior ();
+  run_protocol ();
 }
 
 int main ()
 {
   srand48 (time (0));
   wb_robot_init ();
-  init ();
+  int random_move = 0;
+  init (&random_move);
   do {
     if (random_move && learning_done ()) {
       // we open all the doors not to disturbe the robot
       open_all ();
       run_random ();
     }
-    else {
-      run ();
-    }
+    run ();
   } while (wb_robot_step (TIME_STEP) != -1);
   wb_robot_cleanup ();
   return 0;

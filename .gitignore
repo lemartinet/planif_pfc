@@ -1,5 +1,6 @@
 *.o
 *.d
+*~
 data/data_raw/*
 .metadata
 moc_*
