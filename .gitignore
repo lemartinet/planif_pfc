@@ -7,5 +7,6 @@ moc_*
 .cdtproject
 .*project
 .settings
+controllers/mypuck/mypuck_nogui
 controllers/mypuck/mypuck
 controllers/mypuck_supervisor/mypuck_supervisor

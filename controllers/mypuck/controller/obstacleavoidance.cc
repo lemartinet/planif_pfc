@@ -5,8 +5,6 @@
 #include <cmath>
 #include <iostream>
 
-
-////////////////////////////////////////////
 // OAM - Obstacle Avoidance Module (from e-puck_line controller)
 //
 // The OAM routine first detects obstacles in front of the robot, then records
@@ -15,20 +13,12 @@
 // proximity sensors and motors. Output speeds are in oam_speed[LEFT] 
 // and oam_speed[RIGHT].
 
-
 // IR proximity sensors
-#define PS_RIGHT_00 0
-#define PS_RIGHT_45 1
-#define PS_RIGHT_90 2
-#define PS_RIGHT_REAR 3
-#define PS_LEFT_REAR 4
-#define PS_LEFT_90 5
-#define PS_LEFT_45 6
-#define PS_LEFT_00 7
+enum sensors { PS_RIGHT_00 = 0, PS_RIGHT_45 = 1, PS_RIGHT_90 = 2, PS_RIGHT_REAR = 3,
+	PS_LEFT_REAR = 4, PS_LEFT_90 = 5, PS_LEFT_45 = 6, PS_LEFT_00 = 7 };
 
 // useful constants
-#define LEFT 0
-#define RIGHT 1
+enum directions { LEFT = 0, RIGHT = 1 };
 #define OAM_OBST_THRESHOLD 3000
 #define OAM_FORWARD_SPEED 400
 #define OAM_K_PS_90 0.02

@@ -29,17 +29,16 @@ void Behavior::synch ()
 
 void Behavior::compute_next_action ()
 {
-	static const int ONLY_INTERSECT = Params::get_int ("ONLY_INTERSECT");
 	cpt_trial_++;
     cpt_total_++;
     
   	// save old position
-  	double old_x = robot_.position_get().x_get ();
-  	double old_y = robot_.position_get().y_get ();
+  	double old_x = position_get().x_get ();
+  	double old_y = position_get().y_get ();
 	// update des capteurs
 	robot_.synch ();
-	double x = robot_.position_get().x_get();
-	double y = robot_.position_get().y_get();
+	double x = position_get().x_get();
+	double y = position_get().y_get();
 	// le robot a-t-il ete bouge par le manipulateur
 	if ((old_x - x) * (old_x - x) + (old_y - y) * (old_y - y) > 0.5) {
 		manually_moved_ = true;
@@ -50,6 +49,7 @@ void Behavior::compute_next_action ()
 		manually_moved_ = false;
 	}
 	
+	static const int ONLY_INTERSECT = Params::get_int ("ONLY_INTERSECT");
 	vector<double> dirs;
 	if (automate_ == SLEEP) {
 		neurosolver_.sleep (wait_);
@@ -57,7 +57,7 @@ void Behavior::compute_next_action ()
 	else {
 		avoid_.free_ways (dirs, robot_.angle_get ());
 		// update du réseau de neurones
-		neurosolver_.synch (! manually_moved (), ONLY_INTERSECT == 1 ? automate_ == DECIDE : true);
+		neurosolver_.synch (! manually_moved_, ONLY_INTERSECT == 1 ? automate_ == DECIDE : true);
 	}
 	
 	// màj de l'automate
@@ -113,7 +113,6 @@ void Behavior::compute_next_action ()
 
 void Behavior::do_action ()
 {
-	// revoir cette fonction (peut-être deplacee dans obstacleavoid ?)
 	static const int RANDOM_MOVE = Params::get_int("RANDOM_MOVE");
 	int left_speed, right_speed;
   	if (RANDOM_MOVE && nb_trial_ > 6) {
@@ -132,7 +131,7 @@ void Behavior::do_action ()
 		avoid_.avoid (diff, robot_.position_get (), left_speed, right_speed);
 	}
 	//cout << "left " << left_speed << " right " << right_speed << endl;
-	robot_.setSpeed (left_speed, right_speed);
+	robot_.speed_set(left_speed, right_speed);
 }
 
 

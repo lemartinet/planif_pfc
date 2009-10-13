@@ -21,7 +21,6 @@ public:
 	string automate_state ();
 	
 	int cpt_total_get () const { return cpt_total_; }
-	bool manually_moved () const { return manually_moved_; }
 	double angle_get () const { return robot_.angle_get(); }
 	const Coord& position_get () const { return robot_.position_get(); }
 	bool goal_reached () const { return robot_.goal_reached(); }
@@ -44,7 +43,7 @@ private:
 	ObstacleAvoidance avoid_;
 	double current_;
 	int wait_; // temporisation de l'automate	
-	behabiorAutomate automate_; // état de l'automate
+	enum behabiorAutomate automate_; // état de l'automate
 	int cpt_trial_;
 	int cpt_total_;
 	int nb_trial_;
