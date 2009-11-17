@@ -6,7 +6,6 @@
 #include "coord.hh"
 #include "minicol.hh"
 #include "math.hh"
-#include "cell.hh"
 #include "logger.hh"
 #include "behavior.hh"
 #include <algorithm>
@@ -23,7 +22,7 @@ using namespace boost::lambda;
 Columns::Columns (const vector<ComputeUnit*>& hippo_pop, const ComputeUnit& ego)
 {
 	static const unsigned int SIZE_POP = Params::get_int("SIZE_POP");
-	unsigned int lvl0_nb = SIZE_POP * 0.75;
+	unsigned int lvl0_nb = SIZE_POP * 0.9;
 	while (columns_.size() < lvl0_nb) {
 		Column* col = new Column (*this, columns_.size(), 0);
 		columns_.push_back (col);
@@ -37,13 +36,14 @@ Columns::Columns (const vector<ComputeUnit*>& hippo_pop, const ComputeUnit& ego)
 		Minicol* mc = new Minicol (*this, minicols_.size());
 		minicols_.push_back(mc);
 	}
-	// ajoute une connexion aléatoire avec hippo
-	winner_takes_all_lvl0 (hippo_pop);
-	winner_takes_all_lvl1 (pop_, ego);
+	// ajoute une connexion aléatoire avec hippo et entre colonnes
+//	winner_takes_all_lvl0 (hippo_pop);
+//	winner_takes_all_lvl1 (pop_, ego);
 	
 	win_col_lvl_[0] = win_col_lvl_ [1] = 0;
 	prec_col_lvl_[0] = prec_col_lvl_ [1] = 0;
 	win_minicol_lvl_[0] = win_minicol_lvl_ [1] = 0;
+	new_lvl1_ = false;
 }
 
 Columns::~Columns ()
@@ -67,13 +67,73 @@ void Columns::winner_col (int level)
 			continue;
 		}
 //		else if (best_col == 0 || (best_col->state_activation () < (*it)->state_activation ())){
+//		else if (best_col == 0 || 
+//				((*it)->lastT_recent () > 0.3 && best_col->lastT_recent () < (*it)->lastT_recent ())){
+		else if (best_col == 0 || best_col->lastT_recent () < (*it)->lastT_recent ()){
+//		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ()
+//					&& ((*it)->state_activation () > 0.2 || (*it)->state_activation () < 0.1))){
+			best_col = *it;
+		}
+	}
+	if (best_col->lastT_recent () < 0.3) {
+		best_col = 0;
+		double min_sumw = 0;
+		// on initialise avec celle qui a les plus petits poids = qui n'a pas de selectivité
+		for (it = columns_.begin (); it != columns_.end (); it++) {
+			if ((*it)->level_get () != level) {
+				continue;
+			}
+			double sumw = (*it)->state_get().sum_wE_get();
+			if (best_col == 0 || sumw < min_sumw) {
+				min_sumw = sumw;
+				best_col = *it;
+			}
+		}		
+	}
+	win_col_lvl_[level] = best_col;
+}
+
+void Columns::winner_col (int level, const ComputeUnit& ego)
+{
+	Column* best_col = win_col_lvl_[level];
+//	if (ego.spiking() && win_col_lvl_[level] != 0) 
+//		return; 
+//	if (!ego.spiking()) 
+//		return; 
+	vector<Column*>::iterator it;
+	for (it = columns_.begin (); it != columns_.end (); it++) {
+		if ((*it)->level_get () != level) {
+			continue;
+		}
+//		else if (best_col == 0 || (best_col->state_activation () < (*it)->state_activation ())){
+//		else if (best_col == 0 || 
+//				((*it)->lastT_recent () > 0.3 && best_col->lastT_recent () < (*it)->lastT_recent ())){
 		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ())){
 //		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ()
 //					&& ((*it)->state_activation () > 0.2 || (*it)->state_activation () < 0.1))){
 			best_col = *it;
 		}
 	}
-	win_col_lvl_[level] = best_col;
+	if (best_col->lastT_recent () < 0.3 && ego.spiking()) {
+		new_lvl1_ = true;
+		best_col = 0;
+		double min_sumw = 0;
+		// on initialise avec celle qui a les plus petits poids = qui n'a pas de selectivité
+		for (it = columns_.begin (); it != columns_.end (); it++) {
+			if ((*it)->level_get () != level) {
+				continue;
+			}
+			double sumw = (*it)->state_get().sum_wE_get();
+			if (best_col == 0 || sumw < min_sumw) {
+				min_sumw = sumw;
+				best_col = *it;
+			}
+		}		
+	}
+	else {
+		new_lvl1_ = false;	
+	}
+	win_col_lvl_[level] = best_col;	
 }
 
 void Columns::winner_minicol (int level)
@@ -104,13 +164,39 @@ Minicol* Columns::add_minicol (const Action& action, Column& src, Column& dest, 
 	return mc;	
 }
 
-double Columns::nb_spiking_cells (int level) const
+double Columns::nb_spiking_cols (int level) const
 {
 	double sum = 0;
 	vector<Column*>::const_iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
 		if ((*it)->level_get () == level && (*it)->lastT_recent () > 0.3) {
 			sum += 1;	
+		}
+	}
+	return sum;
+}
+
+double Columns::cells_activity (int level) const
+{
+	double sum = 0;
+	vector<Column*>::const_iterator it;
+	for (it = columns_.begin (); it != columns_.end (); it++) {
+		if ((*it)->level_get () == level && (*it)->lastT_recent () > 0.1) {
+			sum += (*it)->lastT_recent ();	
+		}
+	}
+	return sum;
+}
+
+double Columns::nb_spiking_cells (const vector<ComputeUnit*>& hippo_pop) const
+{
+//	return count_if (hippo_pop.begin (), hippo_pop.end (), bind (&ComputeUnit::spiking, _1)); 
+	double sum = 0;
+	vector<ComputeUnit*>::const_iterator it;
+	for (it = hippo_pop.begin (); it != hippo_pop.end (); it++) {
+		if ((*it)->spiking()) {
+//			sum += (*it)->output();	
+			sum += 1;
 		}
 	}
 	return sum;
@@ -132,22 +218,30 @@ bool Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Co
 
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
-		if ((*it)->level_get () == 0) {
+//		if ((*it)->level_get () == 0) {
 			(*it)->synch ();
 			if (pos != 0) {
 				(*it)->center_rf (*pos, *it == win_col_lvl_[0]);	
 			}
-		}
-		else if ((*it)->level_get () == 1) {
-			(*it)->synch ();	
-		} 
+//		}
+//		else if ((*it)->level_get () == 1) {
+//			(*it)->synch ();	
+//		} 
 	}
   	for_each (minicols_.begin (), minicols_.end (), bind (&Minicol::update_value, _1));
   	
   	winner_col (0);
-  	winner_col (1);
+  	winner_col (1, ego);
   	winner_minicol (0);
   	winner_minicol (1);
+// 	cout << "cells activity: " << cells_activity(0) << endl;
+//	columns_.show_activities (0);
+//	columns_.show_activities (1);
+//	if (Behavior::behavior_get().nb_trial_get() >= 6){
+//	cout << "egoaction: " << ego.output() << endl;
+//	cout << "best lvl1: " << win_col_lvl_[1]->no_get () << " " 
+//		<< win_col_lvl_[1]->state_get().output() << endl;
+//	}
   	if (learn) {
   		winner_takes_all_lvl0 (hippo_pop);
   		winner_takes_all_lvl1 (pop_, ego);
@@ -156,11 +250,6 @@ bool Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Co
   	else {
   		return false;	
   	}
-
-//  	cout << "nb_spiking_cells: " << nb_spiking_cells (0) << endl;
-//	columns_.show_activities (0);
-//	columns_.show_activities (1);
-
 }
 
 bool Columns::topology_learning ()
@@ -171,12 +260,12 @@ bool Columns::topology_learning ()
 //	if (current_lvl0 && prec_lvl0 && prec_lvl0 != current_lvl0) {	
 //		cout << prec_lvl0->no_get () << "/" << prec_lvl0->lastT_recent () << " -> "  
 //			<< current_lvl0->no_get () << "/" << current_lvl0->lastT_recent () 
-//			<< " total " << nb_spiking_cells (0) << endl;
+//			<< " total " << nb_spiking_cols (0) << endl;
 //	}
 	if (current_lvl0 && prec_lvl0 && prec_lvl0 != current_lvl0 
 //		&& prec_lvl0->lastT_recent () * current_lvl0->lastT_recent () > 0.1
 //		&& prec_lvl0->lastT_recent () * current_lvl0->lastT_recent () < 0.3
-		&& nb_spiking_cells (0) < 10) {
+		&& nb_spiking_cols (0) < 10) {
 //		cout << "update minicol" << endl;
     	col_changed = true;
       	Action action (Behavior::behavior_get().angle_get());
@@ -186,9 +275,10 @@ bool Columns::topology_learning ()
 	  	
 	Column* current_lvl1 = win_col_lvl_[1];
 	Column* prec_lvl1 = prec_col_lvl_[1];
-//	if (current_lvl1 && prec_lvl1 && prec_lvl1 != current_lvl1 && nb_spiking_cells (0) < 10) {
-//		columns_.lateral_learning (*prec_lvl1, *current_lvl1, 0, true); attention pas 0 car réf
-//	}
+	if (current_lvl1 && prec_lvl1 && prec_lvl1 != current_lvl1) {
+//		Action action (Behavior::behavior_get().angle_get());
+//		lateral_learning (*prec_lvl1, *current_lvl1, action, true);
+	}
 	prec_col_lvl_[1] = current_lvl1;
   	
   	return col_changed;	
@@ -212,22 +302,6 @@ void Columns::correct_transition ()
   							const_cast<Column&>(real_minicol->to_get()), 
   							real_minicol->action_get(), false);
 	}
-}
-
-void Columns::draw (ostream& os) const
-{
-	os << endl;
-//	for_each (columns_.begin (), columns_.end (), bind (&Column::draw, _1, var (os)));
-	// issu de Column::draw ()
-//	stringstream ss;
-//	string       val;
-//	ss << no_;
-//	ss >> val;
-//	os << "c" << val << " [label=\"{<n" << state_.no_get () << "> H} | {<n" << sup_.no_get () << "> Prec | {";
-//	(*minicols_.begin ())->draw (os);
-//	for_each (minicols_.begin () + 1, minicols_.end (), 
-//		(var (os) << " | ", bind (&Minicol::draw, _1, var (os))));
-//	os << "} | <n" << inf_.no_get () << "> Suiv} \"];" << endl;
 }
 
 Column* Columns::nocol_get (int no) const
@@ -262,14 +336,14 @@ void Columns::lateral_learning (Column& from, Column& to, const Action& action, 
 		Logger::log ("network", message.str (), true);
 	}
 	
-	// on ajoute la competition entre les minicols d'une meme col
-	// cela permettrait de diminuer les poids parasites
-	vector<Minicol*>::const_iterator it;
-	for (it = minicols_.begin (); it != minicols_.end (); it++) {
-		if ((*it)->recruited_get () && (*it)->from_get () == from && (*it) != minicol) {
-			(*it)->lateral_learning (false, 0.1);
-		}
-	}
+//	// on ajoute la competition entre les minicols d'une meme col
+//	// cela permettrait de diminuer les poids parasites
+//	vector<Minicol*>::const_iterator it;
+//	for (it = minicols_.begin (); it != minicols_.end (); it++) {
+//		if ((*it)->recruited_get () && (*it)->from_get () == from && (*it) != minicol) {
+//			(*it)->lateral_learning (false, 0.05);
+//		}
+//	}
 }
 
 void Columns::show_activities (int level) const
@@ -363,48 +437,50 @@ Neuron& Columns::add_neuron_max (nType type)
 
 void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state)
 {
+	if (Behavior::behavior_get().nb_trial_get() < 3)
+		return; 
 	static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
 //	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
 	int nbunits = pop_state.size ();
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
-//		if ((*it)->level_get () == 0 && win_col_lvl_[0] == *it && nb_spiking_cells () >= 6) {
 //		if ((*it)->level_get () == 0 && (win_col_lvl_[0] == *it || newcol)) {
 		if ((*it)->level_get () != 0) {
 			continue;	
 		}
 		Neuron& state = (*it)->state_get ();
 		for (int i = 0; i < nbunits; i++) {
-			Cell* unit = dynamic_cast<Cell*>(pop_state.at (i));
-			Synapse* s = state.syn_get(*unit);
-//			if (s == 0) {
-			if (s == 0 && *it == win_col_lvl_[0]) {
+			ComputeUnit* unit = pop_state.at (i);
+			double* w = state.syn_get(*unit);
+//			if (w == 0) {
 //				double init_val = INIT_PC_COL * drand ();
+			if (w == 0 && *it == win_col_lvl_[0]) {
 				double init_val = unit->spiking () ? unit->output () : 0;
-				state.add_synapse (*unit, init_val, false);
+//				double init_val = 1 / (1 + exp(-10*(unit->output() - 0.3)));
+				state.add_synapse (*unit, init_val);
 			}
-			else if (s != 0) {
+			else if (w != 0 && *it == win_col_lvl_[0]) {
 //				if (*it == win_col_lvl_[0]) {
 //					cout << "delta_w " << (*it)->weight_change (unit, s->w_get (), win_col_lvl_[0]);
 //				}
-				double new_w = (*it)->weight_change (unit, s->w_get (), win_col_lvl_[0]);
-				static const string LEARN_RULE = Params::get ("LEARN_RULE");
-				if (LEARN_RULE == "simple") {
-					s->w_set (s->w_get () + RATE_PC_COL * new_w);
-				}
-				else if (LEARN_RULE == "simple_seuil") {
-					s->w_set (s->w_get () + RATE_PC_COL * new_w);
-					if (s->w_get () > 1) {
-						s->w_set (1);
-					}
-					else if (s->w_get () < 0) {
-						s->w_set (0);
-					}
-				}
-				else if (LEARN_RULE == "mult") {
-					// !!! j'ai *2 pour compenser l'appr plus lent du au *w
-					s->w_set (s->w_get () + s->w_get () * 2 * RATE_PC_COL * new_w);
-				}
+				double new_w = (*it)->weight_change (unit, *w, win_col_lvl_[0]);
+//				static const string LEARN_RULE = Params::get ("LEARN_RULE");
+//				if (LEARN_RULE == "simple") {
+					*w = *w + RATE_PC_COL * new_w;
+//				}
+//				else if (LEARN_RULE == "simple_seuil") {
+//					*w = *w + RATE_PC_COL * new_w;
+//					if (*w > 1) {
+//						*w = 1;
+//					}
+//					else if (*w < 0) {
+//						*w = 0;
+//					}
+//				}
+//				else if (LEARN_RULE == "mult") {
+//					// !!! j'ai *2 pour compenser l'appr plus lent du au *w
+//					*w = *w + *w * 2 * RATE_PC_COL * new_w;
+//				}
 			}
 		}
 	}	
@@ -412,49 +488,58 @@ void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state)
 
 void Columns::winner_takes_all_lvl1 (const vector<Column*>& pop, const ComputeUnit& ego_action)
 {
-	cout << "ego: " << ego_action.output() << endl;
+	if (Behavior::behavior_get().nb_trial_get() < 6)
+		return; 
+	cout << "egoaction: " << ego_action.output() << endl;
+	static const double RATE_COL_COL = Params::get_double ("RATE_COL_COL");
 	int nbunits = pop.size ();
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
-		if ((*it)->level_get () != 1 || win_col_lvl_[1] != *it || !ego_action.spiking ()) {
-//		if ((*it)->level_get () != 1) {
+//		if ((*it)->level_get () != 1 || !ego_action.spiking ()) {
+		if ((*it)->level_get () != 1) {
 			continue;	
 		}
-//		if ((*it)->state_get ().spiking()) {
-//			cout << (*it)->no_get () << " " << (*it)->state_get ().output() << endl;
-//		}
 		Neuron& state = (*it)->state_get ();
 		Neuron& sup = (*it)->sup_get ();
+		static const double EGO_MODULATION = Params::get_double ("EGO_MODULATION");
+		if (state.syn_mod_get() == 0)
+			state.add_synapse_modulation (ego_action, EGO_MODULATION);
 		for (int i = 0; i < nbunits; i++) {
 			Column* col = pop.at (i);
 			Neuron& unit = col->state_get ();
-			Synapse* s = state.syn_get(unit);
-			double rj = unit.output ();
-			//	cout << "nb_col0 " << columns_.nb_spiking_cells (0) << endl;
-			// ca marche pas mal avec 1.3 = .7 + .3 + .3 par ex
-//			static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
-//			if (s == 0 && nb_spiking_cells (0) > THRESH_ADD_LVL1) {
-//			if (s == 0 && nb_spiking_cells (0) > 1) {
-			if (s == 0) {
-				static const double EGO_MODULATION = Params::get_double ("EGO_MODULATION");
-				static const double LVL0_TO_LVL1 = Params::get_double ("LVL0_TO_LVL1");
-				double init_val = unit.spiking () ? rj : 0;
-				state.add_synapse (unit, ego_action, init_val, LVL0_TO_LVL1, EGO_MODULATION);
-//    			cout << "new syn " << unit.no_get() << "-> " << (*it)->no_get() << " : " << rj << endl; 
+			if (col != win_col_lvl_[0] || win_col_lvl_[1] != *it || (!new_lvl1_ && !ego_action.spiking())) {
+				continue;	
 			}
-			else if (s != 0) {
-				s->w_set (s->w_get () + 0.2 * (((rj - s->w_get ()) > 0)?1:0) * rj * state.output ());
+			double* w = state.syn_get(unit);
+			double rj = unit.output ();
+			//	cout << "nb_col0 " << nb_spiking_cols (0) << endl;
+//			static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
+//			if (w == 0 && nb_spiking_cols (0) > THRESH_ADD_LVL1) {
+			if (w == 0) {
+//				double init_val = 1;
+//				double init_val = unit.spiking () ? rj : 0;
+				double init_val = 1 / (1 + exp(-10*(unit.output() - 0.3)));
+				state.add_synapse (unit, init_val);
+//    			cout << "new syn " << unit.no_get() << "-> " << (*it)->no_get() << " : " << rj << endl; 
+			} 
+			else if (w != 0) {
+				*w = *w + RATE_COL_COL * (rj - *w > 0 ? 1 : 0) * rj * state.output () * ego_action.output();
 //				cout << "update lien " << unit.no_get() << " (" << unit.level_get () 
 //					 << ") -> " << no_ << " (" << state_.level_get () << ") : " << s->w_get () << endl;					
-			}
-			
+			} 
+
 			Neuron& unit_sup = col->sup_get ();
-			s = sup.syn_get(unit_sup);
-			if (s == 0 && unit.spiking ()) {
+			w = sup.syn_get(unit_sup);
+			if (w == 0 && unit.spiking ()) {
+				sup.add_synapse (unit_sup, 1);
 				static const double LVL1_MODULATION = Params::get_double ("LVL1_MODULATION");
-				// TODO: à remplacer par un apprentissage basé sur l'activité de col-> state
-				sup.add_synapse (unit_sup, 1, true); 
-				unit_sup.add_synapse_modulation (sup, LVL1_MODULATION);
+				if (unit_sup.syn_mod_get() == 0)
+					unit_sup.add_synapse_modulation (sup, LVL1_MODULATION);
+			}
+			else {
+				double* w = unit_sup.syn_mod_get();
+				if (w != 0)
+					*w = Params::get_double ("LVL1_MODULATION");
 			}
 		}
 	}

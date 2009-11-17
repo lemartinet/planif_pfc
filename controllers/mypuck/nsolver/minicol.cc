@@ -41,9 +41,10 @@ void Minicol::new_set (const Action& action, Column& src, Column& dest, int leve
 	recruited_ = true;
 	
 	// intra-colomn connections
-	inf_.add_synapse (src.state_get (), sup_, 1.0, 0, 1);
-	inf_.add_synapse (src.inf_get (), sup_, 1.0, 0, 1);
-	src.sup_get ().add_synapse (sup_, 1.0, true);
+	inf_.add_synapse (src.state_get (), 1);
+	inf_.add_synapse (src.inf_get (), 1);
+	inf_.add_synapse_mult (sup_, 1);
+	src.sup_get ().add_synapse (sup_, 1.0);
 	
   	// Inter-columns connections
   	lateral_learning (true);
@@ -51,11 +52,6 @@ void Minicol::new_set (const Action& action, Column& src, Column& dest, int leve
 	stringstream s;
 	s << no_+1 << " " << src.no_get ()+1;
 	Logger::log("minicol_col", s.str());
-}
-
-void Minicol::draw (ostream& os) const
-{
-  os << "{<n" << sup_.no_get () << "> s" << no_ << " | <n" << inf_.no_get () << "> i" << no_ << "}";
 }
 
 void Minicol::adapt_action (const Action& action)
@@ -86,14 +82,14 @@ void Minicol::lateral_learning (bool increase, double factor)
 	static const double LATERAL_LEARNING_STEP = Params::get_double("LATERAL_LEARNING_STEP");
 	static const double MAX_LATERAL_WEIGHT = Params::get_double("MAX_LATERAL_WEIGHT");
 		
-	Synapse* forw = dest_->inf_get ().syn_get (inf_);
-	Synapse* back = sup_.syn_get (dest_->sup_get ());
+	double* forw = dest_->inf_get ().syn_get (inf_);
+	double* back = sup_.syn_get (dest_->sup_get ());
 	if (forw == 0 || back == 0) {
 		// on recrute une synapse
 //		double init_val = MAX_LATERAL_WEIGHT;
 		double init_val = 0.1 * drand ();
-		forw = dest_->inf_get ().add_synapse (inf_, init_val, true);
-		back = sup_.add_synapse (dest_->sup_get (), init_val, true);
+		forw = dest_->inf_get ().add_synapse (inf_, init_val);
+		back = sup_.add_synapse (dest_->sup_get (), init_val);
 	}
 
 	// on modifie les synapses forw & back
@@ -101,18 +97,18 @@ void Minicol::lateral_learning (bool increase, double factor)
 	if (increase) {
 //		valf = MAX_LATERAL_WEIGHT - forw->w_get ();
 //		valb = MAX_LATERAL_WEIGHT - back->w_get ();
-		valf = (MAX_LATERAL_WEIGHT - forw->w_get ()) * LATERAL_LEARNING_STEP * factor;
-		valb = (MAX_LATERAL_WEIGHT - back->w_get ()) * LATERAL_LEARNING_STEP * factor;
+		valf = (MAX_LATERAL_WEIGHT - *forw) * LATERAL_LEARNING_STEP * factor;
+		valb = (MAX_LATERAL_WEIGHT - *back) * LATERAL_LEARNING_STEP * factor;
 //		valf = 2* (MAX_LATERAL_WEIGHT - forw->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 //		valb = 2* (MAX_LATERAL_WEIGHT - back->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 	}
 	else {
-		valf = forw->w_get () * -LATERAL_LEARNING_STEP * factor;
-		valb = back->w_get () * -LATERAL_LEARNING_STEP * factor;
+		valf = *forw * -LATERAL_LEARNING_STEP * factor;
+		valb = *back * -LATERAL_LEARNING_STEP * factor;
 	}
 //	cout << "old " << forw->w_get () << " " << back->w_get () << " // ";
-	forw->w_set (forw->w_get () + valf);
-	back->w_set (back->w_get () + valb);
+	*forw = *forw + valf;
+	*back = *back + valb;
 //	cout << "new " << forw->w_get () << " " << back->w_get () << endl;
 }
 

@@ -6,15 +6,13 @@
 class DCell : public ComputeUnit
 {
 public:
-	DCell (double angle, bool can_rest = false) : ComputeUnit(DC), angle_(angle), can_rest_(can_rest), resting_(0) {}
+	DCell (double angle) : ComputeUnit(DC), angle_(angle) {}
 	virtual ~DCell() {}
 	
-	void compute (double current_angle);
+	virtual void compute (double current_angle);
 	
-private:
+protected:
 	const double angle_;
-	const bool can_rest_;
-	int resting_;
 };
 
 #endif /*DCELL_HH_*/

@@ -20,23 +20,22 @@ public:
 	Hippo ();
 	~Hippo ();
 	
-	const Cell& cell_get (int cell) const;
-	int size () const { return cellmap_.size (); }
 	const vector<ComputeUnit*>& pop_get () const { return cellmap_; }
+	void synch (const Coord& position, bool sleeping=false, int ripples=0);
 
-	void cell_add (const Coord& pos);
-	bool synch (const Coord& position);
+private:
 	void sleep (int ripples);
-	int nb_spiking_cells () const;
+	const Cell& cell_get (int cell) const;
 	bool theta_new () const;
-
-	void draw (ostream& os) const;
-
+	void cell_add (const Coord& pos);
+	double nb_spiking_cells () const;
+		
 private:
 	vector<ComputeUnit*> cellmap_;
 	vector<double> activ_;
 	int nb_used_pc_; 
 	int step_;
+	int nb_stable_;
 };
 
 #endif

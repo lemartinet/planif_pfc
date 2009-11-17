@@ -5,15 +5,11 @@ class Action
 {
 public:  
 	Action (double angle);
-	Action (double angle, int speed);
 
-  	int speed_get () const { return speed_; }  
-  	void speed_set (int speed) { speed_ = speed; }
 	double angle_get () const { return angle_; }
 	void angle_set (double angle) { angle_ = angle; }
 
 protected:
-  	int speed_;
   	double angle_;
 };
 

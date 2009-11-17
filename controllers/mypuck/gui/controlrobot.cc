@@ -12,11 +12,11 @@
 ControlRobot::ControlRobot (const Hippo& hippo, Neurosolver& neuro) :
 	hippo_(hippo), neuro_(neuro), refresh_(0)
 {
-	robot_ = widget_.add_node (ROBOT, 1, 20);
+	robot_ = widget_.add_node (ROBOT, 1);
 	show_inf_sup_or_state_ = 0;
-	QObject::connect (&widget_, SIGNAL (sig_node_clicked (int)), this, SLOT (slot_setgoalcol (int)));
 	show_pc_ = false;
 	show_col_ = true;
+	show_col2_ = false;
 }
 
 void ControlRobot::update ()
@@ -34,15 +34,16 @@ void ControlRobot::update_cells ()
 	if (!show_pc_) {
 		return;
 	}
-	int size = hippo_.size ();
-	for (int i = 0; i < size; i++) {
-		const Cell& cell = hippo_.cell_get (i);
+	const vector<ComputeUnit*>& hp_pop = hippo_.pop_get ();
+	vector<ComputeUnit*>::const_iterator it;
+	for (it = hp_pop.begin(); it != hp_pop.end(); it++) {
+		const Cell& cell = dynamic_cast<const Cell&>(**it);
 		if (cell.pos_get () == 0) {
 			continue;
 		}	
 		Node* node = widget_.node_get (CELL, cell.no_get ());
 		if (node == 0 && cell.spiking ()) {
-			node = widget_.add_node (CELL, cell.no_get (), 15);
+			node = widget_.add_node (CELL, cell.no_get ());
 			node->show ();
 		}
 		if (node != 0) {
@@ -50,44 +51,67 @@ void ControlRobot::update_cells ()
 				node->move (*(cell.pos_get ()));
 			}
 			node->color_set (cell.output ());
+			node->update();
 		}
 	}
 }
 
 void ControlRobot::update_cols ()
 {
-	if (!show_col_) {
-		return;
-	}
-	int size = neuro_.cols_get ().size ();
-	for (int i = 0; i < size; i++) {
-		Column* col = neuro_.cols_get ().col_get (i);
-		if (col->level_get () != 0) {
-			continue;
-		}
+	const vector<Column*>& cols = neuro_.cols_get().pop_col_get();
+	vector<Column*>::const_iterator it;
+	for (it = cols.begin(); it != cols.end(); it++) {
+		Column* col = *it;
 		Node* node = widget_.node_get (COL, col->no_get ());
 		if (node == 0 && col->state_activation() > 0.2) {
-			node = widget_.add_node (COL, col->no_get (), 20);
+			node = widget_.add_node (COL, col->no_get ());
+			QObject::connect (node, SIGNAL (sig_node_clicked (int)), this, SLOT (slot_setgoalcol (int)));
+			node->move(*col->pos_get());
 		}
+	}
+	const vector<ComputeUnit*>& hp_pop = hippo_.pop_get ();
+	for (it = cols.begin(); it != cols.end(); it++) {
+		Column* col = *it;
+		if (col->level_get() == 0 && !show_col_) {
+			Node* node = widget_.node_get (COL, col->no_get ());	
+			if (node != 0) {
+				node->hide();
+			}
+			continue;
+		}
+		else if (col->level_get() == 1 && !show_col2_) {
+			Node* node = widget_.node_get (COL, col->no_get ());	
+			if (node != 0) {
+				node->hide();
+			}
+			continue;
+		}
+		Node* node = widget_.node_get (COL, col->no_get ());	
 		if (node != 0) {
 			if (refresh_ == 0) {
-				Synapse* max_s = col->state_get ().max_syn_get (); 
-				if (max_s != 0 && max_s->w_get () > 0.5) {
+				double* max_w = col->state_get ().max_syn_get (); 
+				if (max_w != 0 && *max_w > 0.5) {
+					if (col->level_get () == 0) {
 					Coord moy (0,0);
-					double norm = 0;		
-					for (int j = 0; j < col->state_get ().size (); j++) {
-						Synapse* s = col->state_get ().syn_get (j);
-						Cell* cell = dynamic_cast<Cell*> (&(s->from_get ()));
-						if (s->w_get () < 0.5 || cell->pos_get () == 0) {
+					double norm = 0;
+					vector<ComputeUnit*>::const_iterator itpc;
+					for (itpc = hp_pop.begin(); itpc != hp_pop.end(); itpc++) {
+						const Cell& cell = dynamic_cast<const Cell&>(**itpc);	
+						double* w = col->state_get ().syn_get (cell.no_get());
+						if (*w < 0.5 || cell.pos_get () == 0) {
 							continue;
 						}
-						Coord tmp = *cell->pos_get ();
-						tmp *= s->w_get ();
+						Coord tmp = *cell.pos_get ();
+						tmp *= *w;
 						moy += tmp;
-						norm += s->w_get ();
+						norm += *w;
 					}
 					moy /= norm;
 					node->move (moy);
+					}
+					else {
+						node->move(*col->pos_get());
+					}
 					node->show ();
 				}
 				else {
@@ -97,17 +121,15 @@ void ControlRobot::update_cols ()
 			update_col_appearance (*node, *col);
 		}
 	}
+	widget_.edges_update();
 }
 
 void ControlRobot::update_mincols ()
 {
-	if (!show_col_) {
-		return;
-	}
-	const Columns& cols = neuro_.cols_get();
-	int size = cols.minicol_size ();
-	for (int i = 0; i < size; i++) {
-		Minicol* minicol = cols.minicol_get (i);
+	const vector<Minicol*>& minicols = neuro_.cols_get().pop_minicol_get();
+	vector<Minicol*>::const_iterator it;
+	for (it = minicols.begin(); it != minicols.end(); it++) {
+		Minicol* minicol = *it;
 		if (!minicol->recruited_get ()) {
 			continue;
 		}
@@ -142,6 +164,7 @@ void ControlRobot::update_col_appearance (Node& node, Column& col)
     else if (show_inf_sup_or_state_ == 0) {
     	node.color_set (col.state_activation ());
     }
+	node.update();
 }
 
 void ControlRobot::highlight_current_mincol ()
@@ -160,13 +183,8 @@ void ControlRobot::highlight_current_mincol ()
 
 void ControlRobot::slot_setgoalcol (int no)
 {
-	Column* col = neuro_.cols_get ().nocol_get (no);
-	if (neuro_.is_goal_position (col)) {
-		neuro_.set_goal_weight (col, 0.0);
-	}
-	else {
-		neuro_.set_goal_weight (col, 1.0);
-	}
+	cout << "clic" << endl;
+	neuro_.gui_goal_set(no);
 }
 
 void ControlRobot::show_pc () 
@@ -176,13 +194,14 @@ void ControlRobot::show_pc ()
 		widget_.type_del (CELL);
 	}
 	else {
-		int size = hippo_.size ();
-		for (int i = 0; i < size; i++) {
-			const Cell& cell = hippo_.cell_get (i);
+		const vector<ComputeUnit*>& hp_pop = hippo_.pop_get ();
+		vector<ComputeUnit*>::const_iterator it;
+		for (it = hp_pop.begin(); it != hp_pop.end(); it++) {
+			const Cell& cell = dynamic_cast<const Cell&>(**it);
 			if (cell.pos_get () == 0) {
 				continue;
 			}	
-			Node* node = widget_.add_node (CELL, cell.no_get (), 15);
+			Node* node = widget_.add_node (CELL, cell.no_get ());
 			node->show ();
 		}		
 	}
@@ -191,32 +210,37 @@ void ControlRobot::show_pc ()
 void ControlRobot::show_col () 
 { 
 	show_col_ = !show_col_;
-	if (!show_col_) {
-		widget_.type_del (COL);
-		widget_.edge_type_del (COL);
-	}
-	else {
-		int size = neuro_.cols_get ().size ();
-		for (int i = 0; i < size; i++) {
-			Column* col = neuro_.cols_get ().col_get (i);
-			if (col->pos_get () == 0) {
-				continue;
-			}
-			if (col->maxr_get () > 0.2) {
-				Node* node = widget_.add_node (COL, col->no_get (), 20);
-				node->show ();
-			}
-		}
-		
-		const Columns& cols = neuro_.cols_get();
-		size = cols.minicol_size ();
-		for (int i = 0; i < size; i++) {
-			Minicol* minicol = cols.minicol_get (i);
-			if (!minicol->recruited_get ()) {
-				continue;
-			}
-			Edge* edge = widget_.add_edge (COL, minicol->from_get ().no_get (), minicol->to_get ().no_get ());
-			edge->show ();
-		}
-	}
+//	if (!show_col_) {
+//		widget_.type_del (COL);
+//		widget_.edge_type_del (COL);
+//	}
+//	else {
+//		int size = neuro_.cols_get ().size ();
+//		for (int i = 0; i < size; i++) {
+//			Column* col = neuro_.cols_get ().col_get (i);
+//			if (col->pos_get () == 0) {
+//				continue;
+//			}
+//			if (col->maxr_get () > 0.2) {
+//				Node* node = widget_.add_node (COL, col->no_get (), 20);
+//				node->show ();
+//			}
+//		}
+//		
+//		const Columns& cols = neuro_.cols_get();
+//		size = cols.minicol_size ();
+//		for (int i = 0; i < size; i++) {
+//			Minicol* minicol = cols.minicol_get (i);
+//			if (!minicol->recruited_get ()) {
+//				continue;
+//			}
+//			Edge* edge = widget_.add_edge (COL, minicol->from_get ().no_get (), minicol->to_get ().no_get ());
+//			edge->show ();
+//		}
+//	}
+}
+
+void ControlRobot::show_col2 () 
+{ 
+	show_col2_ = !show_col2_;
 }

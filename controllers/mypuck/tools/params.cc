@@ -44,7 +44,7 @@ void Params::show ()
     }
 }
 
-string Params::get (string name) 
+string Params::get (const string& name) 
 {
 	if (! Params::loaded_) {
 		Params::loaded_ = true;
@@ -62,20 +62,17 @@ string Params::get (string name)
 	} 
 }
 
+void Params::set (const string& name, const string& value)
+{
+	params_[name] = value;
+}
 
-//void Params::set (string name, int val)
-//{
-//	ostringstream str;
-//	str << val;
-//	params_[name] = str.str();
-//}
-
-double Params::get_double (string name) 
+double Params::get_double (const string& name) 
 { 
 	return str2d (get (name)); 
 }
   
-int Params::get_int (string name) 
+int Params::get_int (const string& name) 
 { 
 	return str2i (get (name)); 
 }

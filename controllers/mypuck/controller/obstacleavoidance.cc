@@ -10,131 +10,83 @@
 // The OAM routine first detects obstacles in front of the robot, then records
 // their side in "oam_side" and avoid the detected obstacle by 
 // turning away according to very simple weighted connections between
-// proximity sensors and motors. Output speeds are in oam_speed[LEFT] 
-// and oam_speed[RIGHT].
+// proximity sensors and motors.
 
 // IR proximity sensors
 enum sensors { PS_RIGHT_00 = 0, PS_RIGHT_45 = 1, PS_RIGHT_90 = 2, PS_RIGHT_REAR = 3,
 	PS_LEFT_REAR = 4, PS_LEFT_90 = 5, PS_LEFT_45 = 6, PS_LEFT_00 = 7 };
-
-// useful constants
+// directions
 enum directions { LEFT = 0, RIGHT = 1 };
-#define OAM_OBST_THRESHOLD 3000
-#define OAM_FORWARD_SPEED 400
-#define OAM_K_PS_90 0.02
-#define OAM_K_PS_45 0.09
-#define OAM_K_PS_00 0.12
-#define OAM_K_MAX_DELTAS 600
-#define OAM_BLOQUE 8000
 
 ObstacleAvoidance::ObstacleAvoidance (int* value):
-	ps_value(value), left_near_(false), right_near_(false), bloque_(false), demi_tour(false), 
-	blocked(0), last_x(0), last_y(0)
-{
-}
+	ps_value(value), left_near_(false), right_near_(false), oam_state_(OAM_OFF) {}
 
 ObstacleAvoidance::~ObstacleAvoidance ()
 {
 }
 
-void ObstacleAvoidance::avoid_block (const Coord& position) 
+void ObstacleAvoidance::avoid (double angle, int& left_speed, int& right_speed)
 {
-  	double x = position.x_get ();
-	double y = position.y_get ();
-	// Attention ce code est dépendant de TIME_STEP = 15ms
-	// puisqu'il mesure l'avancée depuis le dernier step 
-  	if (fabs (last_x - x) < 0.00025 && fabs (last_y - y) < 0.00025) {
-    	blocked++;
-  	}
-  	else {
-    	blocked = blocked > 0 ? blocked - 1: 0;
-  	}
-  	last_x = x;
-  	last_y = y;
-}
+	static const int OAM_OBST_THRESHOLD = 4500;
+	static const double OAM_K_PS_90 = 0.02;
+	static const double OAM_K_PS_45 = 0.09;
+	static const double OAM_K_PS_00 = 0.12;
 
-void ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_speed, int& right_speed)
-{
-	int max_ds_value = 0, DeltaS = 0;
-	int Activation[] = {0, 0};
-	bool oam_active;
-	int oam_speed[2];
-		
 	// Determine the presence and the side of an obstacle
+	int Activation[] = {0, 0};
 	for (int i = PS_RIGHT_00; i <= PS_RIGHT_45; i++) {
-		if (max_ds_value < ps_value[i]) max_ds_value = ps_value[i];
 		Activation[RIGHT] += ps_value[i];
 	}
-	Activation[RIGHT] += ps_value[PS_RIGHT_90];
 	for (int i = PS_LEFT_45; i <= PS_LEFT_00; i++) {
-		if (max_ds_value < ps_value[i]) max_ds_value = ps_value[i];
 		Activation[LEFT] += ps_value[i];
 	}
-	Activation[LEFT] += ps_value[PS_LEFT_90];
-	if (max_ds_value > OAM_OBST_THRESHOLD) {
-		oam_active = true;
+//	cout << " " << Activation[LEFT] << " " << Activation[RIGHT] << endl;
+
+	// update de l'etat de l'oam
+	if (Activation[RIGHT] > OAM_OBST_THRESHOLD && Activation[LEFT] > OAM_OBST_THRESHOLD) {
+		oam_state_ = OAM_STUCK;
+//		cout << "bloque" << endl;
+	}
+	else if (Activation[LEFT] > OAM_OBST_THRESHOLD || Activation[RIGHT] > OAM_OBST_THRESHOLD) {
+		oam_state_ = OAM_ON;
+//		cout << "oam_active" << endl;
+	}
+	else if (fabs(angle) > 0.9 * M_PI) {
+		oam_state_ = OAM_BIGTURN;
+//		cout << "demi-tour : "<< angle << endl;
+	}
+	else if (fabs(angle) < 0.1 * M_PI) {
+		oam_state_ = OAM_OFF;
+	}
+
+	// calcul des vitesses de roues en fonction de l'etat de l'oam
+	static const int OAM_FORWARD_SPEED = Params::get_int("DEFAULT_SPEED");
+	int DeltaS = 0;
+	left_speed = right_speed = OAM_FORWARD_SPEED;
+  	if (oam_state_ == OAM_ON) {
+  		// on ralentit pas mais on tourne selon la proximité du mur
+  		bool go_right = Activation[RIGHT] <= Activation[LEFT];
+		DeltaS += (go_right ? -1 : 1) * OAM_K_PS_90 * ps_value[(go_right ? PS_LEFT_90 : PS_RIGHT_90)];
+		DeltaS += (go_right ? -1 : 1) * OAM_K_PS_45 * ps_value[(go_right ? PS_LEFT_45 : PS_RIGHT_45)];
+		DeltaS += (go_right ? -1 : 1) * OAM_K_PS_00 * ps_value[(go_right ? PS_LEFT_00 : PS_RIGHT_00)];
+  	}
+  	else if (oam_state_ == OAM_BIGTURN || oam_state_ == OAM_STUCK) {
+  		// on freine et on tourne à fond
+  		left_speed = right_speed = 0;
+		DeltaS += (angle > 0 ? 1 : -1) * OAM_FORWARD_SPEED;
 	}
 	else {
-		oam_active = false;
-		bloque_ = false;
+		// on ralentit lineairement et on tourne exponentiellement suivant la force du virage
+  		left_speed = right_speed = OAM_FORWARD_SPEED * (1 - fabs(angle) / M_PI);
+		DeltaS += OAM_FORWARD_SPEED * (angle > 0 ? 1 : -1) * (1 - exp(-fabs(1.5 * angle)));
 	}
-//	cout << endl << Activation[LEFT] << " " << Activation[RIGHT] << " " << OAM_OBST_THRESHOLD << " " << blocked << endl;
-
-	if (oam_active && !bloque_) {
- 		if (Activation[RIGHT] > OAM_BLOQUE && Activation[LEFT] > OAM_BLOQUE) {
-			bloque_ = true;
-  			//cout << "bloque" << endl;
-		}
-	}
-
-	// Forward speed
-	oam_speed[LEFT]  = OAM_FORWARD_SPEED;
-	oam_speed[RIGHT] = OAM_FORWARD_SPEED;
-
-	// Go away from obstacle
-  	if (!demi_tour && oam_active) {
-    	// The rotation of the robot is determined by the location and the side of the obstacle
-    	if (Activation[RIGHT] <= Activation[LEFT]) {
-    		DeltaS -= (int) (OAM_K_PS_90 * ps_value[PS_LEFT_90]);
-      		DeltaS -= (int) (OAM_K_PS_45 * ps_value[PS_LEFT_45]);
-      		DeltaS -= (int) (OAM_K_PS_00 * ps_value[PS_LEFT_00]);
-    	}
-    	else { 
-    		DeltaS += (int) (OAM_K_PS_90 * ps_value[PS_RIGHT_90]);
-      		DeltaS += (int) (OAM_K_PS_45 * ps_value[PS_RIGHT_45]);
-      		DeltaS += (int) (OAM_K_PS_00 * ps_value[PS_RIGHT_00]);
-    	}
-    	//cout << "delta1 :" << DeltaS << endl;
-  	}
-  
-  	avoid_block (position);
-//  	cout << "blocked " << blocked << "bloc " << bloque_ << " demi_tour " << demi_tour << " angle " << angle << endl;
-  	if (!bloque_ && blocked < 500) {
-  		if (fabs(angle) < 0.1 * M_PI) {
-  			demi_tour = false;
-  			DeltaS -= (int)(2 * (float)OAM_FORWARD_SPEED / M_PI * -angle);
-  		}
-  		else if (demi_tour || fabs(angle) > 0.9 * M_PI) {
-  			demi_tour = true;
-  			//cout << "demi-tour : "<< angle << endl;
-  			oam_speed[LEFT] = 0;
-		    oam_speed[RIGHT] = 0;
-		    DeltaS += (angle > 0?1:-1) * OAM_K_MAX_DELTAS;
-  		}
-  		else {
-  			DeltaS -= (int)(2 * (float)OAM_FORWARD_SPEED / M_PI * -angle);
-  		}
-  		//cout << "delta2 :" << DeltaS << endl;
-	}	
-	if (DeltaS > OAM_K_MAX_DELTAS) DeltaS = OAM_K_MAX_DELTAS;
-    if (DeltaS < -OAM_K_MAX_DELTAS) DeltaS = -OAM_K_MAX_DELTAS;
+	if (DeltaS > OAM_FORWARD_SPEED) DeltaS = OAM_FORWARD_SPEED;
+    if (DeltaS < -OAM_FORWARD_SPEED) DeltaS = -OAM_FORWARD_SPEED;
 
     // Set speeds
-    oam_speed[LEFT] -= DeltaS;
-    oam_speed[RIGHT] += DeltaS;
-	//cout << "speed: " << oam_speed[LEFT] << " " << oam_speed[RIGHT] << endl; 
-  	left_speed = oam_speed[LEFT];
-  	right_speed = oam_speed[RIGHT];
+    left_speed -= DeltaS;
+    right_speed += DeltaS;
+	//cout << "speed: " << left_speed << " " << right_speed << endl;
 }
 
 int ObstacleAvoidance::analyse_cross_road (bool& left, bool& straight, bool& right)
@@ -164,7 +116,7 @@ int ObstacleAvoidance::analyse_cross_road (bool& left, bool& straight, bool& rig
 	}
 	bool front_reached = false;
 	//if (ps_value[PS_LEFT_00] > 1700) {
-	if (ps_value[PS_LEFT_00] > 1200) {
+	if (ps_value[PS_LEFT_00] > 1200 && ps_value[PS_RIGHT_00] > 1200) {
 		front_reached = true;
 	}
 	//cout << obstacle_left_front << endl;

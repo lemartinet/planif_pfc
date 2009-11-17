@@ -6,13 +6,11 @@
 #include <numeric>
 #include <algorithm>
 
-#define NB_STEP 8
-
-Cell::Cell () : ComputeUnit(PC), pos_(0), lastTidx_(0) 
+Cell::Cell () : ComputeUnit(PC), pos_(0) 
 {
 }
 
-Cell::Cell (const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos)), lastTidx_(0) 
+Cell::Cell (const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos))
 {
 }
 
@@ -21,7 +19,7 @@ bool sort_function (double* v1, double* v2)
 	return v1[0] < v2[0] || (v1[0] == v2[0] && v1[1] < v2[1]); 	
 }
 
-Cell::Cell (const string& filename, const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos)), lastTidx_(0) 
+Cell::Cell (const string& filename, const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos))
 {
 	ifstream file (filename.c_str ());
 	double x, y, r;
@@ -87,27 +85,5 @@ void Cell::compute (const Coord& pos, double peak)
 	if (output_ < 0.05) {
 		output_ = 0.05 + bruit(2 * 0.05);	
 	}
-	// on garde un historique de l'activation sur X time steps
-	if (lastTrecent_.size () < NB_STEP) {
-		lastTrecent_.push_back (output ());
-	}
-	else {
-		lastTrecent_[lastTidx_] = output ();
-		lastTidx_ = ++lastTidx_ % NB_STEP;
-	}
-}
-
-void Cell::draw (ostream& os) const
-{
-	double cell_output = output (); 
-    os << "c" << &cell_output << " [label=\"" << no_ << ":" << output () << "\"]" << endl;
-}
-
-const vector<double>& Cell::lastT_recent () const
-{
-//	double total = accumulate (lastTrecent_.begin(), lastTrecent_.end(), 0.0);
-//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
-//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
-//	return * max_element (lastTrecent_.begin(), lastTrecent_.end());
-	return lastTrecent_;
+	update_recent();
 }

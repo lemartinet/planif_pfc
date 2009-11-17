@@ -83,20 +83,20 @@ void new_trial_doors(){
     trial 3 -> open : way 3
     trial 4-12 -> open : all
     */
-    if (trial == 1|| trial == 4) {
-//      if (trial == 1 || trial == 4 || trial == 7) {
+    //~ if (trial == 1) {
+    if (trial == 1 || trial == 4) {
       orders[0] = orders[1] = orders[2] = o;
       orders[3] = orders[4] = orders[5] = orders[6] = c;
       message_protocol (P1);
     }
-    else if (trial == 2|| trial == 5) {
-//      else if (trial == 2 || trial == 5 || trial == 8) {
+    //~ else if (trial == 2) {
+    else if (trial == 2 || trial == 5) {
       orders[3] = orders[4] = orders[2] = o;
       orders[0] = orders[1] = orders[5] = orders[6] = c;
       message_protocol (P2);
     }
-    else if (trial == 3|| trial == 6) {
-//      else if (trial == 3 || trial == 6 || trial == 9) {
+    //~ else if (trial == 3) {
+    else if (trial == 3 || trial == 6) {
       orders[5] = orders[6] = o;
       orders[3] = orders[4] = orders[0] = orders[1] = orders[2] = c;
       message_protocol (P3);
@@ -234,6 +234,13 @@ void run_protocol () {
   trial_time += (float) TIME_STEP / 1000;
   total_step++;
   
+  // sending the distance of the robot to the goal
+  const double* translation = wb_supervisor_field_get_sf_vec3f (t_field);
+  double dist[] = {translation[0] - goal_position[0], translation[2] - goal_position[2]};
+  char dist_msg[128];
+  sprintf(dist_msg, "%f", sqrt(dist[0] * dist[0] + dist[1] * dist[1]));
+  wb_emitter_send (emitter, dist_msg, strlen(dist_msg) + 1);
+  
   if (robot_state == GOALFOUND && wait == -1 && ((day - 1) * 12 + trial) % 6 == 0) {
     robot_state = SLEEPING;
     wait = SLEEP_STEP;
@@ -255,25 +262,24 @@ void run_protocol () {
     wb_supervisor_field_set_sf_vec3f (t_field, start_position);
     wb_supervisor_field_set_sf_rotation (r_field, start_rotation);
     trial++;
-    new_trial_doors();
+    // Let's change the day if necessary
+    if ((day == 16 && trial > 6) || (day == 15 && trial > 7) || (trial > 12)){
+      day++;
+      trial = 1;
+      nbChoice1 = previous_way1 = 0;
+    }
+    // When all the trials are done, we save the controller and quit webots
+    if (day > 16 || (! FINAL_FORCED && day > 15)){
+      supervisor_die ();
+    }
     open_p23 = 0;
+    new_trial_doors();
     trial_time = 0;
     current_way_init ();
     robot_state = SEARCHING;
   }
   if (wait >= 0) {
     wait--;
-  }
-  
-  // Let's change the day if necessary
-  if ((day == 16 && trial > 6) || (day == 15 && trial > 7) || (trial > 12)){
-    day++;
-    trial = 1;
-    nbChoice1 = previous_way1 = 0;
-  }
-  // When all the trials are done, we save the controller and quit webots
-  if (day > 16 || (! FINAL_FORCED && day > 15)){
-    supervisor_die ();
   }
 }
 

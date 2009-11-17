@@ -3,7 +3,7 @@
 
 #include "columns.hh"
 #include "hippo.hh"
-#include "egoactionpop.hh"
+#include "egoaction.hh"
 #include "alloactionpop.hh"
 #include "computeunit.hh"
 
@@ -18,20 +18,19 @@ public:
 	
 	const Columns& cols_get () const { return columns_; }
 	const Hippo& hippo_get () const { return hippo_; }
-
-	Action* best_action () const;
-	double inf_get (double angle) const;
-	bool synch (bool learning, bool decision_point);
-	void sleep (int sleep_step);
-	void goal_learning ();
+	void get_actions(vector<double>& angles, vector<double>& values);
+	void synch (bool learning, bool decision_point, bool goal_found, bool bloque, bool sleeping, int sleep_step);
+	void gui_goal_set(int no_col);
+	
+private:
 	void set_goal_weight (Column* col, double val);
 	bool is_goal_position (Column* col) const;
+	void sleep (int sleep_step);
+	void goal_learning ();
   
-	void draw (ostream& os) const;
-
 private:
 	Hippo hippo_;
-	EgoActionPop ego_pop_;
+	EgoAction ego_;
 	AlloActionPop allo_pop_;
 	ComputeUnit motivation_;
 	Columns columns_;

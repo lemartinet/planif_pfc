@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# arg1 : path de l'exp
-# arg2 : (> 700) nb neuron
-# il faudrait lire cette valeur dans le fichier type.txt !!!
-# faire une suite au script qui convertit chaque .txt en .mat
-
 import os
 import sys
 import glob
@@ -24,10 +19,11 @@ def txt2mat(dir, var, sparsify=0, prefix=""):
 		os.remove(f)
 
 # Extrait les fichiers d'activité
-def frs(dir, part1, part2):
+def frs(dir):
+	nbneurons = loadtxt(dir + "type.txt", dtype="int", comments="%")[-1, 0];
 	print("Extracting neurons...")
 	os.mkdir(dir + "/frs")
-	begin, end = 1, part2 + 1
+	begin, end = 1, nbneurons + 1
 	fin = open(dir + "/fr.txt", "r")	
 	days = range(1,15) * 12 + [15] * 7 + [16] * 6
 	days.sort()
@@ -48,7 +44,7 @@ def frs(dir, part1, part2):
 			t_ligne = 0
 		t_file.write(" ".join(rows[1:]))			
 		t_ligne += 1
-		if len(rows) < part2 + 1:
+		if len(rows) < nbneurons + 1:
 			print("line skipped")
 			continue
 		for i in range(begin, end):
@@ -61,7 +57,8 @@ def frs(dir, part1, part2):
 	os.remove(dir + "/fr.txt")
 
 # Extrait les fichiers de poids
-def weight(dir, nbneurons):
+def weight(dir):
+	nbneurons = loadtxt(dir + "type.txt", dtype='int', comments="%")[-1, 0];
 	print("Extracting weights...")
 	os.mkdir(dir + "/weight/")
 	fin = open(dir + "/weight.txt", "r")
@@ -101,8 +98,8 @@ def weight(dir, nbneurons):
 #	echo -n "$ratio "
 #	done	
 
-if __name__ == "__main__":
-	# Do it !!!
-	#frs(sys.argv[1], 700, int(sys.argv[2]))
-	weight(sys.argv[1], int(sys.argv[2]))
+#if __name__ == "__main__":
+#	# Do it !!!
+#	frs(sys.argv[1], 700, int(sys.argv[2]))
+#	weight(sys.argv[1], int(sys.argv[2]))
 

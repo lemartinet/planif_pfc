@@ -12,7 +12,7 @@
 #include <sstream>
 #include "mystr.hh"
 
-int str2i (string str)
+int str2i (const string& str)
 {
   stringstream stream;
   int res = 0;
@@ -22,7 +22,7 @@ int str2i (string str)
   return res;
 }
 
-double str2d (string str)
+double str2d (const string& str)
 {
   stringstream  stream;
   double res = 0.0;

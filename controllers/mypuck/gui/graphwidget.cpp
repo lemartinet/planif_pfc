@@ -65,10 +65,6 @@ GraphWidget::~GraphWidget ()
 	delete scene_;
 }
 
-void GraphWidget::itemMoved ()
-{
-}
-
 Node* GraphWidget::node_get (NodeType type, int no)
 {
   Node* node = 0;
@@ -115,6 +111,15 @@ Edge* GraphWidget::edge_get (NodeType type, int from, int to)
   return 0;
 }
 
+void GraphWidget::edges_update ()
+{
+	foreach (QGraphicsItem* item, scene()->items()) {
+		Edge* edge = qgraphicsitem_cast<Edge*>(item);
+		if (edge)
+			edge->adjust ();
+	}
+}
+
 void GraphWidget::edge_hide (NodeType type, int to)
 {
   Edge*  edge = 0;
@@ -141,12 +146,9 @@ void GraphWidget::edge_show (NodeType type, int to)
     }
 }
 
-Node* GraphWidget::add_node (NodeType type, int no, int size)
+Node* GraphWidget::add_node (NodeType type, int no)
 {
-	Node* node = new Node (this);
-	node->nodetype_set (type);
-	node->no_set (no);
-	node->nodesize_set (size);
+	Node* node = new Node (type, no);
 	node->setPos (0, 0);
 	scene_->addItem (node);
 	return node;
@@ -189,14 +191,7 @@ void GraphWidget::drawBackground(QPainter *painter, const QRectF &rect)
 {
     Q_UNUSED(rect);
 
-    // Shadow
     QRectF sceneRect = this->sceneRect();
-//    QRectF rightShadow(sceneRect.right(), sceneRect.top() + 5, 5, sceneRect.height());
-//    QRectF bottomShadow(sceneRect.left() + 5, sceneRect.bottom(), sceneRect.width(), 5);
-//    if (rightShadow.intersects(rect) || rightShadow.contains(rect))
-//	painter->fillRect(rightShadow, Qt::darkGray);
-//    if (bottomShadow.intersects(rect) || bottomShadow.contains(rect))
-//	painter->fillRect(bottomShadow, Qt::darkGray);
 
     // Fill
     QLinearGradient gradient(sceneRect.topLeft(), sceneRect.bottomRight());
@@ -242,11 +237,4 @@ void GraphWidget::scaleView(qreal scaleFactor)
 void GraphWidget::mouseMoveEvent (QMouseEvent* event)
 {
   mouse_pos_ = event->pos ();
-}
-
-void GraphWidget::trigger_sig_node_clicked (NodeType type, int no) 
-{
-	if (type == COL) { 
-		emit sig_node_clicked (no);
-	} 
 }

@@ -61,16 +61,13 @@ void Log::logw () const
 			if (n == 0) {
 				continue;
 			}
-			map<const int, Synapse *> mw = n->all_syn_get ();
+			map<const int, double*> mw = n->all_syn_get ();
 			mw.insert (n->all_syn_getI ().begin (), n->all_syn_getI ().end ());
-			map<const int, Synapse *>::const_iterator it2;
+			map<const int, double*>::const_iterator it2;
 			for (it2 = mw.begin (); it2 != mw.end (); it2++) {
 				int no = it2->first;
-				Synapse* s = it2->second;
-				w_all[no][n->no_get ()] = s->w_get () * s->a_get ();
-				if (s->is_mult ()) {
-					w_all[s->from_mult_get ()->no_get ()][n->no_get ()] = s->w_get () * s->b_get ();
-				}
+				double* w = it2->second;
+				w_all[no][n->no_get ()] = *w;
 			}
 		}
 		for (int i = 0; i < nb_all; i++) {

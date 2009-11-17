@@ -15,8 +15,8 @@
 
 using namespace std;
 
-int str2i (string str);
-double str2d (string str);
+int str2i (const string& str);
+double str2d (const string& str);
 string i2str (int i);
 string d2str (double d);
 

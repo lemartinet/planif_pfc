@@ -41,8 +41,8 @@ Edge::Edge(Node *sourceNode, Node *destNode)
     setAcceptedMouseButtons(0);
     source = sourceNode;
     dest = destNode;
-    source->addEdge_succ (this);
-    dest->addEdge_pred (this);
+//    source->addEdge_succ (this);
+//    dest->addEdge_pred (this);
     adjust();
     best_ = false;
 }

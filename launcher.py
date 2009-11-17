@@ -43,8 +43,8 @@ def analyze(start, end):
 	for i in range(start, end + 1):
 		print("Processing exp %d data..." % i)
 		try:
-			frs("data/data_raw/%d" % i, 700, 1204)
-			weight("data/data_raw/%d" % i, 1204)
+			frs("data/data_raw/%d" % i)
+			weight("data/data_raw/%d" % i)
 		except:
 			print("Problems with exp %d data" % i)
 

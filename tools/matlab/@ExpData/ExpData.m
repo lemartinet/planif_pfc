@@ -1,5 +1,6 @@
 classdef ExpData < handle
     properties
+        num_exp
         path
         trial
         day
@@ -14,12 +15,30 @@ classdef ExpData < handle
     end
     
     methods
-        function [exp_data] = ExpData(path)
-            exp_data.path = path;
+        function [exp_data] = ExpData(path, num, reload)
+            if reload
+                load(sprintf('%s/%d/exp_data.mat', path, num), 'exp_data');
+            else
+                exp_data.num_exp = num;
+                exp_data.path = sprintf('%s/%d/', path, num);
+                exp_data.load_trials();
+                exp_data.analyze_behavior();
+                exp_data.analyze_exploration();
+                save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
+                %         exp_data.load_neurons();
+                %         save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
+                %         exp_data.make_q(0);
+                %         exp_data.linear_graph();
+                %         save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
+            end
         end
         
         % charge les infos des essais
         load_trials(exp_data)
+        % charge les infos de comportement
+        analyze_behavior(exp_data)
+        % charge les infos de decision (planning VS explo)
+        analyze_exploration(exp_data)
         % charge les infos des neurones
         load_neurons(exp_data)
         % crée les fichiers Q des fr selon jour/essai (en smoothant éventuellement)
@@ -73,6 +92,7 @@ classdef ExpData < handle
             y = y.Q;
         end
         
+        % recupere le centre de champ recepteur pour chaque neurone
         function [y] = get_centers(exp_data)
             y = cell2mat({exp_data.neuron.center}');
         end
@@ -86,14 +106,39 @@ classdef ExpData < handle
             figure, plot(t');
             figure, plot(mean(t));
         end
+        
+        function [m_all, m_fst] = get_mean_behavior(exp_data, days)
+            m_all = hist([exp_data.trial(days, :).all_choices], 1:3);
+            m_fst = hist([exp_data.trial(days, :).fst_choice], 1:3);
+        end
+        
+        function [nb_errors] = get_nb_errors(exp_data, days, good)
+            f = cellfun(@(x) [x, good], {exp_data.trial(days, :).all_choices}, 'UniformOutput', false);
+            f = cellfun(@(x) find(x == good, 1) - 1, f);
+            nb_errors = sum(f);
+        end
+        
+        function [explo_ratio] = get_explo_ratio(exp_data, days)
+            dec_list = [exp_data.trial(days, :).decision];
+            dec_list = dec_list(2, :);
+            explo_ratio = length(find(dec_list == 0)) / ...
+                (length(find(dec_list == 0)) + length(find(dec_list == 1)));
+        end
+        
+        function [day, trial] = from_timestep(exp_data, ts)
+            num = find([exp_data.trial(:,:).start] - ts > 0, 1) - 1;
+            [day, trial] = exp_data.from_num_trial(num);
+        end
+
     end
     
     methods (Static = true)
-        function [z] = from_dt(x,y) 
+        function [z] = from_day_trial(x,y) 
             z = (x >= 16) * (175 + y) + (x < 16) * ((x-1) * 12 + y);
         end
-        function [y] = from_num(x) 
+        function [day, trial] = from_numtrial(x) 
             y = (x >= 176) * ([16, x - 175]) + (x < 176) * (1 + [floor((x-1)/12) , mod(x-1,12)]);
+            day = y(1); trial = y(2);
         end
     end
     

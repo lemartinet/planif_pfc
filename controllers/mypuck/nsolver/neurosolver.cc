@@ -12,96 +12,96 @@
 #include <sstream>
 #include <algorithm>
 
-#define LEARN_RYTHM 96
+#define LEARN_RYTHM 30
 //#define LEARN_RYTHM 8
 
-Action go_forward_goal (0);
-
 Neurosolver::Neurosolver () : 
-	hippo_(), ego_pop_(), allo_pop_(), motivation_ (MOTIV, 1), 
-	columns_(hippo_.pop_get (), *ego_pop_.pop_get ().at (1)),  
+	hippo_(), ego_(), allo_pop_(), motivation_ (MOTIV, 1), 
+	columns_(hippo_.pop_get(), ego_),  
 	ripples_(0), learn_rythm_(0)
 {
-	Logger::logw ("weight");
 }
 
 Neurosolver::~Neurosolver () 
 {
 }
 
-Action* Neurosolver::best_action () const
-{
-	if (columns_.best_state_col (0) && is_goal_position (columns_.best_state_col (0))) {
-		return &go_forward_goal;
-	}
-	 
-	Minicol* best_minicol = columns_.best_minicol (0);	
-	if (best_minicol) {
-		stringstream s; 
-		s << "3 " << best_minicol->from_get ().no_get ()+1 << " " << best_minicol->to_get ().no_get ()+1 
-			<< " " << best_minicol->action_get().angle_get();
-		Logger::log ("network", s.str (), true);	
-		return &best_minicol->action_get ();
-	}
-	return 0;
-}
-
-
 void Neurosolver::goal_learning ()
 {
 	Column* col = columns_.best_state_col (0);
-	if (!col || col->lastT_recent () < 0.3) {
-		return;
+	if (col && col->lastT_recent () >= 0.3) {
+		set_goal_weight (col, 1);
 	}
-	set_goal_weight (col, 1);
+	col = columns_.best_state_col (1);
+	if (col && col->lastT_recent () >= 0.3) {
+		set_goal_weight (col, 1);
+	}
 	// ajouter la détection de l'absence d'un goal attendu
 }
 
 void Neurosolver::set_goal_weight (Column* col, double val)
 {
-	Synapse* s = col->sup_get ().syn_get (motivation_);
-	if (s != 0) {
-		s->w_set (val);
+	double* w = col->sup_get ().syn_get (motivation_);
+	if (w != 0) {
+		*w = val;
 	}
 	else {
-		col->sup_get ().add_synapse (motivation_, val, true);
+		col->sup_get ().add_synapse (motivation_, val);
 	}	
 }
 
 bool Neurosolver::is_goal_position (Column* col) const
 {
-	Synapse* s = col->sup_get ().syn_get (motivation_);
-	return (s != 0) && (s->w_get() > 0);	
+	double* w = col->sup_get ().syn_get (motivation_);
+	return (w != 0) && (*w > 0);	
 }
 
-bool Neurosolver::synch (bool learning, bool decision_point)
+void Neurosolver::gui_goal_set(int no_col)
 {
-	if (Behavior::behavior_get().goal_reached ()) {
+	Column* col = columns_.nocol_get(no_col);
+	if (is_goal_position (col)) {
+		set_goal_weight (col, 0.0);
+	}
+	else {
+		set_goal_weight (col, 1.0);
+	}	
+}
+
+void Neurosolver::synch (bool learning, bool decision_point, bool goal_found, bool bloque, 
+						 bool sleeping, int sleep_step)
+{
+	if (sleeping) {
+		sleep(sleep_step);
+		return;	
+	}
+	if (goal_found) {
+		goal_learning();
   		// on sauvegarde les poids à chaque fin d'essai
 		Logger::logw ("weight");			
 	}
-	bool col_changed = false;
+	if (bloque) {
+		columns_.correct_transition ();	
+	}
 	if (!learning) {
 		// on vient d'arriver au goal, on apprend rien pendant un certain temps
 		// permet de virer le lien entre fin de P1 et début de P1
 // 		cout << "no learning" << endl;	
-	  	columns_.synch (false, hippo_.pop_get (), *ego_pop_.pop_get ().at (1), &Behavior::behavior_get().position_get ());
-  		col_changed = true;
+	  	columns_.synch (false, hippo_.pop_get (), ego_, &Behavior::behavior_get().position_get ());
   	}
   	else {
   		bool learn_step = learn_rythm_ % LEARN_RYTHM == LEARN_RYTHM - 1;
-	  	col_changed = columns_.synch (learn_step, hippo_.pop_get (), *ego_pop_.pop_get ().at (1), &Behavior::behavior_get().position_get ());
+	  	columns_.synch (learn_step, hippo_.pop_get (), ego_, &Behavior::behavior_get().position_get ());
 	}
 	++learn_rythm_;
 	
 	// on màj les entrées après pour avoir r_cortex(t) = F(r_subcort(t-1))
 	hippo_.synch (Behavior::behavior_get().position_get ());
-	ego_pop_.synch (Behavior::behavior_get().angle_get()); 
+//	cout << Behavior::behavior_get().nb_path_get() << endl;
+	ego_.compute (Behavior::behavior_get().angle_get(), Behavior::behavior_get().nb_path_get());
+//	cout << ego_.output() << endl;
 	allo_pop_.synch (Behavior::behavior_get().angle_get());
 	motivation_.output_set (Behavior::behavior_get().goal_reached () || decision_point ? 1 : 0);
-	
 	Logger::log ();
-  	return col_changed;
 }
 
 void Neurosolver::sleep (int sleep_step)
@@ -115,8 +115,8 @@ void Neurosolver::sleep (int sleep_step)
 	else if (ripples_ >= 0) {
 		ripples_--;
 	}
-	columns_.synch (true, hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
-	hippo_.sleep (ripples_);
+	columns_.synch (true, hippo_.pop_get (), ego_);
+	hippo_.synch (Behavior::behavior_get().position_get (), true, ripples_);
 	Logger::log ();
 
 	if (sleep_step == 1) {
@@ -124,44 +124,29 @@ void Neurosolver::sleep (int sleep_step)
 	}
 }
 
-void Neurosolver::draw (ostream& os) const
+void Neurosolver::get_actions(vector<double>& angles, vector<double>& values)
 {
-  os << "digraph G {" << endl;
-  hippo_.draw (os);
-  columns_.draw (os);
-  os << "}" << endl;
-}
-
-double Neurosolver::inf_get (double angle) const
-{
-	if (columns_.best_state_col (0) == 0) {
-		return 1;	
+	if (columns_.best_state_col (0) && is_goal_position (columns_.best_state_col (0))) {
+		angles.push_back(0);
+		values.push_back(1);
+		return;
 	}
-	Action a (angle);
-	vector<double> qvals;
-	int nbcols = columns_.size ();
-	// on regarde l'ensemble des états actifs pr calculer la qval
-	for (int i = 0; i < nbcols; i++) {
-		if (columns_.col_get (i)->spiking ()) {
-			vector<Minicol*> all_minicols = columns_.minicol_get (columns_.col_get (i)->no_get(), a);
-			for (vector<Minicol*>::iterator it = all_minicols.begin (); it != all_minicols.end (); ++it) {
-				qvals.push_back ((*it)->activation ());	
-			}
+	const vector<Minicol*>& minicols = columns_.pop_minicol_get();
+	vector<Minicol*>::const_iterator it;
+	for (it = minicols.begin(); it != minicols.end(); it++) {
+		Minicol* minicol = *it;
+		if (minicol->level_get() == 0 && minicol->recruited_get()) {
+			angles.push_back(minicol->action_get().angle_get());
+			// eventuellement utiliser activation() a la place de lastT_recent()
+			values.push_back(minicol->lastT_recent());
 		}
 	}
-	if (qvals.size () > 0) {
-		return *max_element (qvals.begin (), qvals.end ());
-	}
-	else {
-		return -1;
-	}
-	
-//	Minicol* m = current_lvl0_->minicol_get (a);
-//	if (m != 0) {
-//		return m->activation ();
-//	}
-//	else {
-//		-1;
-//	}
+	Minicol* best_minicol = columns_.best_minicol (0);	
+	if (best_minicol) {
+		stringstream s; 
+		s << "3 " << best_minicol->from_get ().no_get ()+1 << " " << best_minicol->to_get ().no_get ()+1 
+			<< " " << best_minicol->action_get().angle_get();
+		Logger::log ("network", s.str (), true);	
+	}		
 }
 

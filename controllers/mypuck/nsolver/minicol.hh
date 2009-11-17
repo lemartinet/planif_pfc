@@ -33,8 +33,6 @@ public:
 	double goal_activation () const { return sup_.output (); }
 	bool spiking () const { return inf_.spiking (); }
 	
-	void draw (ostream& os) const;
-	
 	void update_value ();
 	void adapt_action (const Action& action);
 	void lateral_learning (bool increase, double factor = 1);

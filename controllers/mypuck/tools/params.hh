@@ -11,10 +11,10 @@ class Params
 public:
 	static void load ();
 
-  	static string get (string name);
-//  	static void set (string name, int val);
-	static double get_double (string name);
-	static int get_int (string name);
+  	static string get (const string& name);
+  	static void set (const string& name, const string& value);
+	static double get_double (const string& name);
+	static int get_int (const string& name);
 	static string get_path ();
 	static string get_path_pc ();
 	  

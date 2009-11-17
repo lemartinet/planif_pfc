@@ -34,15 +34,13 @@ using namespace std;
 
 class GraphWidget : public QGraphicsView
 {
-    Q_OBJECT
-
 public:
     GraphWidget ();
     ~GraphWidget ();
 
     Node* node_get (NodeType type, int no);
     Edge* edge_get (NodeType type, int from, int to);
-    Node* add_node (NodeType type, int no, int size);
+    Node* add_node (NodeType type, int no);
     Edge* add_edge (NodeType type, int from, int to);
     QGraphicsScene* scene_get () { return scene_; }
     QPoint& mouse_pos_get () { return mouse_pos_; }
@@ -50,9 +48,7 @@ public:
     void edge_type_del (NodeType type);
     void edge_hide (NodeType type, int to);
     void edge_show (NodeType type, int to);
-    
-	void trigger_sig_node_clicked (NodeType type, int no);
-	void itemMoved();
+    void edges_update();
 
 protected:
     void keyPressEvent(QKeyEvent *event);
@@ -66,9 +62,6 @@ protected:
 private:
     QGraphicsScene*   scene_;
     QPoint            mouse_pos_;
-
-signals:
-    void sig_node_clicked (int no);
 };
 
 #endif

@@ -1,6 +1,10 @@
 #ifndef COMPUTEUNIT_H
 # define COMPUTEUNIT_H
 
+#include <vector>
+
+using namespace std;
+
 enum nType { 
 	STATE = 0, 
 	INF = 1, 
@@ -26,6 +30,8 @@ public:
 	bool spiking () const;
 	int no_get () const { return no_; }
 	static int nb_computeunits_get () { return nb_computeunits; }
+	const vector<double>& lastT_recent () const;
+	void update_recent();
 	 
 protected:
 	double output_;
@@ -33,6 +39,8 @@ protected:
   
 private:
 	static int nb_computeunits;
+	vector<double> lastTrecent_;
+	int lastTidx_;
 };
 
 bool operator== (const ComputeUnit& n1, const ComputeUnit& n2);

@@ -3,6 +3,9 @@
 
 #include <vector>
 
+// OAM state
+enum oam_state { OAM_OFF = 0, OAM_ON = 1, OAM_STUCK = 2, OAM_BIGTURN = 3};
+
 class Coord;
 
 using namespace std;
@@ -13,22 +16,18 @@ public:
 	ObstacleAvoidance (int* value);
 	virtual ~ObstacleAvoidance ();
 
-	bool bloque_get () const { return bloque_; }
-	void avoid (double angle, const Coord& position, int& left_speed, int& right_speed);
+	bool bloque_get () const { return oam_state_ == OAM_STUCK; }
+	void avoid (double angle, int& left_speed, int& right_speed);
 	void free_ways (vector<double>& dirs, double robot_angle);
 
 private:
-	void avoid_block (const Coord& position);
 	int analyse_cross_road (bool& left, bool& straight, bool& right);
 
 private:
 	int* ps_value;
 	bool left_near_;
 	bool right_near_;
-	bool bloque_;
-	bool demi_tour;
-	int blocked;
-	double last_x, last_y;
+	enum oam_state oam_state_;
 };
 
 #endif /*OBSTACLEAVOIDANCE_HH_*/

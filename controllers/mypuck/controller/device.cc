@@ -122,9 +122,10 @@ void RobotDevice::synch ()
 			sleep_ = true;
 //			cout << "sleep !!!" << endl; 
 		}
-//		else {
-//			dist_goal_ = atoi(message.c_str());	
-//		}
+		else {
+			dist_goal_ = str2d(message);
+//			cout << "distance " << dist_goal_ << endl;
+		}
 	}
 }
 
@@ -136,7 +137,7 @@ bool RobotDevice::goal_reached () const {
 //	cout << num_pixels_goal_ << " " << retina_size << endl;
 //	return num_pixels_goal_ > 0.25 * retina_size;
 	// methode avec distance
-//	return distance_goal_factor () < 0.07;
+//	return dist_goal_get () < 0.07;
 	return goal_reached_;
 }
 

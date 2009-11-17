@@ -3,7 +3,6 @@
 #include "params.hh"
 #include "cell.hh"
 #include "computeunit.hh"
-#include "logger.hh"
 #include "coord.hh"
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
@@ -69,8 +68,12 @@ void Hippo::cell_add (const Coord& pos)
 	nb_used_pc_++;
 }
 
-bool Hippo::synch (const Coord & position)
+void Hippo::synch (const Coord & position, bool sleeping, int ripples)
 {
+	if (sleeping) {
+		sleep(ripples);
+		return;
+	}
 	// Minimum activation of a cell, under wich a new cell should be created.
 	static const double CELL_FIRE_MIN = Params::get_double("CELL_FIRE_MIN");
 //	static const double CELL_SIMULT_MIN = Params::get_double("CELL_SIMULT_MIN");
@@ -122,9 +125,12 @@ bool Hippo::synch (const Coord & position)
 //	bool winner = (nb_spiking_cells () >= 6);
 	if (!LOAD_PC && !winner && peak > 0) {
 		cell_add (position);
+		nb_stable_ = 0;
+	}
+	else {
+		nb_stable_++;
 	}
 //	cout << "nb_spiking_cells: " << nb_spiking_cells () << endl;
-	return !winner;
 }
 
 void Hippo::sleep (int ripples)
@@ -144,20 +150,18 @@ void Hippo::sleep (int ripples)
 	}
 }
 
-int Hippo::nb_spiking_cells () const
+double Hippo::nb_spiking_cells () const
 {
-	return count_if (cellmap_.begin (), cellmap_.end (), bind (&ComputeUnit::spiking, _1)); 
-}
-
-void Hippo::draw (ostream& os) const
-{
-	os << "subgraph cluster_hippo" << " {" << endl;
-	os << "style=filled;" << endl;
-	os << "color=grey;" << endl;
-	os << "node [style=filled,color=white];" << endl;
-	for_each (cellmap_.begin (), cellmap_.end (), bind (&Cell::draw, ll_dynamic_cast<Cell*>(_1), var (os)));
-	os << "label = \"hippocampe\";" << endl;
-	os << "}" << endl;
+//	return count_if (cellmap_.begin (), cellmap_.end (), bind (&ComputeUnit::spiking, _1)); 
+	double sum = 0;
+	vector<ComputeUnit*>::const_iterator it;
+	for (it = cellmap_.begin (); it != cellmap_.end (); it++) {
+		if ((*it)->spiking()) {
+//			sum += (*it)->output();	
+			sum += 1;
+		}
+	}
+	return sum;
 }
 
 const Cell& Hippo::cell_get (int cell) const

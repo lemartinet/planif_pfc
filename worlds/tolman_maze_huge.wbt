@@ -1,15 +1,17 @@
 #VRML_SIM V6.0 utf8
 WorldInfo {
   info [
-    "Author: louis-emmanuel.martinet@upmc.fr"
+    "Description: mypuck robot"
+    "Author: fouque@ia.lip6.fr"
+    "Date: 18 Mai 2007"
+    "Version: 1"
   ]
-  title "Tolman & Honzik (1930) 's maze"
+  title "big Tolman & Honzik (1930) 's maze"
   basicTimeStep 15
-  displayRefresh 3
 }
 Viewpoint {
-  orientation 1 -0.000380278 -0.000333967 4.82748
-  position 0.300602 2.46317 -0.461409
+  orientation 1 -4.67787e-08 -1.63822e-08 4.87
+  position 0.754 11.9951 0.938074
 }
 Background {
   skyColor [
@@ -23,7 +25,7 @@ DirectionalLight {
   direction 0.6 -0.2 0.8
 }
 DEF GROUND Solid {
-  translation 0.24 0.001 -0.79
+  translation 0.24 0.01 -0.79
   children [
     DEF GROUND_SHAPE Shape {
       appearance Appearance {
@@ -34,10 +36,10 @@ DEF GROUND Solid {
       geometry IndexedFaceSet {
         coord Coordinate {
           point [
-            1 0 0.85
-            1 0 -0.95
-            -1 0 -0.95
-            -1 0 0.85
+            4 0 3.4
+            4 0 -3.2
+            -2.9 0 -3.2
+            -2.9 0 3.4
           ]
         }
         coordIndex [
@@ -52,7 +54,7 @@ DEF GROUND Solid {
 DEF LABY Solid {
   children [
     DEF WALL_0 Solid {
-      translation 0 0.03 0
+      translation 0 0.03 2.5
       children [
         Shape {
           appearance DEF WALL_APPEARANCE Appearance {
@@ -69,12 +71,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_1 Solid {
-      translation -0.05 0.03 -0.165
+      translation -0.05 0.03 1.81
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_1_BOX Box {
-            size 0.01 0.06 0.34
+            size 0.01 0.06 1.37
           }
         }
       ]
@@ -82,25 +84,23 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_2 Solid {
-      translation 0.05 0.03 -0.165
+      translation 0.05 0.03 1.81
       children [
         Shape {
           appearance USE WALL_APPEARANCE
-          geometry DEF WALL_2_BOX Box {
-            size 0.01 0.06 0.34
-          }
+          geometry USE WALL_1_BOX
         }
       ]
-      boundingObject USE WALL_2_BOX
+      boundingObject USE WALL_1_BOX
       locked TRUE
     }
     DEF WALL_3 Solid {
-      translation 0.59 0.03 -0.33
+      translation 2.04 0.03 1.13
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_3_BOX Box {
-            size 1.09 0.06 0.01
+            size 3.97 0.06 0.01
           }
         }
       ]
@@ -108,12 +108,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_4 Solid {
-      translation 1.13 0.03 -0.845
+      translation 4.02 0.03 -0.725
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_4_BOX Box {
-            size 0.01 0.06 1.04
+            size 0.01 0.06 3.75
           }
         }
       ]
@@ -121,12 +121,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_5 Solid {
-      translation 0.54 0.03 -0.43
+      translation 1.98 0.03 1.03
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_5_BOX Box {
-            size 0.99 0.06 0.01
+            size 3.87 0.06 0.01
           }
         }
       ]
@@ -134,12 +134,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_6 Solid {
-      translation -0.165 0.03 -0.33
+      translation -0.51 0.03 1.13
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_6_BOX Box {
-            size 0.23 0.06 0.01
+            size 0.92 0.06 0.01
           }
         }
       ]
@@ -147,12 +147,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_7 Solid {
-      translation -0.135 0.03 -0.43
+      translation -0.48 0.03 1.03
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_7_BOX Box {
-            size 0.165 0.06 0.01
+            size 0.87 0.06 0.01
           }
         }
       ]
@@ -160,12 +160,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_8 Solid {
-      translation -0.05 0.03 -0.62
+      translation -0.05 0.03 0.125
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_8_BOX Box {
-            size 0.01 0.06 0.39
+            size 0.01 0.06 1.81
           }
         }
       ]
@@ -173,12 +173,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_9 Solid {
-      translation 0.54 0.03 -1.26
+      translation 1.985 0.03 -2.49
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_9_BOX Box {
-            size 0.99 0.06 0.01
+            size 3.88 0.06 0.01
           }
         }
       ]
@@ -186,12 +186,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_10 Solid {
-      translation 0.59 0.03 -1.36
+      translation 2.03 0.03 -2.6
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_10_BOX Box {
-            size 1.09 0.06 0.01
+            size 3.97 0.06 0.01
           }
         }
       ]
@@ -199,12 +199,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_11 Solid {
-      translation -0.28 0.03 -0.81
+      translation -1.17 0.03 -0.775
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_11_BOX Box {
-            size 0.45 0.06 0.01
+            size 2.23 0.06 0.01
           }
         }
       ]
@@ -212,12 +212,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_12 Solid {
-      translation -0.345 0.03 -0.91
+      translation -1.245 0.03 -0.885
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_12_BOX Box {
-            size 0.6 0.06 0.01
+            size 2.4 0.06 0.01
           }
         }
       ]
@@ -225,12 +225,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_13 Solid {
-      translation 0.05 0.03 -0.845
+      translation 0.05 0.03 -0.73
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_13_BOX Box {
-            size 0.01 0.06 0.84
+            size 0.01 0.06 3.52
           }
         }
       ]
@@ -238,13 +238,13 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_14 Solid {
-      translation -0.46 0.03 -0.57
+      translation -1.71 0.03 0.16
       rotation 0 1 0 0.65
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_14_BOX Box {
-            size 0.01 0.06 0.61
+            size 0.01 0.06 2.44
           }
         }
       ]
@@ -252,31 +252,31 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_15 Solid {
-      translation -0.05 0.03 -1.3
+      translation -0.05 0.03 -2.37
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_15_BOX Box {
-            size 0.01 0.06 0.79
+            size 0.01 0.06 2.98
           }
         }
       ]
       boundingObject USE WALL_15_BOX
     }
     DEF WALL_16 Solid {
-      translation 1.03 0.03 -0.845
+      translation 3.92 0.03 -0.73
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_16_BOX Box {
-            size 0.01 0.06 0.84
+            size 0.01 0.06 3.53
           }
         }
       ]
       boundingObject USE WALL_16_BOX
     }
     DEF WALL_17 Solid {
-      translation -0.64 0.03 -0.86
+      translation -2.445 0.03 -0.84
       children [
         Shape {
           appearance USE WALL_APPEARANCE
@@ -289,32 +289,32 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_18 Solid {
-      translation -0.36 0.03 -0.62
+      translation -1.6 0.03 0.13
       rotation 0 1 0 0.65
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_18_BOX Box {
-            size 0.01 0.06 0.485
+            size 0.01 0.06 2.27
           }
         }
       ]
       boundingObject USE WALL_18_BOX
     }
     DEF WALL_19 Solid {
-      translation 0.05 0.03 -1.525
+      translation 0.05 0.03 -3.23
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_19_BOX Box {
-            size 0.01 0.06 0.34
+            size 0.01 0.06 1.26
           }
         }
       ]
       boundingObject USE WALL_19_BOX
     }
     DEF WALL_20 Solid {
-      translation 0 0.03 -1.69
+      translation 0 0.03 -3.86
       children [
         Shape {
           appearance USE WALL_APPEARANCE
@@ -327,7 +327,8 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF GOAL Transform {
-      translation 0 0.01 -1.64
+      translation 0 0.03 -3.85
+      rotation 1 0 0 1.5
       children [
         Shape {
           appearance Appearance {
@@ -344,7 +345,7 @@ DEF LABY Solid {
       ]
     }
     DEF START Transform {
-      translation 0 0.001 -0.05
+      translation 0 0.01 2.44
       rotation 1 0 0 0
       children [
         Shape {
@@ -362,10 +363,9 @@ DEF LABY Solid {
       ]
     }
   ]
-  locked TRUE
 }
 DEF ICEASIM DifferentialWheels {
-  translation 0 0 -0.05
+  translation 0 0 2.44
   children [
     DEF EPUCK_LEFT_WHEEL Solid {
       translation -0.026 0.02 0
@@ -2038,13 +2038,14 @@ DEF ICEASIM DifferentialWheels {
   wheelRadius 0.0205
 }
 Supervisor {
+  translation 0 0 1.015
   children [
     Emitter {
       name "emitter"
       channel 11
     }
     DEF WAY2_START Servo {
-      translation -0.05 0.03 -0.38
+      translation -0.0505 0.03 0.075
       rotation 1 0 0 1.57
       children [
         DEF SLIDING_DOOR Transform {
@@ -2053,7 +2054,7 @@ Supervisor {
             Shape {
               appearance USE WALL_APPEARANCE
               geometry Box {
-                size 0.01 0.06 0.1
+                size 0.01 0.06 0.11
               }
             }
           ]
@@ -2065,7 +2066,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF WAY2_END Servo {
-      translation -0.05 0.03 -0.86
+      translation -0.0505 0.03 -1.845
       rotation 1 0 0 1.57
       children [
         USE SLIDING_DOOR
@@ -2076,7 +2077,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF WAY3_START Servo {
-      translation 0.05 0.03 -0.38
+      translation 0.0495 0.03 0.075
       rotation 1 0 0 1.57
       children [
         USE SLIDING_DOOR
@@ -2087,7 +2088,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF WAY3_END Servo {
-      translation 0.05 0.03 -1.31
+      translation 0.049 0.03 -3.56
       rotation 1 0 0 1.57
       children [
         USE SLIDING_DOOR
@@ -2098,7 +2099,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF WAY1_MID Servo {
-      translation 0 0.03 -0.69
+      translation 0 0.03 -1.44
       rotation 1 0 0 1.57
       children [
         DEF SLIDING_WAY1 Transform {
@@ -2138,7 +2139,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF WAY1_END Servo {
-      translation 0 0.03 -1.16
+      translation 0 0.03 -3.12
       rotation 1 0 0 1.57
       children [
         USE SLIDING_WAY1
@@ -2149,7 +2150,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF WAY1_START Servo {
-      translation 0 0.03 -0.43
+      translation 0 0.03 0.015
       rotation 1 0 0 1.57
       children [
         Transform {
@@ -2189,7 +2190,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF SENSOR_MID DistanceSensor {
-      translation -0.04 0.03 -0.64
+      translation -0.04 0.03 -1.33
       name "sensor0"
       lookupTable [
         0 0 0
@@ -2199,7 +2200,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_END DistanceSensor {
-      translation -0.04 0.03 -1.11
+      translation -0.04 0.03 -3.02
       name "sensor1"
       lookupTable [
         0 0 0
@@ -2209,7 +2210,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_GOAL DistanceSensor {
-      translation -0.04 0.03 -1.62
+      translation -0.04 0.03 -4.81
       name "sensor2"
       lookupTable [
         0 0 0
@@ -2219,7 +2220,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_WAY2 DistanceSensor {
-      translation -0.16 0.03 -0.82
+      translation -0.19 0.03 -1.805
       rotation 0 1 0 1.57
       name "sensor3"
       lookupTable [
@@ -2230,7 +2231,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_WAY2_CLOSE DistanceSensor {
-      translation -0.04 0.03 -0.76
+      translation -0.04 0.03 -1.54
       name "sensor4"
       lookupTable [
         0 0 0
@@ -2240,7 +2241,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_WAY2_START DistanceSensor {
-      translation -0.22 0.03 -0.34
+      translation -0.42 0.03 0.105
       rotation 0 1 0 1.57
       name "sensor_way2_start"
       lookupTable [
@@ -2251,7 +2252,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_WAY3_START DistanceSensor {
-      translation 0.22 0.03 -0.34
+      translation 0.42 0.03 0.105
       rotation 0 1 0 1.57
       name "sensor_way3_start"
       lookupTable [
@@ -2262,7 +2263,7 @@ Supervisor {
       aperture 0.15
     }
     DEF SENSOR_WAY0_START DistanceSensor {
-      translation -0.04 0.03 -0.16
+      translation -0.04 0.03 0.53
       name "sensor_way0_start"
       lookupTable [
         0 0 0
@@ -2272,6 +2273,5 @@ Supervisor {
       aperture 0.15
     }
   ]
-  locked TRUE
   controller "mypuck_supervisor"
 }

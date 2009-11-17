@@ -11,12 +11,11 @@ CC_SOURCES = \
 	nsolver/column.cc\
 	nsolver/columns.cc\
 	nsolver/computeunit.cc\
-	nsolver/synapse.cc\
 	nsolver/hippo.cc\
 	nsolver/cell.cc\
 	nsolver/neuron.cc\
 	nsolver/neurosolver.cc\
-	nsolver/egoactionpop.cc\
+	nsolver/egoaction.cc\
 	nsolver/alloactionpop.cc\
 	nsolver/dcell.cc\
 	tools/coord.cc\
@@ -33,3 +32,4 @@ myclean:
 	find . -name "*.o" | xargs -r rm
 	find . -name "*.d" | xargs -r rm
 	
+myall: all

@@ -16,7 +16,7 @@ public:
 	double angle_get () const { return orientation_; }
 	const Coord& position_get () const { return position_; }
 	int* ps_value_get () const { return ps_value_; }
-	double distance_goal_factor () const { return (dist_goal_ > 1)?1:dist_goal_; }
+	double dist_goal_get () const { return dist_goal_; }
 	bool sleep_get () const { return sleep_; }
 	void speed_set(double left, double right) { setSpeed(left, right); }
 

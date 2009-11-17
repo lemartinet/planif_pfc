@@ -1,7 +1,5 @@
 #include "column.hh"
 #include "coord.hh"
-#include "hippo.hh"
-#include "cell.hh"
 #include "params.hh"
 #include "mystr.hh"
 #include "computeunit.hh"
@@ -13,8 +11,6 @@
 //#include <numeric>
 #include <algorithm>
 
-#define NB_STEP 8
-
 bool operator== (const Column& c1, const Column& c2)
 {
   return c1.no_get() == c2.no_get();
@@ -23,7 +19,7 @@ bool operator== (const Column& c1, const Column& c2)
 Column::Column (Columns& columns, int no, int lvl) :
 	no_(no), state_(columns.add_neuron_max (STATE)), 
 	sup_(columns.add_neuron_max (MAXSUP)), inf_(columns.add_neuron_max (LAT)), 
-	columns_(columns), level_(lvl), pos_(0), maxr(0), lastTidx_(0)
+	columns_(columns), level_(lvl), pos_(0), maxr(0)
 {
 	stringstream s1, s2, s3;
 	s1 << state_.no_get ()+1 << " " << no+1;
@@ -43,16 +39,7 @@ Column::~Column ()
 
 void Column::synch ()
 {
-	// on garde un historique de l'activation sur X time steps
-	if (lastTrecent_.size () < NB_STEP) {
-		lastTrecent_.push_back (state_.output ());
-		lastTold_.push_back (state_.output ());
-	}
-	else {
-		lastTold_[lastTidx_] = lastTrecent_[lastTidx_];
-		lastTrecent_[lastTidx_] = state_.output ();
-		lastTidx_ = ++lastTidx_ % NB_STEP;
-	}
+	state_.update_recent();
 }
 
 void Column::center_rf (const Coord& pos, bool winner)
@@ -70,27 +57,14 @@ void Column::center_rf (const Coord& pos, bool winner)
 	}
 }
 
-double Column::lastT_recent () const
+double Column::lastT_recent() const
 {
-//	double total = accumulate (lastTrecent_.begin(), lastTrecent_.end(), 0.0);
-//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
-//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
-	return *max_element (lastTrecent_.begin(), lastTrecent_.end());
+	const vector<double>& last = state_.lastT_recent();
+	return *max_element (last.begin(), last.end());
 }
 
-double Column::lastT_old () const
+double Column::weight_change (const ComputeUnit* cell, double old_w, Column* winner)
 {
-//	double total = accumulate (lastTold_.begin(), lastTold_.end(), 0.0);
-//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
-//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
-	return *max_element (lastTold_.begin(), lastTold_.end());
-}
-
-double Column::weight_change (const Cell* cell, double old_w, Column* winner)
-{
-	if (lastTrecent_.size () < NB_STEP) {
-		return 0;
-	}
 	if (this == winner) {
 		// ancienne methode simple
 	//	return (cell->lastT_recent_max () - old_w) * lastT_recent ()
@@ -101,25 +75,28 @@ double Column::weight_change (const Cell* cell, double old_w, Column* winner)
 		
 		vector<double> corr;
 		const vector<double>& cell_last = cell->lastT_recent();
-		for (int i = 0; i < NB_STEP; i++) {
-			corr.push_back ((cell_last[i] - old_w) * lastTrecent_[i]);
-			if (i < NB_STEP - 1) {
-				corr.push_back ((cell_last[i] - old_w) * lastTrecent_[i+1]);
+		const vector<double>& state_last = state_.lastT_recent();
+		int last_size = min(cell_last.size(), state_last.size());
+		for (int i = 0; i < last_size; i++) {
+			corr.push_back ((cell_last[i] - old_w) * state_last[i]);
+			if (i < last_size - 1) {
+				corr.push_back ((cell_last[i] - old_w) * state_last[i+1]);
 			}	
 		}
 		return *max_element (corr.begin(), corr.end());
 	}
-	else {
-		vector<double> corr;
-		const vector<double>& cell_last = cell->lastT_recent();
-		static const double SPARSE_P = Params::get_double ("SPARSE_P");
-		for (int i = 0; i < NB_STEP; i++) {
-			corr.push_back (cell_last[i] * (winner->lastTrecent_[i] * lastTrecent_[i] - SPARSE_P * SPARSE_P));
-			if (i < NB_STEP - 1) {
-				corr.push_back (cell_last[i] * (winner->lastTrecent_[i+1] * lastTrecent_[i+1] - SPARSE_P * SPARSE_P));
-			}	
-//			corr.push_back (winner->lastTrecent_[i] * lastTrecent_[i] - SPARSE_P * SPARSE_P);
-		}
-		return -2 * *max_element (corr.begin(), corr.end());
-	}
+//	else {
+//		vector<double> corr;
+//		const vector<double>& cell_last = cell->lastT_recent();
+//		static const double SPARSE_P = Params::get_double ("SPARSE_P");
+//		for (int i = 0; i < NB_STEP; i++) {
+//			corr.push_back (cell_last[i] * (winner->lastTrecent_[i] * lastTrecent_[i] - SPARSE_P * SPARSE_P));
+//			if (i < NB_STEP - 1) {
+//				corr.push_back (cell_last[i] * (winner->lastTrecent_[i+1] * lastTrecent_[i+1] - SPARSE_P * SPARSE_P));
+//			}	
+////			corr.push_back (winner->lastTrecent_[i] * lastTrecent_[i] - SPARSE_P * SPARSE_P);
+//		}
+//		return -2 * *max_element (corr.begin(), corr.end());
+//	}
+	return 0;
 } 

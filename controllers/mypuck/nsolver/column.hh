@@ -8,7 +8,6 @@
 class ComputeUnit;
 class Columns;
 class Coord;
-class Cell;
 
 using namespace std; 
 
@@ -30,11 +29,10 @@ public:
 	int level_get () const { return level_; }
 	double maxr_get () { return maxr; }
 	double lastT_recent () const;
-	double lastT_old () const;
 
 	void synch ();
 	void center_rf (const Coord& pos, bool winner);
-	double weight_change (const Cell* cell, double old_w, Column* winner);
+	double weight_change (const ComputeUnit* cell, double old_w, Column* winner);
 
 private:
 	const int no_;
@@ -45,10 +43,6 @@ private:
 	int level_; // niveau de la colonne dans la carte
 	Coord* pos_;
 	double maxr;
-	
-	vector<double> lastTrecent_;
-	vector<double> lastTold_;
-	int lastTidx_;
 };
 
 bool operator== (const Column& c1, const Column& c2);
