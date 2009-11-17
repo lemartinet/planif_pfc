@@ -121,7 +121,6 @@ void ControlRobot::update_cols ()
 			update_col_appearance (*node, *col);
 		}
 	}
-	widget_.edges_update();
 }
 
 void ControlRobot::update_mincols ()
@@ -143,6 +142,7 @@ void ControlRobot::update_mincols ()
 			Node* node2 = widget_.node_get (COL, minicol->to_get ().no_get ());
 			if (node1 != 0 && node2 != 0 && node1->isVisible () && node2->isVisible ()) {
 				edge->color_set (minicol->state_activation ());
+//				edge->update();
 				edge->show ();
 			}
 			else {
@@ -183,7 +183,6 @@ void ControlRobot::highlight_current_mincol ()
 
 void ControlRobot::slot_setgoalcol (int no)
 {
-	cout << "clic" << endl;
 	neuro_.gui_goal_set(no);
 }
 

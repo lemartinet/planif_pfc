@@ -48,7 +48,6 @@ public:
     void edge_type_del (NodeType type);
     void edge_hide (NodeType type, int to);
     void edge_show (NodeType type, int to);
-    void edges_update();
 
 protected:
     void keyPressEvent(QKeyEvent *event);

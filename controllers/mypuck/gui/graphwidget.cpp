@@ -111,15 +111,6 @@ Edge* GraphWidget::edge_get (NodeType type, int from, int to)
   return 0;
 }
 
-void GraphWidget::edges_update ()
-{
-	foreach (QGraphicsItem* item, scene()->items()) {
-		Edge* edge = qgraphicsitem_cast<Edge*>(item);
-		if (edge)
-			edge->adjust ();
-	}
-}
-
 void GraphWidget::edge_hide (NodeType type, int to)
 {
   Edge*  edge = 0;

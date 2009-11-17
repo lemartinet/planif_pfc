@@ -19,13 +19,15 @@ public:
 	int no_get() const { return no_; }
 	void color_set(double val) { rate_ = val; }
 	NodeType nodetype_get() const { return nodetype_; }
-
 	void move(const Coord& coord_webots);
+
+	enum { Type = UserType + 1 };
+	int type() const { return Type; }
+
+protected:
+	void mousePressEvent(QGraphicsSceneMouseEvent *event);
 	QRectF boundingRect() const;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-private:
-	void mousePressEvent(QGraphicsSceneMouseEvent *event);
 
 signals:
 	void sig_node_clicked(int no);
