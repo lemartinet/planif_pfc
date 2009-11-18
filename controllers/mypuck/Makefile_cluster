@@ -1,6 +1,6 @@
 MY_INC	  = -Icontroller -Insolver -Itools -I.
-CFLAGS    = -W $(MY_INC) -g -O2 
-LIBRARIES = -gdb -lCppController
+CFLAGS    = -W $(MY_INC) -O3 
+LIBRARIES = -lCppController
 
 CC_SOURCES = \
 	controller/action.cc\

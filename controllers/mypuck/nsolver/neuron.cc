@@ -72,7 +72,7 @@ double Neuron::sum_wi (const map<const int, Synapse *>& syn) const
 {
 	double res = 0.0;
 	map<const int, Synapse *>::const_iterator iter;
-	for (iter = syn.begin (); iter != syn.end (); iter++) {
+	for (iter = syn.begin (); iter != syn.end (); ++iter) {
 		res += *iter->second->w_get ();	
 	}
 	return res;
@@ -118,7 +118,7 @@ double Neuron::syndrive_sum (const map<const int, Synapse *>& syn) const
 {
 	double res = 0.0;
 	map<const int, Synapse *>::const_iterator iter;
-	for (iter = syn.begin (); iter != syn.end (); iter++) {
+	for (iter = syn.begin (); iter != syn.end (); ++iter) {
 		res += iter->second->drive ();	
 	}
 	return res / sum_wi (syn);
@@ -127,9 +127,14 @@ double Neuron::syndrive_sum (const map<const int, Synapse *>& syn) const
 double Neuron::syndrive_max (const map<const int, Synapse *>& syn) const
 {
 	map<const int, Synapse *>::const_iterator it;
-	it = max_element (syn.begin (), syn.end (), 
-		bind (&Synapse::drive, bind (&snd, _1)) < bind (&Synapse::drive, bind (&snd, _2)));
-	return (it == syn.end ()) ? 0 : it->second->drive ();
+	double max = 0;
+	for (it = syn.begin(); it != syn.end(); ++it) {
+		double dr = it->second->drive();
+		if (dr > max) {
+			max = dr;
+		}
+	}
+	return max;
 }
 
 double Neuron::syndrive_wta (const map<const int, Synapse *>& syn) const
@@ -156,7 +161,7 @@ double* Neuron::max_syn_get () const
 	map<const int, Synapse *>::const_iterator iter;
 	double max_w = 0;
 	Synapse* max_s = 0;
-	for (iter = synapses_.begin (); iter != synapses_.end (); iter++) {
+	for (iter = synapses_.begin (); iter != synapses_.end (); ++iter) {
 		if (max_w < *iter->second->w_get ()) {
 			max_w = *iter->second->w_get ();
 			max_s = iter->second;
@@ -169,7 +174,7 @@ map<const int, double*> Neuron::all_syn_get () const
 {
 	map<const int, Synapse*>::const_iterator iter;
 	map<const int, double*> res;
-	for (iter = synapses_.begin (); iter != synapses_.end (); iter++) {
+	for (iter = synapses_.begin (); iter != synapses_.end (); ++iter) {
 		res[iter->first] = iter->second->w_get ();
 	}
 	return res; 
@@ -179,7 +184,7 @@ map<const int, double*> Neuron::all_syn_getI () const
 { 
 	map<const int, Synapse*>::const_iterator iter;
 	map<const int, double*> res;
-	for (iter = synapsesI_.begin (); iter != synapsesI_.end (); iter++) {
+	for (iter = synapsesI_.begin (); iter != synapsesI_.end (); ++iter) {
 		res[iter->first] = iter->second->w_get ();
 	}
 	return res; 

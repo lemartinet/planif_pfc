@@ -62,7 +62,7 @@ void Columns::winner_col (int level)
 {
 	Column* best_col = 0;
 	vector<Column*>::iterator it;
-	for (it = columns_.begin (); it != columns_.end (); it++) {
+	for (it = columns_.begin (); it != columns_.end (); ++it) {
 		if ((*it)->level_get () != level) {
 			continue;
 		}
@@ -79,7 +79,7 @@ void Columns::winner_col (int level)
 		best_col = 0;
 		double min_sumw = 0;
 		// on initialise avec celle qui a les plus petits poids = qui n'a pas de selectivité
-		for (it = columns_.begin (); it != columns_.end (); it++) {
+		for (it = columns_.begin (); it != columns_.end (); ++it) {
 			if ((*it)->level_get () != level) {
 				continue;
 			}
@@ -101,7 +101,7 @@ void Columns::winner_col (int level, const ComputeUnit& ego)
 //	if (!ego.spiking()) 
 //		return; 
 	vector<Column*>::iterator it;
-	for (it = columns_.begin (); it != columns_.end (); it++) {
+	for (it = columns_.begin (); it != columns_.end (); ++it) {
 		if ((*it)->level_get () != level) {
 			continue;
 		}
@@ -119,7 +119,7 @@ void Columns::winner_col (int level, const ComputeUnit& ego)
 		best_col = 0;
 		double min_sumw = 0;
 		// on initialise avec celle qui a les plus petits poids = qui n'a pas de selectivité
-		for (it = columns_.begin (); it != columns_.end (); it++) {
+		for (it = columns_.begin (); it != columns_.end (); ++it) {
 			if ((*it)->level_get () != level) {
 				continue;
 			}
@@ -216,11 +216,12 @@ bool Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Co
 //	}
 //	cout << maxval;
 
+	const int GUI = Params::get_int ("GUI");
 	vector<Column*>::iterator it;
-	for (it = columns_.begin (); it != columns_.end (); it++) {
+	for (it = columns_.begin (); it != columns_.end (); ++it) {
 //		if ((*it)->level_get () == 0) {
 			(*it)->synch ();
-			if (pos != 0) {
+			if (GUI && pos != 0) {
 				(*it)->center_rf (*pos, *it == win_col_lvl_[0]);	
 			}
 //		}
