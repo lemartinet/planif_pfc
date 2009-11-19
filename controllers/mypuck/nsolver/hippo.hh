@@ -29,7 +29,7 @@ private:
 	bool theta_new () const;
 	void cell_add (const Coord& pos);
 	double nb_spiking_cells () const;
-		
+
 private:
 	vector<ComputeUnit*> cellmap_;
 	vector<double> activ_;

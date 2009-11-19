@@ -6,7 +6,7 @@
 #include <numeric>
 #include <algorithm>
 
-Cell::Cell () : ComputeUnit(PC), pos_(0) 
+Cell::Cell () : ComputeUnit(PC), pos_(0)
 {
 }
 
@@ -16,7 +16,7 @@ Cell::Cell (const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos))
 
 bool sort_function (double* v1, double* v2)
 {
-	return v1[0] < v2[0] || (v1[0] == v2[0] && v1[1] < v2[1]); 	
+	return v1[0] < v2[0] || (v1[0] == v2[0] && v1[1] < v2[1]);
 }
 
 Cell::Cell (const string& filename, const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos))

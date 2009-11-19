@@ -15,13 +15,13 @@ classdef ExpData < handle
     end
     
     methods
-        function [exp_data] = ExpData(path, num, reload)
+        function [exp_data] = ExpData(path, num, reload, maze)
             if reload
                 load(sprintf('%s/%d/exp_data.mat', path, num), 'exp_data');
             else
                 exp_data.num_exp = num;
                 exp_data.path = sprintf('%s/%d/', path, num);
-                exp_data.load_trials();
+                exp_data.load_trials(maze);
                 exp_data.analyze_behavior();
                 exp_data.analyze_exploration();
                 save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
@@ -34,7 +34,7 @@ classdef ExpData < handle
         end
         
         % charge les infos des essais
-        load_trials(exp_data)
+        load_trials(exp_data, maze)
         % charge les infos de comportement
         analyze_behavior(exp_data)
         % charge les infos de decision (planning VS explo)

@@ -38,14 +38,13 @@ public:
     GraphWidget ();
     ~GraphWidget ();
 
-    Node* node_get (NodeType type, int no);
-    Edge* edge_get (NodeType type, int from, int to);
+    Node* node_get (NodeType type, int no) const;
+    Edge* edge_get (NodeType type, int from, int to) const;
     Node* add_node (NodeType type, int no);
     Edge* add_edge (NodeType type, int from, int to);
-    QGraphicsScene* scene_get () { return scene_; }
-    QPoint& mouse_pos_get () { return mouse_pos_; }
-    void type_del (NodeType type);
-    void edge_type_del (NodeType type);
+    QGraphicsScene* scene_get () const { return scene_; }
+    void type_hide (NodeType type);
+    void type_show (NodeType type);
     void edge_hide (NodeType type, int to);
     void edge_show (NodeType type, int to);
 
@@ -54,13 +53,15 @@ protected:
     void timerEvent(QTimerEvent *event);
     void wheelEvent(QWheelEvent *event);
     void closeEvent(QCloseEvent *);
-    void mouseMoveEvent (QMouseEvent* event);
     void drawBackground(QPainter *painter, const QRectF &rect);
     void scaleView(qreal scaleFactor);
 
 private:
-    QGraphicsScene*   scene_;
-    QPoint            mouse_pos_;
+    QGraphicsScene* scene_;
+    Node** col_nodes_;
+    Node** cell_nodes_;
+    Edge*** edges_;
+    int SIZE_POP;
 };
 
 #endif

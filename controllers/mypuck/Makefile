@@ -45,10 +45,10 @@ include $(WEBOTS_HOME)/projects/default/controllers/Makefile.include
 myclean:
 	find . -name "*.o" | xargs -r rm
 	find . -name "*.d" | xargs -r rm
-	find . -name "moc_*.c*[cp]" | xargs rm
 
 ui:
 	rm gui/boardwindow.hh
+	find . -name "moc_*.c*[cp]" | xargs rm
 	uic-qt4 gui/boardwindow.ui -o gui/boardwindow.hh
 	moc-qt4 gui/controlrobot.hh -o gui/moc_controlrobot.cc
 	moc-qt4 gui/boardwidget.hh -o gui/moc_boardwidget.cc

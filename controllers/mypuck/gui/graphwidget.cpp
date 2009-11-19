@@ -24,29 +24,23 @@
 #include "graphwidget.h"
 #include "edge.h"
 #include "node.h"
-
-#include <QDebug>
+#include "params.hh"
 #include <QGraphicsScene>
 #include <QWheelEvent>
-
 #include <iostream>
-#include <math.h>
 
 GraphWidget::GraphWidget ()
 {
     QGraphicsScene *scene = new QGraphicsScene(this);
     scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    scene->setSceneRect(0, 0, 50, 50);
     setScene(scene);
+    scene_ = scene;
+
     setCacheMode(CacheBackground);
     setRenderHint(QPainter::Antialiasing);
     setTransformationAnchor(AnchorUnderMouse);
     setResizeAnchor(AnchorViewCenter);
     setWindowTitle(tr("Columns viewer"));
-    setMouseTracking (true);
-//    scale(0.8, 0.8);
-    //setMinimumSize(400, 400);
-    scene_ = scene;
     
     // repere pour le monde de Webots : min (-0.64, -1.5), max (1.13, 0.0)
     double w_xmin = -0.64, w_ymin = -1.7, w_xmax = 1.13, w_ymax = 0.0;
@@ -54,94 +48,107 @@ GraphWidget::GraphWidget ()
 	// repere pour le gui : min (0, 0), max (500, 500)
 	double g_xmin = 0, g_ymin = 0, g_xmax = 500, g_ymax = 500;
 	Coord::gui_coord_set (g_xmin, g_ymin, g_xmax, g_ymax);
-	// taille du graph
-	scene_->setSceneRect(g_xmin, g_ymin, fabs (g_xmax - g_xmin), fabs (g_ymax - g_ymin));
+    setMinimumSize(g_xmax, g_ymax);
+
+	SIZE_POP = Params::get_int("SIZE_POP");
+	col_nodes_ = new Node*[SIZE_POP];
+	cell_nodes_ = new Node*[SIZE_POP];
+	edges_ = new Edge**[SIZE_POP];
+	for (int i = 0; i < SIZE_POP; ++i) {
+		col_nodes_[i] = cell_nodes_[i] = 0;
+		edges_[i] = new Edge*[SIZE_POP];
+		for (int j = 0; j < SIZE_POP; ++j)
+			edges_[i][j] = 0;
+	}
 }
 
 GraphWidget::~GraphWidget ()
 {
-	// supprime automatiquement tous les items de la scene
+	// scene_ supprime automatiquement tous les items de la scene
 	// (Edge, Node, ...) -> ne pas les supprimer ailleurs
 	delete scene_;
+	delete [] col_nodes_;
+	delete [] cell_nodes_;
 }
 
-Node* GraphWidget::node_get (NodeType type, int no)
+Node* GraphWidget::node_get (NodeType type, int no) const
 {
-  Node* node = 0;
-
-  foreach (QGraphicsItem *item, scene()->items())
-    {
-      if ((node = qgraphicsitem_cast<Node *>(item)) && node->nodetype_get () == type && node->no_get () == no)
-	return node;
-    }
-  return 0;
+	if (type == COL)
+		return col_nodes_[no];
+	else if (type == CELL)
+		return cell_nodes_[no];
+	else
+		return 0;
 }
 
-void GraphWidget::type_del (NodeType type)
+void GraphWidget::type_hide (NodeType type)
 {
-	foreach (QGraphicsItem *item, scene()->items()) {
-		Node* node = qgraphicsitem_cast<Node*>(item);
-		if (node && node->nodetype_get () == type) {
-			node->hide ();
-			scene()->removeItem (node);
+	if (type == COL)
+		for (int i = 0; i < SIZE_POP; ++i) {
+			if (col_nodes_[i] != 0)
+				col_nodes_[i]->hide();
 		}
-    }
-}
-
-void GraphWidget::edge_type_del (NodeType type)
-{
-	foreach (QGraphicsItem *item, scene()->items()) {
-		Edge* edge = qgraphicsitem_cast<Edge*>(item);
-		if (edge && edge->sourceNode ()->nodetype_get () == type && edge->destNode ()->nodetype_get () == type) {
-			edge->hide ();
-			scene()->removeItem (edge);
+	else if (type == CELL)
+		for (int i = 0; i < SIZE_POP; ++i) {
+			if (cell_nodes_[i] != 0)
+				cell_nodes_[i]->hide();
 		}
-    }
 }
 
-Edge* GraphWidget::edge_get (NodeType type, int from, int to)
+void GraphWidget::type_show (NodeType type)
 {
-  Edge*  edge = 0;
+	if (type == COL)
+		for (int i = 0; i < SIZE_POP; ++i) {
+			if (col_nodes_[i] != 0)
+				col_nodes_[i]->show();
+		}
+	else if (type == CELL)
+		for (int i = 0; i < SIZE_POP; ++i) {
+			if (cell_nodes_[i] != 0)
+				cell_nodes_[i]->show();
+		}
+}
 
-  foreach (QGraphicsItem *item, scene()->items())
-    {
-      if ((edge = qgraphicsitem_cast<Edge *>(item)) && edge->sourceNode ()->nodetype_get () == type && edge->sourceNode ()->no_get () == from && edge->destNode ()->nodetype_get () == type && edge->destNode ()->no_get () == to)
-	return edge;
-    }
-  return 0;
+Edge* GraphWidget::edge_get (NodeType type, int from, int to) const
+{
+	if (type == COL)
+		return edges_[from][to];
+	else
+		return 0;
 }
 
 void GraphWidget::edge_hide (NodeType type, int to)
 {
-  Edge*  edge = 0;
-
-  foreach (QGraphicsItem *item, scene()->items())
-    {
-      if ((edge = qgraphicsitem_cast<Edge *>(item)) 
-      		&& ((edge->destNode ()->nodetype_get () == type && edge->destNode ()->no_get () == to)
-      			|| (edge->sourceNode ()->nodetype_get () == type && edge->sourceNode ()->no_get () == to)))
-		edge->hide ();
-    }
+	if (type != COL)
+		return;
+	for (int i = 0; i < SIZE_POP; ++i) {
+		for (int j = 0; j < SIZE_POP; ++j) {
+			if (edges_[i][j] != 0)
+				edges_[i][j]->hide();
+		}
+	}
 }
 
 void GraphWidget::edge_show (NodeType type, int to)
 {
-  Edge*  edge = 0;
-
-  foreach (QGraphicsItem *item, scene()->items())
-    {
-      if ((edge = qgraphicsitem_cast<Edge *>(item)) 
-      		&& ((edge->destNode ()->nodetype_get () == type && edge->destNode ()->no_get () == to)
-      			|| (edge->sourceNode ()->nodetype_get () == type && edge->sourceNode ()->no_get () == to)))
-		edge->show ();
-    }
+	if (type != COL)
+		return;
+	for (int i = 0; i < SIZE_POP; ++i) {
+		for (int j = 0; j < SIZE_POP; ++j) {
+			if (edges_[i][j] != 0)
+				edges_[i][j]->show();
+		}
+	}
 }
 
 Node* GraphWidget::add_node (NodeType type, int no)
 {
 	Node* node = new Node (type, no);
-	node->setPos (0, 0);
 	scene_->addItem (node);
+	if (type == COL)
+		col_nodes_[no] = node;
+	else if (type == CELL)
+		cell_nodes_[no] = node;
 	return node;
 }
 
@@ -155,6 +162,7 @@ Edge* GraphWidget::add_edge (NodeType type, int from, int to)
     return 0;
   edge = new Edge (node1, node2);
   scene_->addItem (edge);
+  edges_[from][to] = edge;
   return edge;
 }
 
@@ -183,7 +191,6 @@ void GraphWidget::drawBackground(QPainter *painter, const QRectF &rect)
     Q_UNUSED(rect);
 
     QRectF sceneRect = this->sceneRect();
-
     // Fill
     QLinearGradient gradient(sceneRect.topLeft(), sceneRect.bottomRight());
     gradient.setColorAt(0, Qt::white);
@@ -223,9 +230,4 @@ void GraphWidget::scaleView(qreal scaleFactor)
         return;
 
     scale(scaleFactor, scaleFactor);
-}
-
-void GraphWidget::mouseMoveEvent (QMouseEvent* event)
-{
-  mouse_pos_ = event->pos ();
 }

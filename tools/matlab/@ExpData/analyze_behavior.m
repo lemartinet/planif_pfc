@@ -18,7 +18,7 @@ for i = 1:15
             m = m(2:end);
         end
         exp_data.trial(i, j).all_choices = m;
-        if ~is_empty(m)
+        if ~isempty(m)
             exp_data.trial(i, j).fst_choice = m(1);
         else
             exp_data.trial(i, j).fst_choice = [];

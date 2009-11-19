@@ -1,4 +1,4 @@
-function load_trials(exp_data)
+function load_trials(exp_data, maze)
 % charge les infos de mouvement:
 % trial[day,trial].start/.end
 % trial[...].pos
@@ -6,9 +6,10 @@ function load_trials(exp_data)
 
 % infos for each var (one var by column)
 % vspace, e.g. [0 xMax yMax tMax rMax; 0 xMin yMin tMin rMin]
-vspace_all_tolman = [0 1.17 0 pi 1; 0 -0.68 -1.7 -pi 0];
-vspace_all_tolman_big = [0 2.09 0.77 pi 1; 0 -1.19 -2.40 -pi 0];
-vspace_all = vspace_all_tolman_big;
+vspace_allmaze{1} = [0 1.17 0 pi 1; 0 -0.68 -1.7 -pi 0];
+vspace_allmaze{2} = [0 2.09 0.77 pi 1; 0 -1.19 -2.40 -pi 0];
+vspace_allmaze{3} = [0 4 2.46 pi 1; 0 -2.4 -3.78 -pi 0];
+vspace_all = vspace_allmaze{maze};
 vspace = vspace_all(:, 2:3);
 % step, e.g. [0 xStep yStep tStep rStep]
 step_all = [0 0.05 0.05 0.2 0.05];

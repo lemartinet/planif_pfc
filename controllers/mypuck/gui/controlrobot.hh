@@ -32,7 +32,6 @@ public:
 private:
 	void update_col_appearance (Node& node, Column& col);
 	void update_mincols ();
-	void highlight_current_mincol ();
 	void update_cols ();	
 	void update_cells ();
 

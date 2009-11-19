@@ -1,4 +1,4 @@
-function main(data_path, exp, reload)
+function main(data_path, exp, reload, maze)
 
 exp_all1 = zeros(length(exp), 3);
 exp_all2 = zeros(length(exp), 3);
@@ -8,7 +8,7 @@ exp_fst2 = zeros(length(exp), 3);
 exp_fst3 = zeros(length(exp), 3);
 for i = exp	
 	fprintf('Working on experiment %d\n', i);
-    exp_data = ExpData(data_path, i, reload);
+    exp_data = ExpData(data_path, i, reload, maze);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Analyse du comportement de base
