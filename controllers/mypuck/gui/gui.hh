@@ -13,7 +13,7 @@ class Gui : public QApplication
 public:
 	Gui (int& argc, char**& argv, Behavior& behavior);
 	~Gui ();
-	
+
 	void synch ();
 	  
 private:

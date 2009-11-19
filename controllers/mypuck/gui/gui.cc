@@ -17,11 +17,7 @@ Gui::~Gui ()
 
 void Gui::synch ()
 {
-	if (boardwidget_) {
-		boardwidget_->update ();
-	}
-	if (eventloop_) {
-		eventloop_->processEvents(QEventLoop::AllEvents);
-	}
+	boardwidget_->update ();
 	boardwidget_->show ();
+	eventloop_->processEvents(QEventLoop::AllEvents);
 }

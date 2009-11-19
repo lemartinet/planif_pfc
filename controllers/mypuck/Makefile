@@ -33,6 +33,7 @@ CC_SOURCES = \
 	gui/moc_boardwidget.cc\
 	gui/gui.cc\
 	mypuck.cc
+#	main_gui.cc	
 
 CPP_SOURCES = \
 	gui/edge.cpp\

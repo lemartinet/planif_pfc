@@ -12,7 +12,7 @@ class BoardWidget : public QMainWindow, public Ui::BoardWindow
 
 public:
   BoardWidget (Behavior& behavior);
-  
+
   void update () { robotgui_.update (); }
 
 protected:
