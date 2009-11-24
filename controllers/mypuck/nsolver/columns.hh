@@ -42,7 +42,8 @@ private:
 	void log_no_pop (int level) const;
 	void winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state);
 	void winner_takes_all_lvl1 (const vector<Column*>& pop, const ComputeUnit& ego_action);
-	void lateral_learning (Column& from, Column& to, const Action& action, bool increase);
+	void lateral_learning_lvl0 (Column& from, Column& to, const Action& action, bool increase);
+	void lateral_learning_lvl1(Column& from_1, Column& from_0, Column& to_1, Column& to_0, const Action& action);
 	bool topology_learning ();
 	void winner_col (int level);
 	void winner_col (int level, const ComputeUnit& ego);
