@@ -86,8 +86,8 @@ void Minicol::lateral_learning (bool increase, double factor)
 	double* back = sup_.syn_get (dest_->sup_get ());
 	if (forw == 0 || back == 0) {
 		// on recrute une synapse
-//		double init_val = MAX_LATERAL_WEIGHT;
-		double init_val = 0.1 * drand ();
+		double init_val = MAX_LATERAL_WEIGHT;
+//		double init_val = 0.1 * drand ();
 		forw = dest_->inf_get ().add_synapse (inf_, init_val);
 		back = sup_.add_synapse (dest_->sup_get (), init_val);
 	}
@@ -95,10 +95,10 @@ void Minicol::lateral_learning (bool increase, double factor)
 	// on modifie les synapses forw & back
 	double valf, valb;
 	if (increase) {
-//		valf = MAX_LATERAL_WEIGHT - forw->w_get ();
-//		valb = MAX_LATERAL_WEIGHT - back->w_get ();
-		valf = (MAX_LATERAL_WEIGHT - *forw) * LATERAL_LEARNING_STEP * factor;
-		valb = (MAX_LATERAL_WEIGHT - *back) * LATERAL_LEARNING_STEP * factor;
+//		valf = (MAX_LATERAL_WEIGHT - *forw) * LATERAL_LEARNING_STEP * factor;
+//		valb = (MAX_LATERAL_WEIGHT - *back) * LATERAL_LEARNING_STEP * factor;
+		valf = (MAX_LATERAL_WEIGHT - *forw) * factor;
+		valb = (MAX_LATERAL_WEIGHT - *back) * factor;
 //		valf = 2* (MAX_LATERAL_WEIGHT - forw->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 //		valb = 2* (MAX_LATERAL_WEIGHT - back->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 	}

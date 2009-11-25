@@ -230,9 +230,11 @@ bool Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s
 		// le robot explore (dirs equiprobable)
 		for (int i = 0; i < nb_free; i++) {
 			// si on est près du but, on va tout droit
-			if (robot_.dist_goal_get() < 0.8 && angle_equal(dirs[i], 0))
+//			double dist_goal_thresh = 0.8;
+			double dist_goal_thresh = 1.6;
+			if (robot_.dist_goal_get() < dist_goal_thresh && angle_equal(dirs[i], 0))
 				pa[i] = 1;
-			else if (robot_.dist_goal_get() < 0.8)
+			else if (robot_.dist_goal_get() < dist_goal_thresh)
 				pa[i] = 0;
 			else
 				pa[i] = 1.0 / nb_free;

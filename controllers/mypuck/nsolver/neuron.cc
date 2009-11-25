@@ -80,8 +80,9 @@ double Neuron::sum_wi (const map<const int, Synapse *>& syn) const
 
 double Neuron::sigmoid(double x, double phi) const
 {
-	double a = 10, b = 0.3; 
-	return 1 / (1 + exp(-pow(a, phi) * (x - b)));
+//	double a = 10, b = 0.3;
+//	return 1 / (1 + exp(-pow(a, phi) * (x - b)));
+	return pow (1 / 0.9, 0.9) * x;
 }
 
 void Neuron::compute ()
@@ -104,8 +105,9 @@ void Neuron::compute ()
 	output_next_ = pot_ * (1 + br);
 	if (synapse_mod_ != 0) {
 		double phi = synapse_mod_->drive();
-		output_next_ = (sigmoid(output_next_, phi) - sigmoid(0, phi)) 
-						/ (sigmoid(1, phi) - sigmoid(0, phi));
+//		output_next_ = (sigmoid(output_next_, phi) - sigmoid(0, phi))
+//						/ (sigmoid(1, phi) - sigmoid(0, phi));
+		output_next_ = sigmoid(output_next_, phi);
 	}
 	output_next_ = output_next_ < 0.0 ? 0.0 : output_next_;
 	output_next_ = output_next_ > 1.0 ? 1.0 : output_next_;

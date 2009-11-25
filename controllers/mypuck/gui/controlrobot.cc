@@ -23,7 +23,7 @@ void ControlRobot::update ()
 {
 	if (refresh_ == 0) {
 		robot_->move (Behavior::behavior_get().position_get ());
-		widget_.centerOn(robot_);
+//		widget_.centerOn(robot_);
 		update_cells ();
 		update_cols ();
 		update_mincols ();
