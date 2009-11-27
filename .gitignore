@@ -7,6 +7,7 @@ moc_*
 .cdtproject
 .*project
 .settings
+gmon.out
 controllers/mypuck/mypuck_nogui
 controllers/mypuck/mypuck
 controllers/mypuck_supervisor/mypuck_supervisor

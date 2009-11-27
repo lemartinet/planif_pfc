@@ -44,6 +44,7 @@ Columns::Columns (const vector<ComputeUnit*>& hippo_pop, const ComputeUnit& ego)
 	prec_col_lvl_[0] = prec_col_lvl_ [1] = 0;
 	win_minicol_lvl_[0] = win_minicol_lvl_ [1] = 0;
 	new_lvl1_ = false;
+	old_win_lvl1_ = 0;
 }
 
 Columns::~Columns ()
@@ -90,7 +91,7 @@ void Columns::winner_col (int level)
 			}
 		}		
 	}
-	cout << best_col->no_get() << " " << best_col->state_activation() << endl;
+//	cout << best_col->no_get() << " " << best_col->state_activation() << endl;
 	win_col_lvl_[level] = best_col;
 }
 
@@ -134,7 +135,13 @@ void Columns::winner_col (int level, const ComputeUnit& ego)
 	else {
 		new_lvl1_ = false;	
 	}
-	cout << best_col->no_get() << " " << best_col->state_activation() << endl;
+//	cout << best_col->no_get() << " " << best_col->state_activation() << endl;
+	vector<Minicol*> best_mini = minicol_get(best_col->no_get());
+	vector<Minicol*>::iterator itm = best_mini.begin();
+	for (; itm != best_mini.end(); ++itm)
+		cout << (*itm)->from_get().no_get() << "->" << (*itm)->to_get().no_get() << ":" << (*itm)->activation() << " ";
+	if (best_mini.size() > 0)
+		cout << endl;
 	win_col_lvl_[level] = best_col;	
 }
 
@@ -153,7 +160,7 @@ void Columns::winner_minicol (int level)
 	win_minicol_lvl_[level] = best_minicol;
 }
 
-Minicol* Columns::add_minicol (const Action& action, Column& src, Column& dest, int level)
+Minicol* Columns::add_minicol (const Action& action, Column& src, Column& dest, int level, Neuron* from0, Neuron* to0)
 {
 	static const int SIZE_POP = Params::get_int("SIZE_POP");
 	if (nb_used_minicol_ >= SIZE_POP) {
@@ -161,7 +168,7 @@ Minicol* Columns::add_minicol (const Action& action, Column& src, Column& dest, 
 		return 0;	
 	}
 	Minicol* mc = minicols_[nb_used_minicol_];
-	mc->new_set (action, src, dest, level);
+	mc->new_set (action, src, dest, level, from0, to0);
 	nb_used_minicol_++;
 	return mc;	
 }
@@ -231,7 +238,7 @@ bool Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Co
 //			(*it)->synch ();	
 //		} 
 	}
-  	for_each (minicols_.begin (), minicols_.end (), bind (&Minicol::update_value, _1));
+  	for_each (minicols_.begin (), minicols_.end (), bind (&Minicol::synch, _1));
   	
   	winner_col (0);
   	winner_col (1, ego);
@@ -274,18 +281,26 @@ bool Columns::topology_learning ()
       	Action action (Behavior::behavior_get().angle_get());
       	lateral_learning_lvl0 (*prec_lvl0, *current_lvl0, action, true);
   	}
-	prec_col_lvl_[0] = current_lvl0;
-	  	
+
 	Column* current_lvl1 = win_col_lvl_[1];
 	Column* prec_lvl1 = prec_col_lvl_[1];
-	if (current_lvl1 && prec_lvl1 && prec_lvl1 != current_lvl1
-			&& Behavior::behavior_get().nb_trial_get() >= 6) {
-		cout << "new transition lvl1" << prec_lvl1->no_get() << "->" << current_lvl1->no_get() << endl;
+	static bool learn_lvl1_lat = false;
+	if (learn_lvl1_lat && col_changed) {
+		cout << "lvl1 " << prec_lvl1->no_get() << "->" << current_lvl1->no_get()
+				<< " / lvl0" << prec_lvl0->no_get() << "->" << current_lvl0->no_get() << endl;
 		Action action(Behavior::behavior_get().angle_get());
 		lateral_learning_lvl1(*prec_lvl1, *prec_lvl0, *current_lvl1, *current_lvl0, action);
+		learn_lvl1_lat = false;
+	} else if (current_lvl1 && prec_lvl1 && prec_lvl1 != current_lvl1 && current_lvl1->state_activation() > 0.3
+			&& Behavior::behavior_get().nb_trial_get() >= 6) {
+		learn_lvl1_lat = true;
 	}
-	if (current_lvl1->state_activation() > 0.3)
+
+	prec_col_lvl_[0] = current_lvl0;
+	if (current_lvl1->state_activation() > 0.3 && !learn_lvl1_lat) {
+		old_win_lvl1_ = prec_col_lvl_[1];
 		prec_col_lvl_[1] = current_lvl1;
+	}
   	
   	return col_changed;	
 }
@@ -307,6 +322,13 @@ void Columns::correct_transition ()
   		lateral_learning_lvl0 (const_cast<Column&>(real_minicol->from_get()),
   							const_cast<Column&>(real_minicol->to_get()), 
   							real_minicol->action_get(), false);
+	}
+
+	if (old_win_lvl1_ != 0) {
+		cout << "correction: " << old_win_lvl1_->no_get() << "->" << win_col_lvl_[1]->no_get() << endl;
+		Minicol* mini_lvl1 = minicol_get(old_win_lvl1_->no_get(), win_col_lvl_[1]->no_get());
+		if (mini_lvl1 != 0)
+			mini_lvl1->increase_lvl1_set(false);
 	}
 }
 
@@ -334,7 +356,7 @@ void Columns::lateral_learning_lvl0 (Column& from, Column& to, const Action& act
   	}
   	else {
   		// on recrute une nouvelle minicolonne
-      	minicol = add_minicol (action, from, to, from.level_get ());
+      	minicol = add_minicol (action, from, to, from.level_get (), 0, 0);
       	minicol->lateral_learning_lvl0(true);
       	message << "2 " << from.no_get ()+1 << " " << to.no_get ()+1
    				<< " " << action.angle_get ();
@@ -357,13 +379,16 @@ void Columns::lateral_learning_lvl1(Column& from_1, Column& from_0, Column& to_1
 {
 	stringstream message;
 	Minicol* minicol_1 = minicol_get(from_1.no_get(), to_1.no_get());
-	Minicol* minicol_0 = win_minicol_lvl_[0];
-  	if (minicol_1 == 0) {
-      	minicol_1 = add_minicol(action, from_1, to_1, from_1.level_get ());
-      	minicol_0->sup_get().add_synapse(minicol_1->sup_get(), 1);
+	Minicol* minicol_0 = minicol_get(from_0.no_get(), to_0.no_get());
+  	if (minicol_1 == 0 && from_1.no_get() != to_1.no_get()) {
+      	minicol_1 = add_minicol(action, from_1, to_1, 1, &minicol_0->inf_get(), &to_0.sup_get());
+      	static const double LVL1_MODULATION = Params::get_double ("LVL1_MODULATION");
+      	if (minicol_0->sup_get().syn_mod_get() == 0)
+      		minicol_0->sup_get().add_synapse_modulation (minicol_1->sup_get(), LVL1_MODULATION);
       	to_0.inf_get().add_synapse(to_1.inf_get(), 1);
+    } else if (minicol_1 != 0) {
+    	minicol_1->increase_lvl1_set(true);
     }
-  	minicol_1->lateral_learning_lvl1(minicol_0->activation(), to_0.sup_activation());
 	if (message.str () != "") {
 		Logger::log ("network", message.str (), true);
 	}
@@ -442,6 +467,18 @@ vector<Minicol*> Columns::minicol_get (int from, const Action& action) const
 //		}
 //	}
 //	return big_one;	
+}
+
+vector<Minicol*> Columns::minicol_get (int from) const
+{
+	vector<Minicol*> res;
+	vector<Minicol*>::const_iterator it;
+	for (it = minicols_.begin (); it != minicols_.end (); it++) {
+		if ((*it)->recruited_get () && (*it)->from_get ().no_get () == from) {
+			res.push_back(*it);
+		}
+	}
+	return res;
 }
 
 Neuron& Columns::add_neuron (nType type)
@@ -523,9 +560,9 @@ void Columns::winner_takes_all_lvl1 (const vector<Column*>& pop, const ComputeUn
 			continue;	
 		}
 		Neuron& state = (*it)->state_get ();
-		static const double EGO_MODULATION = Params::get_double ("EGO_MODULATION");
-		if (state.syn_mod_get() == 0)
-			state.add_synapse_modulation (ego_action, EGO_MODULATION);
+//		static const double EGO_MODULATION = Params::get_double ("EGO_MODULATION");
+//		if (state.syn_mod_get() == 0)
+//			state.add_synapse_modulation (ego_action, EGO_MODULATION);
 		for (int i = 0; i < nbunits; i++) {
 			Column* col = pop.at (i);
 			Neuron& unit = col->state_get ();

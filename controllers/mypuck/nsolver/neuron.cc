@@ -82,7 +82,8 @@ double Neuron::sigmoid(double x, double phi) const
 {
 //	double a = 10, b = 0.3;
 //	return 1 / (1 + exp(-pow(a, phi) * (x - b)));
-	return pow (1 / 0.9, 0.9) * x;
+//	return pow (1 / 0.9, 0.9) * x;
+	return 1;
 }
 
 void Neuron::compute ()

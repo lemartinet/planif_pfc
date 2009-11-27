@@ -11,12 +11,13 @@
 #include <string>
 //#include <numeric>
 #include <algorithm>
+#include <cmath>
 
 #define NB_STEP 8
 
 Minicol::Minicol (Columns& columns, int no) :
 	no_(no), sup_(columns.add_neuron_max (SUP)), inf_(columns.add_neuron_max (INF)), 
-	action_(0), recruited_(false), lastTidx_(0)
+	action_(0), recruited_(false), lastTidx_(0), from0_(0), to0_(0), increase_lvl1_(true)
 {
 	stringstream s1, s2;
 	s1 << inf_.no_get ()+1 << " " << no+1;
@@ -32,7 +33,7 @@ Minicol::~Minicol ()
 	}
 }
 
-void Minicol::new_set (const Action& action, Column& src, Column& dest, int level)
+void Minicol::new_set (const Action& action, Column& src, Column& dest, int level, Neuron* from0, Neuron* to0)
 {
 	src_ = &src;
 	dest_ = &dest;
@@ -49,6 +50,11 @@ void Minicol::new_set (const Action& action, Column& src, Column& dest, int leve
 	stringstream s;
 	s << no_+1 << " " << src.no_get ()+1;
 	Logger::log("minicol_col", s.str());
+
+	if (level == 1) {
+		from0_ = from0;
+		to0_ = to0;
+	}
 }
 
 void Minicol::adapt_action (const Action& action)
@@ -62,8 +68,13 @@ void Minicol::adapt_action (const Action& action)
 //	cout << action->angle_get() << " = " << action_->angle_get() << endl; 
 }
 
-void Minicol::update_value ()
+void Minicol::synch()
 {
+	if (level_ == 1 && recruited_) {
+//	  	cout << from0_->output() << " " << to0_->output() << endl;
+	  	lateral_learning_lvl1();
+	}
+
 	// on garde un historique de l'activation sur X time steps
 	if (lastT_.size () < NB_STEP) {
 		lastT_.push_back (inf_.output ());
@@ -109,17 +120,28 @@ void Minicol::lateral_learning_lvl0 (bool increase, double factor)
 //	cout << "new " << forw->w_get () << " " << back->w_get () << endl;
 }
 
-void Minicol::lateral_learning_lvl1(double lvl0_from_fr, double lvl0_to_fr)
+void Minicol::lateral_learning_lvl1()
 {
+	// calcul du nb de synapse lvl0 au sein d'une colonne lvl1
+	// le +1 est parce qu'on prend le sup de to0 (car il est pas biaisé)
+	// alors qu'il faudrait le sup de from0
+	int nb_syn_back = log(to0_->output()) / log(0.9) + 1;
+	int nb_syn_from = log(from0_->output()) / log(0.9) + 1;
+	// réajustement de la force de propagation
+	double back_out = pow(1 * 0.9 * pow(1 / 0.9, 0.8), nb_syn_back);
+	double to_out = pow(1 * 0.9 * pow(1 / 0.9, 0.8), nb_syn_from);
+
 	double* forw = dest_->inf_get ().syn_get (inf_);
 	double* back = sup_.syn_get (dest_->sup_get ());
 	if (forw == 0 || back == 0) {
-		forw = dest_->inf_get ().add_synapse (inf_, lvl0_from_fr);
-		back = sup_.add_synapse (dest_->sup_get (), lvl0_to_fr);
-	}
-	else {
-		*forw = lvl0_from_fr;
-		*back = lvl0_to_fr;
+		forw = dest_->inf_get ().add_synapse (inf_, to_out);
+		back = sup_.add_synapse (dest_->sup_get (), back_out);
+	} else if (increase_lvl1_){
+		*forw = to_out;
+		*back = back_out;
+	} else {
+		*forw = 0;
+		*back = 0;
 	}
 }
 

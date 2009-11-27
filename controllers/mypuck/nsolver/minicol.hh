@@ -18,7 +18,7 @@ public:
 	Minicol (Columns& columns, int no);
 	~Minicol ();
 	
-	void new_set (const Action& action, Column& src, Column& dest, int level);
+	void new_set (const Action& action, Column& src, Column& dest, int level, Neuron* from0, Neuron* to0);
 	Neuron& sup_get () const { return sup_; }
 	Neuron& inf_get () const { return inf_; }
 	Action& action_get () const { return *action_; }
@@ -33,10 +33,11 @@ public:
 	double goal_activation () const { return sup_.output (); }
 	bool spiking () const { return inf_.spiking (); }
 	
-	void update_value ();
+	void synch ();
 	void adapt_action (const Action& action);
 	void lateral_learning_lvl0 (bool increase, double factor = 1);
-	void lateral_learning_lvl1(double lvl0_from_fr, double lvl0_to_fr);
+	void lateral_learning_lvl1();
+	void increase_lvl1_set(bool val) { increase_lvl1_ = val; }
 
 private:
 	const int no_;
@@ -47,9 +48,11 @@ private:
 	Column* dest_;
 	int level_; // niveau de la minicolonne dans la carte
 	bool recruited_;
-	
 	vector<double> lastT_;
 	int lastTidx_;
+	Neuron* from0_;
+	Neuron* to0_;
+	bool increase_lvl1_;
 };
 
 #endif
