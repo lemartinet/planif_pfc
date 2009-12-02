@@ -18,7 +18,7 @@ public:
 	Minicol (Columns& columns, int no);
 	~Minicol ();
 	
-	void new_set (const Action& action, Column& src, Column& dest, int level, Neuron* from0, Neuron* to0);
+	void new_set (const Action& action, Column& src, Column& dest, int level);
 	Neuron& sup_get () const { return sup_; }
 	Neuron& inf_get () const { return inf_; }
 	Action& action_get () const { return *action_; }
@@ -27,6 +27,7 @@ public:
 	double lastT_recent () const;
 	int level_get () const { return level_; }
 	bool recruited_get () const { return recruited_; }
+	void lvl0_set(Minicol* lvl0) { lvl0_ = lvl0; }
 	
 	double activation () const { return inf_.output (); }
 	double state_activation () const { return inf_.output (); }
@@ -36,8 +37,7 @@ public:
 	void synch ();
 	void adapt_action (const Action& action);
 	void lateral_learning_lvl0 (bool increase, double factor = 1);
-	void lateral_learning_lvl1();
-	void increase_lvl1_set(bool val) { increase_lvl1_ = val; }
+	void lateral_learning_lvl1(bool increase = true);
 
 private:
 	const int no_;
@@ -50,9 +50,7 @@ private:
 	bool recruited_;
 	vector<double> lastT_;
 	int lastTidx_;
-	Neuron* from0_;
-	Neuron* to0_;
-	bool increase_lvl1_;
+	Minicol* lvl0_;
 };
 
 #endif

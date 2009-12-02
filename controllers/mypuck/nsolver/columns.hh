@@ -34,7 +34,7 @@ public:
 	void correct_transition ();
 
 private:	
-	Minicol* add_minicol (const Action& action, Column& src, Column& dest, int level, Neuron* from0, Neuron* to0);
+	Minicol* add_minicol (const Action& action, Column& src, Column& dest, int level);
 	vector<Column*> level_pop_get (int level) const;
 	void show_activities (int level) const;
 	double nb_spiking_cols (int level) const;
@@ -60,7 +60,6 @@ private:
 	Column* prec_col_lvl_[2];
 	Minicol* win_minicol_lvl_[2];
 	bool new_lvl1_;
-	Column* old_win_lvl1_;
 };
 
 #endif

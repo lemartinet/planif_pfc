@@ -17,7 +17,7 @@
 
 Minicol::Minicol (Columns& columns, int no) :
 	no_(no), sup_(columns.add_neuron_max (SUP)), inf_(columns.add_neuron_max (INF)), 
-	action_(0), recruited_(false), lastTidx_(0), from0_(0), to0_(0), increase_lvl1_(true)
+	action_(0), recruited_(false), lastTidx_(0)
 {
 	stringstream s1, s2;
 	s1 << inf_.no_get ()+1 << " " << no+1;
@@ -33,7 +33,7 @@ Minicol::~Minicol ()
 	}
 }
 
-void Minicol::new_set (const Action& action, Column& src, Column& dest, int level, Neuron* from0, Neuron* to0)
+void Minicol::new_set (const Action& action, Column& src, Column& dest, int level)
 {
 	src_ = &src;
 	dest_ = &dest;
@@ -50,11 +50,6 @@ void Minicol::new_set (const Action& action, Column& src, Column& dest, int leve
 	stringstream s;
 	s << no_+1 << " " << src.no_get ()+1;
 	Logger::log("minicol_col", s.str());
-
-	if (level == 1) {
-		from0_ = from0;
-		to0_ = to0;
-	}
 }
 
 void Minicol::adapt_action (const Action& action)
@@ -71,7 +66,6 @@ void Minicol::adapt_action (const Action& action)
 void Minicol::synch()
 {
 	if (level_ == 1 && recruited_) {
-//	  	cout << from0_->output() << " " << to0_->output() << endl;
 	  	lateral_learning_lvl1();
 	}
 
@@ -96,52 +90,44 @@ void Minicol::lateral_learning_lvl0 (bool increase, double factor)
 		// on recrute une synapse
 		double init_val = MAX_LATERAL_WEIGHT;
 //		double init_val = 0.1 * drand ();
-		forw = dest_->inf_get ().add_synapse (inf_, init_val);
+//		forw = dest_->inf_get ().add_synapse (inf_, init_val);
+		forw = dest_->inf_get ().add_synapse (inf_, 1);
 		back = sup_.add_synapse (dest_->sup_get (), init_val);
 	}
 
 	// on modifie les synapses forw & back
-	double valf, valb;
+	double valb;
 	if (increase) {
 //		valf = (MAX_LATERAL_WEIGHT - *forw) * LATERAL_LEARNING_STEP * factor;
 //		valb = (MAX_LATERAL_WEIGHT - *back) * LATERAL_LEARNING_STEP * factor;
-		valf = (MAX_LATERAL_WEIGHT - *forw) * factor;
+//		valf = (MAX_LATERAL_WEIGHT - *forw) * factor;
 		valb = (MAX_LATERAL_WEIGHT - *back) * factor;
 //		valf = 2* (MAX_LATERAL_WEIGHT - forw->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 //		valb = 2* (MAX_LATERAL_WEIGHT - back->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 	}
 	else {
-		valf = *forw * -LATERAL_LEARNING_STEP * factor;
+//		valf = *forw * -LATERAL_LEARNING_STEP * factor;
 		valb = *back * -LATERAL_LEARNING_STEP * factor;
 	}
 //	cout << "old " << forw->w_get () << " " << back->w_get () << " // ";
-	*forw = *forw + valf;
+//	*forw = *forw + valf;
 	*back = *back + valb;
 //	cout << "new " << forw->w_get () << " " << back->w_get () << endl;
 }
 
-void Minicol::lateral_learning_lvl1()
+void Minicol::lateral_learning_lvl1(bool increase)
 {
-	// calcul du nb de synapse lvl0 au sein d'une colonne lvl1
-	// le +1 est parce qu'on prend le sup de to0 (car il est pas biaisé)
-	// alors qu'il faudrait le sup de from0
-	int nb_syn_back = log(to0_->output()) / log(0.9) + 1;
-	int nb_syn_from = log(from0_->output()) / log(0.9) + 1;
-	// réajustement de la force de propagation
-	double back_out = pow(1 * 0.9 * pow(1 / 0.9, 0.8), nb_syn_back);
-	double to_out = pow(1 * 0.9 * pow(1 / 0.9, 0.8), nb_syn_from);
-
-	double* forw = dest_->inf_get ().syn_get (inf_);
-	double* back = sup_.syn_get (dest_->sup_get ());
-	if (forw == 0 || back == 0) {
-		forw = dest_->inf_get ().add_synapse (inf_, to_out);
-		back = sup_.add_synapse (dest_->sup_get (), back_out);
-	} else if (increase_lvl1_){
-		*forw = to_out;
-		*back = back_out;
+	double* back = sup_.syn_get(dest_->sup_get ());
+	double* from = dest_->inf_get().syn_get(inf_);
+	if (back == 0 || from == 0) {
+		dest_->inf_get().add_synapse(inf_, 0);
+		sup_.add_synapse(dest_->sup_get(), 0);
+	} else if (increase) {
+		*back = lvl0_->sup_get().output() / dest_->sup_activation();
+		*from = lvl0_->inf_get().output() / inf_.output();
 	} else {
-		*forw = 0;
 		*back = 0;
+		*from = 0;
 	}
 }
 
