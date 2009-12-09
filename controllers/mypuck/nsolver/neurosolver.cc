@@ -150,3 +150,34 @@ void Neurosolver::get_actions(vector<double>& angles, vector<double>& values)
 	}		
 }
 
+bool Neurosolver::shortcut(double available, int& nb_action)
+{
+	nb_action = 0;
+	Column* col = columns_.best_state_col(0);
+	if (is_goal_position(col))
+		return true;
+	else if (col == 0)
+		return false;
+	vector<int> visited;
+	double angle = 0;
+	do {
+		visited.push_back(col->no_get());
+		vector<Minicol*> minicols = columns_.minicol_get(col->no_get());
+		Minicol* best_minicol = 0;
+		vector<Minicol*>::iterator it;
+		for (it = minicols.begin (); it != minicols.end (); ++it) {
+			if (!best_minicol || (best_minicol->lastT_recent () < (*it)->lastT_recent ())) {
+				best_minicol = *it;
+			}
+		}
+		if (best_minicol == 0)
+			break;
+		col = const_cast<Column*>(&best_minicol->to_get());
+		angle += best_minicol->action_get().angle_get();
+		nb_action++;
+//		cout << col->no_get() << " ";
+	} while (!is_goal_position(col) && !angle_equal(angle / nb_action, available) &&
+			find(visited.begin(), visited.end(), col->no_get()) == visited.end());
+	return angle_equal(angle / nb_action, available);
+}
+

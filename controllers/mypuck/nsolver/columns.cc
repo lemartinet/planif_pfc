@@ -135,12 +135,12 @@ void Columns::winner_col (int level, const ComputeUnit& ego)
 		new_lvl1_ = false;	
 	}
 //	cout << best_col->no_get() << " " << best_col->state_activation() << endl;
-	vector<Minicol*> best_mini = minicol_get(best_col->no_get());
-	vector<Minicol*>::iterator itm = best_mini.begin();
-	for (; itm != best_mini.end(); ++itm)
-		cout << (*itm)->from_get().no_get() << "->" << (*itm)->to_get().no_get() << ":" << (*itm)->activation() << " ";
-	if (best_mini.size() > 0)
-		cout << endl;
+//	vector<Minicol*> best_mini = minicol_get(best_col->no_get());
+//	vector<Minicol*>::iterator itm = best_mini.begin();
+//	for (; itm != best_mini.end(); ++itm)
+//		cout << (*itm)->from_get().no_get() << "->" << (*itm)->to_get().no_get() << ":" << (*itm)->activation() << " ";
+//	if (best_mini.size() > 0)
+//		cout << endl;
 	win_col_lvl_[level] = best_col;	
 }
 
@@ -285,13 +285,13 @@ bool Columns::topology_learning ()
 	Column* prec_lvl1 = prec_col_lvl_[1];
 	static bool learn_lvl1_lat = false;
 	if (learn_lvl1_lat && col_changed) {
-		cout << "lvl1 " << prec_lvl1->no_get() << "->" << current_lvl1->no_get()
-				<< " / lvl0" << prec_lvl0->no_get() << "->" << current_lvl0->no_get() << endl;
+//		cout << "lvl1 " << prec_lvl1->no_get() << "->" << current_lvl1->no_get()
+//				<< " / lvl0" << prec_lvl0->no_get() << "->" << current_lvl0->no_get() << endl;
 		Action action(Behavior::behavior_get().angle_get());
 		lateral_learning_lvl1(*prec_lvl1, *prec_lvl0, *current_lvl1, *current_lvl0, action);
 		learn_lvl1_lat = false;
 	} else if (current_lvl1 && prec_lvl1 && prec_lvl1 != current_lvl1 && current_lvl1->state_activation() > 0.3
-			&& Behavior::behavior_get().nb_trial_get() >= 6) {
+			&& Behavior::behavior_get().nb_trial_get() >= 2) {
 		learn_lvl1_lat = true;
 	}
 
@@ -508,7 +508,7 @@ Neuron& Columns::add_neuron_max (nType type)
 
 void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state)
 {
-	if (Behavior::behavior_get().nb_trial_get() < 3)
+	if (Behavior::behavior_get().nb_trial_get() < 1)
 		return; 
 	static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
 //	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
@@ -559,7 +559,7 @@ void Columns::winner_takes_all_lvl0 (const vector<ComputeUnit*>& pop_state)
 
 void Columns::winner_takes_all_lvl1 (const vector<Column*>& pop, const ComputeUnit& ego_action)
 {
-	if (Behavior::behavior_get().nb_trial_get() < 6)
+	if (Behavior::behavior_get().nb_trial_get() < 2)
 		return; 
 //	cout << "egoaction: " << ego_action.output() << endl;
 	static const double RATE_COL_COL = Params::get_double ("RATE_COL_COL");

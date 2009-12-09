@@ -16,8 +16,8 @@
 Behavior* Behavior::behavior_ = 0;
 
 Behavior::Behavior (RobotDevice& robot): 
-	robot_(robot), avoid_(robot_.ps_value_get()), current_(0.0), wait_(0),
-	automate_(GO_ON), cpt_trial_(0), cpt_total_(0), nb_trial_(0), neurosolver_()
+	robot_(robot), next_action_(0), wait_(0), automate_(GO_ON),
+	cpt_trial_(0), cpt_total_(0), nb_trial_(0), neurosolver_()
 {
 	behavior_ = this;
 	Logger::logw ("weight");	
@@ -27,13 +27,7 @@ Behavior::~Behavior ()
 {
 }
 
-void Behavior::synch () 
-{
-  	compute_next_action ();
-  	do_action ();
-}
-
-void Behavior::compute_next_action ()
+void Behavior::synch ()
 {
 	cpt_trial_++;
     cpt_total_++;
@@ -42,7 +36,7 @@ void Behavior::compute_next_action ()
 	robot_.synch ();
 	vector<double> dirs;
 	if (automate_ != SLEEP) {
-		avoid_.free_ways (dirs, robot_.angle_get ());
+		robot_.free_ways (dirs, robot_.angle_get ());
 		nb_path_ = dirs.size();
 	}
 	
@@ -67,7 +61,6 @@ void Behavior::compute_next_action ()
 	}
 	else if (automate_ != GOAL && automate_ != SLEEP && robot_.goal_reached ()) {
 		// on s'arrete au goal
-//		cout << "goal !!!!!!!!!!" << endl;
 		wait_ = 5 * WAIT_BETWEEN_DECISIONS;
 		automate_ = GOAL;
 		cpt_trial_ = 0;
@@ -76,7 +69,7 @@ void Behavior::compute_next_action ()
 	else if (automate_ == GOAL && wait_ == 0) {	
 		automate_ = GO_ON;
 	}
-	else if (automate_ != BLOCK && automate_ != SLEEP && automate_ != GOAL && avoid_.bloque_get ()) {
+	else if (automate_ != BLOCK && automate_ != SLEEP && automate_ != GOAL && robot_.bloque_get ()) {
 		// utiliser la meme valeur que le rythme d'appr dans neurosolver ?
 		wait_ = 96;
 		automate_ = BLOCK;
@@ -86,7 +79,7 @@ void Behavior::compute_next_action ()
 	}	
 	else if (automate_ == GO_ON && dirs.size () > 1) {
 		// on attend avt de prendre la decision, le tps de la propagation
-		// on prend une décision seulement aux intersections (pas ds couloir)
+		// (on peut prendre une décision seulement aux intersections)
 		wait_ = ONLY_INTERSECT == 1 ? 20 : 0; 
 		automate_ = DECIDE;
 	}
@@ -94,9 +87,9 @@ void Behavior::compute_next_action ()
 		// on prend la décision
 		automate_ = DECIDED;
 		wait_ = WAIT_BETWEEN_DECISIONS;
-		current_ = select_action (dirs);
-//		current_ = 	robot_.angle_get () + decision_codee_angle[decision_codee++];
-//		cout << "action :" << current_ << endl;
+		next_action_ = select_action(dirs);
+//		next_action = 	robot_.angle_get () + decision_codee_angle[decision_codee++];
+//		cout << "action :" << next_action << endl;
 	}
 	else if (automate_ == DECIDED && wait_ == 0) { //dirs.size () <= 1) {
 		// on attend entre 2 décisions (persistance) 
@@ -106,35 +99,15 @@ void Behavior::compute_next_action ()
 		wait_--;	
 	}
 //	cout << automate_state () << endl;
-}
 
-void Behavior::do_action ()
-{
-	static const int RANDOM_MOVE = Params::get_int("RANDOM_MOVE");
-	int left_speed, right_speed;
-  	if (RANDOM_MOVE && nb_trial_ > 6) {
-  		left_speed = right_speed = 10;
-  	}
-	else if (automate_ == GOAL || automate_ == DECIDE || automate_ == SLEEP) {
-//		cout << "zero speed !" << endl;
-		left_speed = right_speed = 0;
-	}
-	else if (automate_ == DECIDED) {
-		double diff = ecart_angulaire (robot_.angle_get (), current_);
-		if (angle_equal (robot_.angle_get (), current_)) {
-	  		diff = 0;
-	  		current_ = robot_.angle_get ();
-		}
-		//cout << "diff " << diff;
-		avoid_.avoid (diff, left_speed, right_speed);
-	}
-	else {
-		avoid_.avoid (0, left_speed, right_speed);
-	}
-	//cout << "left " << left_speed << " right " << right_speed << endl;
-	robot_.speed_set(left_speed, right_speed);
+	// execution de l'action
+	if (automate_ == GOAL || automate_ == DECIDE || automate_ == SLEEP)
+		robot_.stop();
+	else if (automate_ == DECIDED)
+		robot_.move(next_action_);
+	else
+		robot_.move(robot_.angle_get());
 }
-
 
 double Behavior::select_action (const vector<double>& dirs)
 {
@@ -154,11 +127,12 @@ double Behavior::select_action (const vector<double>& dirs)
 		explore = e_greedy (dirs, pa, s);
 	}
 	else if (EXPLO == "qgreedy") {
-		cout << EXPLO << endl;
 		explore = q_greedy (dirs, pa);
 	}
 	else if (EXPLO == "soft") {
 		explore = softmax (dirs, pa);
+	} else if (EXPLO == "noexplo") {
+		explore = no_exploration (dirs, pa, s);
 	}
 //	for (int i = 0; i < nb_free; i++) {
 //		cout << dirs[i] << "/" << pa[i] << " ";
@@ -192,6 +166,45 @@ double Behavior::select_action (const vector<double>& dirs)
 		Logger::log ("decision", s.str (), true);		
 		return 0;
 	}
+}
+
+bool Behavior::no_exploration (const vector<double>& dirs, double* pa, stringstream& s)
+{
+	int nb_free = dirs.size ();
+	int min = 0;
+	int min_d = -1;
+	for (int i = 0; i < nb_free; i++) {
+		// on cherche le meilleur shortcut
+		int long_shortcut;
+		bool is_short = neurosolver_.shortcut(dirs[i], long_shortcut);
+//		cout << dirs[i] << " " << is_short << " " << long_shortcut << endl;
+		if (is_short && long_shortcut > min) {
+			min	= long_shortcut;
+			min_d = i;
+		}
+		pa[i] = 0;
+	}
+	if (min_d >= 0) {
+		pa[min_d] = 1;
+	} else {
+		// le robot explore (dirs equiprobable)
+		s << "-";
+		for (int i = 0; i < nb_free; i++) {
+			// si on est près du but, on va tout droit
+			double dist_goal_thresh = 0.8;
+//			double dist_goal_thresh = 1.6;
+			if (robot_.dist_goal_get() < dist_goal_thresh && angle_equal(dirs[i], 0))
+				pa[i] = 1;
+			else if (robot_.dist_goal_get() < dist_goal_thresh)
+				pa[i] = 0;
+			else
+				pa[i] = 1.0 / nb_free;
+//			cout << pa[i] << " ";
+		}
+//		cout << endl;
+		return true;
+	}
+	return false;
 }
 
 bool Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s)

@@ -11,7 +11,7 @@
 // camera
 int camera_enabled = 0; // mettre à 1 pour activer la camera
 
-RobotDevice::RobotDevice () :
+RobotDevice::RobotDevice (): ps_value_(new int[NB_SENSORS]), avoid_(ps_value_),
 	position_(0.0, -0.05), orientation_(0.0), num_pixels_goal_(0), 
 	goal_reached_(false), sleep_(false)
 {
@@ -44,7 +44,6 @@ RobotDevice::RobotDevice () :
   	orientation_ = -atan2 (orient[0], orient[2]) + M_PI/2;
   	orientation_ = orientation_ > M_PI ? orientation_ - 2*M_PI : orientation_;
   	orientation_ = orientation_ < -M_PI ? orientation_ + 2*M_PI : orientation_;
-  	ps_value_ = new int[NB_SENSORS];
 }
 
 RobotDevice::~RobotDevice () 
@@ -141,3 +140,14 @@ bool RobotDevice::goal_reached () const {
 	return goal_reached_;
 }
 
+void RobotDevice::move(double angle)
+{
+	int left_speed, right_speed;
+	double diff = ecart_angulaire(orientation_, angle);
+	if (angle_equal(orientation_, angle))
+		diff = 0;
+	//cout << "diff " << diff;
+	avoid_.avoid (diff, left_speed, right_speed);
+	//cout << "left " << left_speed << " right " << right_speed << endl;
+	setSpeed(left_speed, right_speed);
+}

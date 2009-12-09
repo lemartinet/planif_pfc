@@ -3,7 +3,6 @@
 
 #include "neurosolver.hh"
 #include "device.hh"
-#include "obstacleavoidance.hh"
 #include <sstream>
 
 class Action;
@@ -30,9 +29,8 @@ public:
 	static Behavior& behavior_get() { return *behavior_; }
   	
 private:
-	void compute_next_action ();
-	void do_action ();
 	double select_action (const vector<double>& dirs);
+	bool no_exploration (const vector<double>& dirs, double* pa, stringstream& s);
 	bool e_greedy (const vector<double>& dirs, double* pa, stringstream& s);
 	bool q_greedy (const vector<double>& dirs, double* pa);
 	bool softmax (const vector<double>& dirs, double* pa);
@@ -42,8 +40,7 @@ private:
 private:
 	static Behavior* behavior_; 
 	RobotDevice& robot_;
-	ObstacleAvoidance avoid_;
-	double current_;
+	double next_action_;
 	int wait_; // temporisation de l'automate	
 	enum behabiorAutomate automate_; // état de l'automate
 	int cpt_trial_;

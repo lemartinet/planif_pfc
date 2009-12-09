@@ -4,7 +4,7 @@
 #include <vector>
 
 // OAM state
-enum oam_state { OAM_OFF = 0, OAM_ON = 1, OAM_STUCK = 2, OAM_BIGTURN = 3};
+enum oam_state { OAM_OFF = 0, OAM_ON = 1, OAM_STUCK = 2, OAM_BIGTURN = 3 };
 
 class Coord;
 
@@ -21,12 +21,7 @@ public:
 	void free_ways (vector<double>& dirs, double robot_angle);
 
 private:
-	int analyse_cross_road (bool& left, bool& straight, bool& right);
-
-private:
 	int* ps_value;
-	bool left_near_;
-	bool right_near_;
 	enum oam_state oam_state_;
 };
 

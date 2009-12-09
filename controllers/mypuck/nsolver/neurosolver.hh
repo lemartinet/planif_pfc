@@ -21,6 +21,7 @@ public:
 	void get_actions(vector<double>& angles, vector<double>& values);
 	void synch (bool learning, bool decision_point, bool goal_found, bool bloque, bool sleeping, int sleep_step);
 	void gui_goal_set(int no_col);
+	bool shortcut(double available, int& nb_action);
 	
 private:
 	void set_goal_weight (Column* col, double val);

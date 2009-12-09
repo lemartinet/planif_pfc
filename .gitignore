@@ -12,3 +12,4 @@ controllers/mypuck/mypuck_nogui
 controllers/mypuck/mypuck
 controllers/mypuck_supervisor/mypuck_supervisor
 controllers/mypuck/gui/boardwindow.hh
+controllers/supervisor_shortcut_maze/supervisor_shortcut_maze

@@ -4,6 +4,7 @@
 #include "math.hh"
 #include <cmath>
 #include <iostream>
+#include <fstream>
 
 // OAM - Obstacle Avoidance Module (from e-puck_line controller)
 //
@@ -18,8 +19,9 @@ enum sensors { PS_RIGHT_00 = 0, PS_RIGHT_45 = 1, PS_RIGHT_90 = 2, PS_RIGHT_REAR 
 // directions
 enum directions { LEFT = 0, RIGHT = 1 };
 
-ObstacleAvoidance::ObstacleAvoidance (int* value):
-	ps_value(value), left_near_(false), right_near_(false), oam_state_(OAM_OFF) {}
+ObstacleAvoidance::ObstacleAvoidance (int* value): ps_value(value), oam_state_(OAM_OFF)
+{
+}
 
 ObstacleAvoidance::~ObstacleAvoidance ()
 {
@@ -89,148 +91,34 @@ void ObstacleAvoidance::avoid (double angle, int& left_speed, int& right_speed)
 	//cout << "speed: " << left_speed << " " << right_speed << endl;
 }
 
-int ObstacleAvoidance::analyse_cross_road (bool& left, bool& straight, bool& right)
-{
-	// fonction adaptée au laby de tolman. 
-	
-	// on analyse les alentours du robot (dvt, gauche, droite)
-	if (ps_value[PS_LEFT_45] < 200) {
-		left_near_ = true;
-	} 
-	else if (ps_value[PS_LEFT_45] > 1700) {
-		left_near_ = false;
-	}		
-	if (ps_value[PS_RIGHT_45] < 200) {
-		right_near_ = true;
-	}
-	else if (ps_value[PS_RIGHT_45] > 1700) {
-		right_near_ = false;
-	}
-	bool left_reached = false;
-	if (ps_value[PS_LEFT_90]  < 200) {
-		left_reached = true;
-	}
-	bool right_reached = false;
-	if (ps_value[PS_RIGHT_90]  < 200) {
-		right_reached = true;
-	}
-	bool front_reached = false;
-	//if (ps_value[PS_LEFT_00] > 1700) {
-	if (ps_value[PS_LEFT_00] > 1200 && ps_value[PS_RIGHT_00] > 1200) {
-		front_reached = true;
-	}
-	//cout << obstacle_left_front << endl;
-
-	left = straight = right = false;
-	// Quel type d'intersection ?
-	if (left_near_ && left_reached) {
-		if (right_near_) {
-			if (right_reached) {
-				if (!front_reached) {
-					// on a 3 chemins (g,d,td)
-//					cout << "on a 3 chemins (g,d,td)" << endl;
-					left = straight = right = true;
-					return 3;
-				}
-				else {
-					// on a 2 chemins (g,d)
-//					cout << "on a 2 chemins (g,d)" << endl;
-					left = right = true;
-					return 2;
-				}
-			}
-			else {
-				// il faut attendre encore le chemin d
-//				cout << "il faut attendre encore le chemin d" << endl;
-				return 1;
-			}
-		}
-		else if (!front_reached) {
-			// on a 2 chemins (g,td)
-//			cout << "on a 2 chemins (g,td)" << endl;
-			left = straight = true;
-			return 2;
-		}
-		else {
-			// on a 1 seul chemin, pas de décision
-//			cout << "on a 1 seul chemin (g)" << endl;
-			// on reinitialise la detection d'intersection
-			left_near_ = false;
-			return 1;	
-		}
-	}
-	else if (right_near_ && right_reached) {
-		if (left_near_ && !left_reached) {
-			// il faut attendre encore le chemin g
-//			cout << "il faut attendre encore le chemin g" << endl;
-			return 1;
-		}
-		else if (!front_reached) {
-			// on a 2 chemins (d,td)
-//			cout << "on a 2 chemins (d,td)" << endl;
-			right = straight = true;
-			return 2;
-		}
-		else {
-			// on a 1 seul chemin, pas de décision
-//			cout << "on a 1 seul chemin (d)" << endl;
-			// on reinitialise la detection d'intersection
-			right_near_ = false;
-			return 1;
-		}
-	}
-	else if (!front_reached) {
-			// on a 1 chemin (td)
-//			cout << "on a 1 chemin (td)" << endl;
-			straight = true;
-			return 1;
-	}
-	return 0;	
-} 
-
-//int ObstacleAvoidance::analyse_cross_road_bis ()
-//{
-//	// fonction adaptée au laby de tolman. 
-//	
-//	// on analyse les alentours du robot
-//	// le test > 0 est pour supprimer l'artefact de debut de simulation
-//	bool left_reached = false;
-//	if (obstacle_left_get () > 0 && obstacle_left_get ()  < 200) {
-//		left_reached = true;
-//	}
-//	bool right_reached = false;
-//	if (obstacle_right_get () > 0 && obstacle_right_get ()  < 200) {
-//		right_reached = true;
-//	}
-//	bool front_reached = false;
-//	if (obstacle_left_front_get() > 1300) {
-//		front_reached = true;
-//	}
-//	
-//	int count = 0;
-//	count = left_reached ? count + 1: count;
-//	count = right_reached ? count + 1: count;
-//	count = !front_reached ? count + 1: count;
-//	cout << "count :" << count << endl;
-//	return count;	
-//} 
-
 void ObstacleAvoidance::free_ways (vector<double>& dirs, double robot_angle)
 {
-	// à modifier pour que plus généralement, elle serve à découvrir
-	// les directions empruntables par le robot selon un échantillonnage
-	// ici on regarde tous les 90° (gauche, tout droit, droite et arrière)
 	// On tient compte du demi-tour
-	bool go_left = false, go_straight = false, go_right = false;
-	analyse_cross_road (go_left, go_straight, go_right);
 //	dirs.push_back (pi_pi (robot_angle - M_PI));
-	if (go_left) {
-		dirs.push_back (pi_pi (robot_angle + M_PI/2.0));
+
+	if (ps_value[PS_LEFT_00] + ps_value[PS_RIGHT_00] < 1500) {
+//		cout << "dir 0 free" << endl;
+		dirs.push_back(pi_pi(robot_angle));
 	}
-	if (go_right) {
-		dirs.push_back (pi_pi (robot_angle - M_PI/2.0));
+	// on divise l'espace des ps (PS_RIGHT_45, PS_RIGHT_90) en deux zones
+	if (ps_value[PS_RIGHT_45] + ps_value[PS_RIGHT_90] < 4000) {
+		// zone avec quelque chose à droite. On redivise cette zone en deux
+		if (ps_value[PS_RIGHT_45] > 500 && ps_value[PS_RIGHT_90] > 2500) {
+//			cout << "dir right 90 free" << endl;
+			dirs.push_back(pi_pi(robot_angle - M_PI/2.0));
+		} else if (ps_value[PS_RIGHT_45] < 500 && ps_value[PS_RIGHT_90] < 2500) {
+//			cout << "dir right 45 free" << endl;
+			dirs.push_back(pi_pi(robot_angle - M_PI/4.0));
+		}
 	}
-	if (go_straight) {
-		dirs.push_back (pi_pi (robot_angle));
+	if (ps_value[PS_LEFT_45] + ps_value[PS_LEFT_90] < 4000) {
+		// quelque chose à gauche !
+		if (ps_value[PS_LEFT_45] > 500 && ps_value[PS_LEFT_90] > 2500) {
+//			cout << "dir left 90 free" << endl;
+			dirs.push_back(pi_pi(robot_angle + M_PI/2.0));
+		} else if (ps_value[PS_LEFT_45] < 500 && ps_value[PS_LEFT_90] < 2500) {
+//			cout << "dir left 45 free" << endl;
+			dirs.push_back(pi_pi(robot_angle + M_PI/4.0));
+		}
 	}
 }

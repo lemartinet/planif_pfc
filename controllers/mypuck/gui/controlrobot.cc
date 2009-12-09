@@ -118,7 +118,7 @@ void ControlRobot::update_mincols ()
 	vector<Minicol*>::const_iterator it;
 	for (it = minicols.begin(); it != minicols.end(); it++) {
 		Minicol* minicol = *it;
-		if (!minicol->recruited_get ()) {
+		if (minicol == 0 || !minicol->recruited_get ()) {
 			continue;
 		}
 		Edge* edge = widget_.edge_get (COL, minicol->from_get ().no_get (), minicol->to_get ().no_get ());
