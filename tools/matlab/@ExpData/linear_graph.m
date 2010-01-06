@@ -1,4 +1,4 @@
-function linear_graph2 (exp_data)
+function linear_graph (exp_data)
 
 % on pourrait utiliser la même routine pour calculer la vraie distance au but 
 % au lieu de la distance à vol d'oiseau

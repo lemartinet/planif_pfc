@@ -39,18 +39,18 @@ def compute(start, end, maze):
 
 def analyze(start, end):
 	sys.path.append("tools/script")
-	import post
+	from post import frs, weight
 	for i in range(start, end + 1):
 		print("Processing exp %d data..." % i)
 		try:
-			frs("data/data_raw/%d" % i)
-			weight("data/data_raw/%d" % i)
+			frs("data/data_raw/%d/" % i)
+			weight("data/data_raw/%d/" % i)
 		except:
 			print("Problems with exp %d data" % i)
 
 def main(argv):
 	try:
-		opts, args = getopt.getopt(argv, "acr:")
+		opts, args = getopt.getopt(argv, "a:cr:")
 		if len(opts) == 0: raise getopt.GetoptError, ""
 	except getopt.GetoptError:
 		print(__doc__)

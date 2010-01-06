@@ -19,8 +19,8 @@ function [pv, v] = proba_var (vars, step, vspace)
 nb_stim = size(vars, 1);	
 nb_var = size(vars, 2);
 if nargin == 3
-	v_max = vspace(1,:);
-	v_min = vspace(2,:);
+	v_max = vspace(1, :);
+	v_min = vspace(2, :);
 else
 	v_max = max(vars);
 	v_max = v_max + step; % v_max = borne sup non atteinte
@@ -37,9 +37,9 @@ value = sparse(jdx, 1, 1);
 pv = zeros(nb_bin);
 nb_total = 0;
 keys = num2cell(keys);
-for i=1:size(keys,1)
-	pv (keys{i,:}) = value(i,1);
-	nb_total = nb_total + value(i,1);
+for i = 1 : size(keys, 1)
+	pv(keys{i, :}) = value(i, 1);
+	nb_total = nb_total + value(i, 1);
 end
 pv = pv ./ nb_total;
 

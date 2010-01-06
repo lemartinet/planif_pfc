@@ -29,21 +29,18 @@ def frs(dir):
 	days.sort()
 	trials = range(1,13) * 14 + range(1,8) + range(1,7)
 	t_idx = 0
-	t_ligne = 0
 	t_file = open(dir + "/frs/Q_%d_%d.txt" % (days[t_idx], trials[t_idx]), "w")
 	var = loadtxt(dir + "vars.txt", comments="%")
 	t_step = [] # t_step contient les indices de fin de chaque day/trial
-	for d, t in zip(days trials):
-		t_step += [1 + logical_and(var[:, 1] == d, var[:, 2] == t).nonzero()[0][-1]]
+	for d, t in zip(days, trials):
+		t_step += [logical_and(var[:, 1] == d, var[:, 2] == t).nonzero()[0][-1]]
 	for s in fin:
 		rows = s.split()
-		if t_ligne >= t_step(t_idx):
-			f_file.close()
-			t_file = open(dir + "/frs/Q_%d_%d.txt" % (days[t_idx], trials[t_idx]), "w")
+		if int(rows[0]) > var[t_step[t_idx], 0]:
+			t_file.close()
 			t_idx += 1
-			t_ligne = 0
-		t_file.write(" ".join(rows[1:]))			
-		t_ligne += 1
+			t_file = open(dir + "/frs/Q_%d_%d.txt" % (days[t_idx], trials[t_idx]), "w")
+		t_file.write(" ".join(rows[1:]) + "\n")			
 		if len(rows) < nbneurons + 1:
 			print("line skipped")
 			continue
@@ -51,6 +48,7 @@ def frs(dir):
 			fout = open("%s/frs/%d.txt" % (dir, i), "a")
 			fout.write(rows[i] + "\n")
 			fout.close()
+	t_file.close()
 	fin.close()
 	txt2mat (dir + "/frs/", "Q", prefix="Q_")
 	txt2mat (dir + "/frs/", "fr")
@@ -81,22 +79,6 @@ def weight(dir):
 	os.remove(dir + "/weight.txt")
 	#possibilité d'utiliser np.mat(";".join(lines)) pour construire la matrice
 	#puis sparse puis on sauve la liste de toutes les matrices d'un coup
-
-# Extrait le taux d'exploration
-#def explore (dir):
-#	# recup des jours en fonction des indices
-#	idx_days = numpy.loadtxt(dir + "/vars.txt", comments='%')
-#	fin.close()
-#	fin = open(dir + "/decision.txt", "r")
-#	for li in fin:
-# code bash
-#	for i in `seq 1 $nb_day`
-#	do
-#	explo=`cat $exp/output_mypuck.txt | grep "Day $i " | grep explo | wc -l`
-#	planif=`cat $exp/output_mypuck.txt | grep "Day $i " | grep -v explo | grep -v goal | grep -v pas | wc -l`
-#	ratio=`echo "scale=2 ; $explo / ($explo + $planif)" | bc`
-#	echo -n "$ratio "
-#	done	
 
 #if __name__ == "__main__":
 #	# Do it !!!

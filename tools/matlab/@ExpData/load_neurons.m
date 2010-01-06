@@ -18,22 +18,22 @@ for i = 1 : exp_data.nbneurons
 	fr = exp_data.load_neuron(i);
 
 	fprintf('field and theta info...\n');	
-	for d = 1 : 16
-		for t = 1 : 12
-			if (d == 15 && t > 7) || (d == 16 && t > 6)
-				break;
-			end
-			step_idx = exp_data.trial(d,t).start : exp_data.trial(d,t).end;
-			[tfr] = firing_rate (fr(step_idx), exp_data.trial(d,t).v_space, v_size);
-			exp_data.neuron(i).trial(d,t).fr = tfr(idx);
-			[c, fs, m_fr, s_fr] = field_properties (tfr, exp_data.trial(d,t).pv_space);
-			exp_data.neuron(i).trial(d,t).center = c;
-			exp_data.neuron(i).trial(d,t).fsize = fs;
-			exp_data.neuron(i).trial(d,t).m_fr = m_fr;
-			exp_data.neuron(i).trial(d,t).s_fr = s_fr;
-			exp_data.neuron(i).trial(d,t).theta = theta(fr(step_idx));
-		end
-		step_idx = exp_data.day(d).start : exp_data.day(d).end;
+	for d = 1 : 15
+% 		for t = 1 : 12
+% 			if (d == 15 && t > 7) || (d == 16 && t > 6)
+% 				break;
+% 			end
+% 			step_idx = exp_data.trial(d,t).start/exp_data.step_size : exp_data.trial(d,t).end/exp_data.step_size;
+% 			[tfr] = firing_rate (fr(step_idx), exp_data.trial(d,t).v_space, v_size);
+% 			exp_data.neuron(i).trial(d,t).fr = tfr(idx);
+% 			[c, fs, m_fr, s_fr] = field_properties (tfr, exp_data.trial(d,t).pv_space);
+% 			exp_data.neuron(i).trial(d,t).center = c;
+% 			exp_data.neuron(i).trial(d,t).fsize = fs;
+% 			exp_data.neuron(i).trial(d,t).m_fr = m_fr;
+% 			exp_data.neuron(i).trial(d,t).s_fr = s_fr;
+% 			exp_data.neuron(i).trial(d,t).theta = theta(fr(step_idx));
+% 		end
+		step_idx = exp_data.day(d).start/exp_data.step_size : exp_data.day(d).end/exp_data.step_size;
 		[tfr] = firing_rate (fr(step_idx), exp_data.day(d).v_space, v_size);
 		exp_data.neuron(i).day(d).fr = tfr(idx);
 		[c, fs, m_fr, s_fr] = field_properties (tfr, exp_data.day(d).pv_space);
@@ -51,6 +51,7 @@ for i = 1 : exp_data.nbneurons
 	exp_data.neuron(i).m_fr = m_fr;
 	exp_data.neuron(i).s_fr = s_fr;
 	exp_data.neuron(i).theta = theta(fr);
+    clear fr;
 end
 
 

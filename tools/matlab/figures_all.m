@@ -1,223 +1,107 @@
-function [] = figures_all (data_path, nbexp)
+function figures_all(data_path)
+% remettre boxplot et anova1 sous la forme (data, num_group) plutôt que
+% (data_grp1, data_grp2) pour éviter de limiter à une taille de grp
 
-% Loading values...
-filename = sprintf ('%s/data_extracted/fsize1_o.mat', data_path);
-load (filename, 'fsize1_o');
-filename = sprintf ('%s/data_extracted/fsize1_c.mat', data_path);
-load (filename, 'fsize1_c');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Boxplot of densities for cells and columns
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+load(sprintf ('%s/aks_o.mat', data_path), 'aks_o');
+load(sprintf ('%s/aks_c.mat', data_path), 'aks_c');
 
-filename = sprintf ('%s/data_extracted/pks_o.mat', data_path);
-load (filename, 'pks_o');
-filename = sprintf ('%s/data_extracted/pks_c.mat', data_path);
-load (filename, 'pks_c');
+f = figure(); 
+% we can mean the density for each experiment to have only nbexp values
+datac = build_r_data(aks_c, 0);
+datao = build_r_data(aks_o, 0);
+max_data = max(length(datao), length(datac));
+boxplot([datac(1:max_data)', datao(1:max_data)']);
+title ('spatial density');
+saveas (f, sprintf('%s/spatial_density.pdf', data_path), 'pdf');
 
-filename = sprintf ('%s/data_extracted/aks_o.mat', data_path);
-load (filename, 'aks_o');
-filename = sprintf ('%s/data_extracted/paks_o.mat', data_path);
-load (filename, 'paks_o');
-filename = sprintf ('%s/data_extracted/aks_c.mat', data_path);
-load (filename, 'aks_c');
-filename = sprintf ('%s/data_extracted/paks_c.mat', data_path);
-load (filename, 'paks_c');
-
-filename = sprintf ('%s/data_extracted/lks_o.mat', data_path);
-load (filename, 'lks_o');
-filename = sprintf ('%s/data_extracted/lks_c.mat', data_path);
-load (filename, 'lks_c');
-
-filename = sprintf ('%s/data_extracted/infos_c.mat', data_path);
-load (filename, 'infos_c');
-filename = sprintf ('%s/data_extracted/infos_o.mat', data_path);
-load (filename, 'infos_o');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% We plot the paks distribution for cells and columns
+% Density distribution for cells and columns
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = 1;
-f = figure (fig); 
-clf (fig);
-
-y_c = [];
-y_o = [];
-error_c = [];
-error_o = [];
-
-nb = size (paks_c,2);
-y_c (1) = 0;
-error_c (1) = 0;
-
-for i=2:nb+1
-	y_c (i) = mean (paks_c (:,i-1));
-	%error_c(i)=std (paks_o(:,i-1));
-end
-x_c = 0:100;
-
-nb = size (paks_o,2);
-y_o (1) = 0;
-error_o (1) = 0;
-for i=2:nb+1
-	y_o (i) = mean (paks_o (:,i-1));
-	%error_o(i)=std (paks_o(:,i-1));
-end
-x_o=0:100;
-
-%errorbar (x_c, y_c, error_c);
-plot (x_c, y_c);
-hold on;
-%errorbar (x_o, y_o, error_o, '--');
-plot (x_o, y_o, '--');
-
-title ('Active kurtosis');
-xlabel('Number of active cell');
-ylabel('Probability');
-axis([0 30 0 1]);
-figName = sprintf('%s/data_extracted/figures/active_kurtosis_fig1.eps', data_path);
-saveas (f, figName, 'psc2');
+% load(sprintf('%s/paks_o.mat', data_path), 'paks_o');
+% load(sprintf('%s/paks_c.mat', data_path), 'paks_c');
+% 
+% f = figure(); hold on;
+% y_c = [0, mean(paks_c)];
+% y_o = [0, mean(paks_o)];
+% plot(0:100, y_c);
+% plot(0:100, y_o, '--');
+% title('density distribution');
+% xlabel('Number of active cell');
+% ylabel('Probability');
+% axis([0 30 0 1]);
+% saveas(f, sprintf('%s/density_distribution.pdf', data_path), 'pdf');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% We plot the boxplot of aks for cells and columns
+% Boxplot of population kurtosis for cells and columns
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = fig + 1;
-f = figure (fig); 
-clf (fig);
+load(sprintf('%s/pks_o.mat', data_path), 'pks_o');
+load(sprintf('%s/pks_c.mat', data_path), 'pks_c');
 
-data = build_r_data (nbexp, aks_c', aks_o', false, false, 0, 0);
-
-boxplot (data(:,2), data(:,1));
-
-title ('boxplot aks');
-xlabel('');
-ylabel('');
-%axis([0.5 2.5 0 90]);
-figName = sprintf('%s/data_extracted/figures/active_kurtosis_boxplot.eps', data_path);
-saveas (f, figName, 'psc2');
-figName = sprintf('%s/data_extracted/group_active_kurtosis', data_path);
-save ('-ASCII', figName, 'data');
+f = figure(); 
+datac = build_r_data(pks_c, 0);
+datao = build_r_data(pks_o, 0);
+max_data = max(length(datao), length(datac));
+boxplot([datac(1:max_data)', datao(1:max_data)']);
+title('population kurtosis');
+saveas(f, sprintf('%s/population_kurtosis.pdf', data_path), 'pdf');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% We plot the density vs aks for cells and columns
+% Boxplot of lifetime kurtosis for cells and columns
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = fig + 1;
-f = figure (fig); 
-clf (fig);
+load(sprintf('%s/lks_o.mat', data_path), 'lks_o');
+load(sprintf('%s/lks_c.mat', data_path), 'lks_c');
 
-for i=1:nbexp
-	density_c(i) = sum ([0 paks_c(i,:)] .* x_c);
-end
-for i=1:nbexp
-	density_o(i) = sum ([0 paks_o(i,:)] .* x_o);
-end
-
-data = build_r_data (nbexp, density_c', density_o', false, false, 0, 0);
-
-boxplot (data(:,2), data(:,1));
-
-title ('boxplot density');
-xlabel('');
-ylabel('');
-figName = sprintf('%s/data_extracted/figures/density_boxplot.eps', data_path);
-saveas (f, figName, 'psc2');
-figName = sprintf('%s/data_extracted/group_density', data_path);
-save ('-ASCII', figName, 'data');
-
-%plot (density_c, aks_c, '.');
-%[corr_c, p_c] = corrcoef (density_c, aks_c);
-%printf('correlation density vs aks for cells : %f %f\n', corr_c, p_c);
-
-%fig = fig + 1;
-%f = figure (fig); 
-%clf (fig);
-%plot (density_o, aks_o, '.');
-%[corr_o, p_o] = corrcoef (density_o, aks_o);
-%printf('correlation density vs aks for cells : %f %f\n', corr_c, p_c);
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% We plot the boxplot of pks for cells and columns
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = fig + 1;
-f = figure (fig); 
-clf (fig);
-
-data = build_r_data (nbexp, pks_c, pks_o, true, false, 0, 0);
-
-boxplot (data(:,2), data(:,1));
-
-title ('boxplot pks');
-xlabel('');
-ylabel('');
-%axis([0.5 2.5 0 90]);
-figName = sprintf('%s/data_extracted/figures/population_kurtosis_boxplot.eps', data_path);
-saveas (f, figName, 'psc2');
-figName = sprintf('%s/data_extracted/group_population_kurtosis', data_path);
-save ('-ASCII', figName, 'data');
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% We plot the boxplot of lks for cells and columns
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = fig + 1;
-f = figure (fig); 
-clf (fig);
-
-data = build_r_data (nbexp, lks_c, lks_o, true, true, 0.9, 0.6);
-
-boxplot (data(:,2), data(:,1));
-
-title ('boxplot lks');
-xlabel('');
-ylabel('');
-%axis([0.5 2.5 0 90]);
-figName = sprintf('%s/data_extracted/figures/lifetime_kurtosis_boxplot.eps', data_path);
-saveas (f, figName, 'psc2');
-figName = sprintf('%s/data_extracted/group_lifetime_kurtosis', data_path);
-save ('-ASCII', figName, 'data');
+f = figure(); 
+datac = build_r_data(lks_c, 0.9);
+datao = build_r_data(lks_o, 0.6);
+max_data = max(length(datao), length(datac));
+boxplot([datac(1:max_data)', datao(1:max_data)']);
+title('lifetime kurtosis');
+saveas(f, sprintf('%s/lifetime_kurtosis.pdf', data_path), 'pdf');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % We plot the receptive field size vs lks for cells and columns
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = fig + 1;
-f = figure (fig); 
-clf (fig);
+load(sprintf('%s/fsize1_o.mat', data_path), 'fsize1_o');
+load(sprintf('%s/fsize1_c.mat', data_path), 'fsize1_c');
 
-[data_fsize, data_fsize_c, data_fsize_o] = build_r_data (nbexp, fsize1_c, fsize1_o, true, true, 0.9, 0.6);
-[data_lks, data_lks_c, data_lks_o]  = build_r_data (nbexp, lks_c, lks_o, true, true, 0.9, 0.6);
+f = figure();
+datac_fsize = build_r_data(fsize1_c, 0.9);
+datao_fsize = build_r_data(fsize1_o, 0.6);
+max_data = max(length(datac_fsize), length(datao_fsize));
+boxplot([datac_fsize(1:max_data)', datao_fsize(1:max_data)']);
+title('field size');
+saveas(f, sprintf('%s/field_size.pdf', data_path), 'pdf');
 
-plot (data_lks_c, data_fsize_c, 'o');
-[corr_c, p_c] = corrcoef (data_lks_c, data_fsize_c);
-printf('correlation lks vs field size for cells : %f %f\n', corr_c, p_c);
-
-%fig = fig + 1;
-%f = figure (fig); 
-%clf (fig);
-hold on
-plot (data_lks_o, data_fsize_o, 'x');
-[corr_o, p_o] = corrcoef (data_lks_o, data_fsize_o);
-printf('correlation lks vs field size for columns : %f %f\n', corr_o, p_o);
+f = figure(); hold on;
+plot(datac, datac_fsize, 'o');
+plot(datao, datao_fsize, 'x');
+[corr_c, p_c] = corrcoef(datac, datac_fsize);
+[corr_o, p_o] = corrcoef(data_lks_o, data_fsize_o);
+title(sprintf('correlation lks vs field size\nfor cells: %f %f\n...for columns: %f %f\n', corr_c, p_c, corr_o, p_o));
+saveas(f, sprintf('%s/lk_vs_field.pdf', data_path), 'pdf');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % We plot the boxplot or histogram of MI for cells and columns
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fig = fig + 1;
-f = figure (fig); 
-clf (fig);
+load(sprintf('%s/infos_o.mat', data_path), 'infos_o');
+load(sprintf('%s/infos_c.mat', data_path), 'infos_c');
 
-data = build_r_data (nbexp, infos_c, infos_o, true, true, 0.6, 0.6);
-
-boxplot (data(:,2), data(:,1));
-
-title ('boxplot info');
-xlabel('');
-ylabel('');
-%axis([0.5 2.5 0 90]);
-figName = sprintf('%s/data_extracted/figures/info_boxplot.eps', data_path);
-saveas (f, figName, 'psc2');
-figName = sprintf('%s/data_extracted/group_info', data_path);
-save ('-ASCII', figName, 'data');
+f = figure(); 
+datac = build_r_data(infos_c, 0.6);
+datao = build_r_data(infos_o, 0.6);
+max_data = max(length(datao), length(datac));
+boxplot([datac(1:max_data)', datao(1:max_data)']);
+title('mutual information');
+saveas(f, sprintf('%s/mutual_info.pdf', data_path), 'pdf');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,16 +110,12 @@ save ('-ASCII', figName, 'data');
 % can be used for lifetime kurtosis too
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 m = 0;
-for i=1:2:39
-indice = i;
-data2 = build_r_data (2, infos_c(indice:100), infos_o(indice:100), true, false, 0.5, 0.5);
-data10 = build_r_data (10, infos_c(indice:100), infos_o(indice:100), true, false, 0.5, 0.5);
-val = data10(:,2);                                                              
-lkc = val (find(data2(:,1)==1));                                                
-lko = val (find(data10(:,1)==2));
-data = build_r_data (1, lkc', lko', false, false, 0.5, 0.5);                    
-m1 = anova1 (data(:,2), data(:,1));
-m = m + m1;
+for i = 1:2:40
+    datac = build_r_data(infos_c(i, :), 0.6);
+    datao = build_r_data(infos_o(i, :), 0.6);
+    max_data = max(length(datao), length(datac));
+    m1 = anova1([datac(1:max_data)', datao(1:max_data)']);
+    m = m + m1;
 end
 m = m / 20;
 
@@ -243,9 +123,3 @@ m = m / 20;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % info prospective
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%bar(mean(info))
-%hold on
-%errorbar(1,mean(info), std(info))
-%axis([0 2 0 4]);
-
-

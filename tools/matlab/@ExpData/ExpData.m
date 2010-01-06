@@ -1,6 +1,7 @@
 classdef ExpData < handle
     properties
         num_exp
+        step_size
         path
         trial
         day
@@ -12,6 +13,11 @@ classdef ExpData < handle
         col_of_minicol
         
         lin_graph
+        
+        pks
+        aks
+        paks
+        lks
     end
     
     methods
@@ -24,15 +30,13 @@ classdef ExpData < handle
                 exp_data.load_trials(maze);
                 exp_data.analyze_behavior();
                 exp_data.analyze_exploration();
+                %exp_data.load_neurons();
                 save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
-                %         exp_data.load_neurons();
-                %         save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
-                %         exp_data.make_q(0);
-                %         exp_data.linear_graph();
-                %         save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
             end
         end
         
+        % calcule une liste d'indexes d'enregistrement
+        [idx] = get_step_idx(exp_data, days, trials)
         % charge les infos des essais
         load_trials(exp_data, maze)
         % charge les infos de comportement
@@ -46,7 +50,7 @@ classdef ExpData < handle
         % calcule la représentation linéaire de tous les fr
         linear_graph(exp_data)
         % affiche cette représentation selon une liste de neurones, et un chemin
-        linear_graph_plot(exp_data, path, neurons)
+        [fr] = linear_graph_plot(exp_data, path, neurons)
         
         % charge le fr d'un neurone
         function [fr] = load_neuron(exp_data, nb)
@@ -129,7 +133,12 @@ classdef ExpData < handle
             num = find([exp_data.trial(:,:).start] - ts > 0, 1) - 1;
             [day, trial] = exp_data.from_num_trial(num);
         end
-
+        
+        function [m, s] = spatial_mean_std(exp_data, v)
+            idx = exp_data.pv_space > 0;
+            m = dotprod(v, exp_data.pv_space(idx)');
+            s = sqrt(dotprod(v .^ 2, exp_data.pv_space(idx)') - m ^ 2);
+        end
     end
     
     methods (Static = true)

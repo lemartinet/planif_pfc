@@ -18,8 +18,9 @@ step = step_all(:, 2:3);
 goal = [0 -1.6];
 
 vars = load(sprintf('%s/vars.txt', exp_data.path));
+exp_data.step_size = vars(2,1) - vars(1,1);
 var = [];
-for i = 1:16
+for i = 1:15
 	dvar = [];
 	for j = 1:12
         if (i == 15 && j > 7) || (i == 16 && j > 6)
