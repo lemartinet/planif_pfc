@@ -5,7 +5,7 @@ function [v,corr] = reward (folder_in, folder_out, pos_units, rew_units, thresh)
 % TODO faire une autre mesure pr reward: 
 %	à chaque di<d<dj on note l'activité de la pop, et on peut en sortir une info ?
 % car en fait l'activité d'un neurone seul ne dit rien car il faut une mesure de référence
-% peut-on cacracteriser le fait que la variabilité d'un neurone est inferieur à la différence de réponse entre deux neurones
+% BUG !!! bug dans reward : on utilise toujours exp 1 !!!
 
 % on associe les neurones d'une meme colonne
 filename = sprintf('%s/col.txt', folder_in);

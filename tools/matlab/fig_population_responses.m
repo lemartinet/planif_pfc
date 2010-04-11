@@ -1,4 +1,6 @@
-function population_responses(exp_data, listn, pop_name)
+function fig_population_responses(exp_data, listn, pop_name)
+% function fig_population_responses(exp_data, listn, pop_name)
+% example: population_responses(exp_data, exp_data.from_type(t), num2str(t));
 % here we plot :
 %   graph des activités (en couleur) pour une position donnée, avec chaque point = le centre d'un champ recepteur
 %   graph des activités cumulées en tous les points, en prenant la somme, le max, ...

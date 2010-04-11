@@ -34,11 +34,13 @@ def frs(dir):
 	t_step = [] # t_step contient les indices de fin de chaque day/trial
 	for d, t in zip(days, trials):
 		t_step += [logical_and(var[:, 1] == d, var[:, 2] == t).nonzero()[0][-1]]
+	print("day %d, trial %d... " % (days[t_idx], trials[t_idx]))
 	for s in fin:
 		rows = s.split()
 		if int(rows[0]) > var[t_step[t_idx], 0]:
 			t_file.close()
 			t_idx += 1
+			print("day %d, trial %d... " % (days[t_idx], trials[t_idx]))
 			t_file = open(dir + "/frs/Q_%d_%d.txt" % (days[t_idx], trials[t_idx]), "w")
 		t_file.write(" ".join(rows[1:]) + "\n")			
 		if len(rows) < nbneurons + 1:
@@ -50,8 +52,8 @@ def frs(dir):
 			fout.close()
 	t_file.close()
 	fin.close()
-	txt2mat (dir + "/frs/", "Q", prefix="Q_")
-	txt2mat (dir + "/frs/", "fr")
+	txt2mat(dir + "/frs/", "Q", prefix="Q_")
+	txt2mat(dir + "/frs/", "fr")
 	os.remove(dir + "/fr.txt")
 
 # Extrait les fichiers de poids

@@ -1,4 +1,6 @@
 function main(data_path, exp, reload, maze)
+% function main(data_path, exp, reload, maze)
+% maze = 1, 2 or 3 (resp. small, big ang huge tolman maze)
 
 % !!! Should be able to deal with a list of days and trials !!!
 % !!! Should also be able to compute fr for other than vars x,y !!!
@@ -7,75 +9,11 @@ function main(data_path, exp, reload, maze)
 % an_type = [0 1 2 3 10];
 % TODO thresh pour le calcul dans reward
 % thresh = [0.2 0.07 0.07 0.2 0.2];
-% additional parameters for kurtosis computations
-% poolsize = 600; %150
-% max_activated_pop = 100
 
-
-exp_all1 = zeros(length(exp), 3);
-exp_all2 = zeros(length(exp), 3);
-exp_all3 = zeros(length(exp), 3);
-exp_fst1 = zeros(length(exp), 3);
-exp_fst2 = zeros(length(exp), 3);
-exp_fst3 = zeros(length(exp), 3);
-nb_errors3 = zeros(length(exp), 1);
-nb_errors2 = zeros(length(exp), 1);
-nb_errors1 = zeros(length(exp), 1);
 for i = exp	
 	fprintf('Working on experiment %d\n', i);
     exp_data = ExpData(data_path, i, reload, maze);
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Analyse du comportement de base
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [m_all1, m_fst1] = exp_data.get_mean_behavior(1);
-    exp_all1(i, :) = m_all1; exp_fst1(i, :) = m_fst1; 
-    nb_errors1(i) = exp_data.get_nb_errors(1, 1);
-    [m_all2, m_fst2] = exp_data.get_mean_behavior(2:14);
-    exp_all2(i, :) = m_all2; exp_fst2(i, :) = m_fst2; 
-    nb_errors2(i) = exp_data.get_nb_errors(2:14, 2);
-    [m_all3, m_fst3] = exp_data.get_mean_behavior(15);
-    exp_all3(i, :) = m_all3; exp_fst3(i, :) = m_fst3;
-    nb_errors3(i) = exp_data.get_nb_errors(15, 3);
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Analyse neuronale de base (graph, kurtosis, info, ...)
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     exp_data.linear_graph();
-%     save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
-%     exp_data.linear_graph_plot(1, 1:200);
-%     exp_data.linear_graph_plot(2, 1:200);
-%     exp_data.linear_graph_plot(3, 1:200);
-
-    % Simple plots des ch récept spatiaux = place fields
-%     mkdir(sprintf('%s/plot_fr/', exp_data.path));
-%     for t = [10, 0, 1, 2]
-%         for n = exp_data.from_type(t)
-%             fr = exp_data.neuron(n).fr;
-%             f = figure('Visible', 'off');
-%             contourf(fr); hold on; contour(fr, 10);
-%             colorbar;
-%             saveas(f, sprintf('%s/plot_fr/%d.pdf', exp_data.path, i),'pdf');
-%             close(f);
-%         end
-%     end
-
-%	  fprintf('Computation of responses, kurtosis, ... (exp%d)\n',i);
-%     for t = [10, 0, 1, 2]
-%         population_responses(exp_data, exp_data.from_type(t), num2str(t));
-%         frs = [exp_data.neuron(exp_data.from_type(t)).fr]';
-%         exp_data.pks{t} = population_kurtosis(frs, poolsize);
-%         [exp_data.aks{t}, exp_data.paks{t}] = active_kurtosis(frs, max_activated_pop);
-%         exp_data.lks{t} = lifetime_kurtosis(frs, exp_data.pv_space);
-%     end
-
-%     fprintf('Computation of information (exp %d)\n', i);
-%     for k = an_type
-%         [MI, MI_pop] = info_all(exp_data, k);
-%         exp_data.(sprintf('type_%d', k)).MI = MI;
-%         exp_data.(sprintf('type_%d', k)).MI_pop = MI_pop;
-%     end
- 	
 % 	printf ('Computation of prospective information (exp %d)\n',i);fflush(stdout);
 % 	pos_units = listn(find(listn(:,2) == 0),1);
 % 	folder_in = sprintf ('%s/data_raw/%d/frs/', data_path, i);
@@ -93,6 +31,13 @@ for i = exp
 % 		[v(i,k),corr(i,k)] = reward (folder_in, folder_out, pos_units, rew_units, thresh(k));
 %     end
     
+
+%     exp_data.linear_graph();
+%     save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
+%     exp_data.linear_graph_plot(1, 1:200);
+%     exp_data.linear_graph_plot(2, 1:200);
+%     exp_data.linear_graph_plot(3, 1:200);
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Analyse theta
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -215,21 +160,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plots et save généraux
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% filename = sprintf ('%s/behavior.mat', data_path);
-% save('-mat', filename, 'exp_all1', 'exp_all2', 'exp_all3', ...'exp_fst1', 'exp_fst2', 'exp_fst3');
-figure, boxplot(exp_fst1);
-%figure, hist(exp_fst1);
-anova1(exp_fst1);
-figure, hist(nb_errors1, 0:12);
-figure, boxplot(exp_fst2);
-%figure, hist(exp_fst2);
-anova1(exp_fst2);
-figure, hist(nb_errors2, 0:100);
-figure, boxplot(exp_fst3);
-%figure, hist(exp_fst3);
-anova1(exp_fst3);
-figure, hist(nb_errors3, 0:10);
-
 % filename = sprintf ('%s/data_extracted/prospective.mat', data_path);
 % save('-mat', filename, 'infop');
 % filename = sprintf ('%s/data_extracted/reward.mat', data_path);

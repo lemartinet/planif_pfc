@@ -93,7 +93,7 @@ void Neuron::compute ()
 	static const double DELTA_T = Params::get_double("DELTA_T");
 	static const double NEURON_ACTIVATION_NOISE = Params::get_double("NEURON_ACTIVATION_NOISE");
 	double br = bruit (2 * NEURON_ACTIVATION_NOISE);
-	
+
 	double syndrive = 0;
 	if (max_) {
 		syndrive = syndrive_max (synapses_) + syndrive_max (synapsesI_);

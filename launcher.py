@@ -45,8 +45,8 @@ def analyze(start, end):
 		try:
 			frs("data/data_raw/%d/" % i)
 			weight("data/data_raw/%d/" % i)
-		except:
-			print("Problems with exp %d data" % i)
+		except BaseException as b:
+			print("Problems with exp %d data: %s" % (i, b))
 
 def main(argv):
 	try:

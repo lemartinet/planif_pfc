@@ -14,10 +14,10 @@ classdef ExpData < handle
         
         lin_graph
         
-        pks
-        aks
-        paks
-        lks
+        spatial_10
+        spatial_0
+        spatial_1
+        spatial_2
     end
     
     methods
@@ -28,9 +28,13 @@ classdef ExpData < handle
                 exp_data.num_exp = num;
                 exp_data.path = sprintf('%s/%d/', path, num);
                 exp_data.load_trials(maze);
+
                 exp_data.analyze_behavior();
                 exp_data.analyze_exploration();
-                %exp_data.load_neurons();
+%                 exp_data.load_trials_shortcut(maze);
+%                 exp_data.analyze_behavior_shortcut();
+
+                exp_data.load_neurons();
                 save(sprintf('%s/exp_data.mat', exp_data.path), 'exp_data');
             end
         end
@@ -97,8 +101,9 @@ classdef ExpData < handle
         end
         
         % recupere le centre de champ recepteur pour chaque neurone
-        function [y] = get_centers(exp_data)
-            y = cell2mat({exp_data.neuron.center}');
+        function [y] = get_centers(exp_data, list)
+            y = cell2mat({exp_data.neuron(list).center}');
+            % y = reshape([exp_data.neuron(list).center], 2, length(list))';
         end
         
         function plot_theta(exp_data, list)
@@ -136,8 +141,8 @@ classdef ExpData < handle
         
         function [m, s] = spatial_mean_std(exp_data, v)
             idx = exp_data.pv_space > 0;
-            m = dotprod(v, exp_data.pv_space(idx)');
-            s = sqrt(dotprod(v .^ 2, exp_data.pv_space(idx)') - m ^ 2);
+            m = dotprod(v, exp_data.pv_space(idx));
+            s = sqrt(dotprod(v .^ 2, exp_data.pv_space(idx)) - m ^ 2);
         end
     end
     

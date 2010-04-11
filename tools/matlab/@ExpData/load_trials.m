@@ -8,7 +8,7 @@ function load_trials(exp_data, maze)
 % vspace, e.g. [0 xMax yMax tMax rMax; 0 xMin yMin tMin rMin]
 vspace_allmaze{1} = [0 1.17 0 pi 1; 0 -0.68 -1.7 -pi 0];
 vspace_allmaze{2} = [0 2.09 0.77 pi 1; 0 -1.19 -2.40 -pi 0];
-vspace_allmaze{3} = [0 4 2.46 pi 1; 0 -2.4 -3.78 -pi 0];
+vspace_allmaze{3} = [0 4 2.46 pi 1; 0 -2.4 -3.82 -pi 0];
 vspace_all = vspace_allmaze{maze};
 vspace = vspace_all(:, 2:3);
 % step, e.g. [0 xStep yStep tStep rStep]
@@ -20,7 +20,7 @@ goal = [0 -1.6];
 vars = load(sprintf('%s/vars.txt', exp_data.path));
 exp_data.step_size = vars(2,1) - vars(1,1);
 var = [];
-for i = 1:15
+for i = 1:16
 	dvar = [];
 	for j = 1:12
         if (i == 15 && j > 7) || (i == 16 && j > 6)

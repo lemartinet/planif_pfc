@@ -18,7 +18,7 @@ for i = 1 : exp_data.nbneurons
 	fr = exp_data.load_neuron(i);
 
 	fprintf('field and theta info...\n');	
-	for d = 1 : 15
+	for d = 1 : 16
 % 		for t = 1 : 12
 % 			if (d == 15 && t > 7) || (d == 16 && t > 6)
 % 				break;
