@@ -5,8 +5,6 @@
 #ifndef MATH_HH_
 # define MATH_HH_
 
-#define PI 3.14159
-
 double pow2 (double v);
 
 double drand ();

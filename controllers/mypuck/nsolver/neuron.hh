@@ -22,7 +22,6 @@ public:
 	int size () const { return synapses_.size (); }
 	double* syn_get (const ComputeUnit& from) const;
 	double* syn_get (int from_no) const;
-	double* syn_mod_get() const { return synapse_mod_ == 0 ? 0 : synapse_mod_->w_get(); }
 	double* max_syn_get () const;
 	map<const int, double*> all_syn_get () const;
 	map<const int, double*> all_syn_getI () const;
@@ -34,7 +33,6 @@ public:
 	// Add a synapse from another neuron, with synaptic weight w.
 	double* add_synapse (const ComputeUnit& from, double w);
 	double* add_synapse_mult (const ComputeUnit& from, double w);
-	double* add_synapse_modulation (const ComputeUnit& from, double w);
 
 	// Set of functions to compute next firing rate and update the output
 	// compute () has to be called first by all neurons
@@ -44,17 +42,14 @@ public:
 private:
 	double syndrive_sum (const map<const int, Synapse*>& syn) const;
 	double syndrive_max (const map<const int, Synapse*>& syn) const;
-	double syndrive_wta (const map<const int, Synapse*>& syn) const;	
 	double sum_wi (const map<const int, Synapse*>& syn) const;
-	double sigmoid(double x, double phi) const; 
+	double sigmoid(double x) const;
 	
 private:
-	double thresh_; ///< Global spiking threshold value.
-	double pot_; ///< Membrane's current potential.
+	double pot_; // Membrane's current potential.
 	const bool max_;
 	map<const int, Synapse*>   synapses_;
 	map<const int, Synapse*>   synapsesI_;
-	Synapse* synapse_mod_;
 	Synapse* synapse_mult_; 
 	double output_next_;
 	double thetaM_; // BCM threshold

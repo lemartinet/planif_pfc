@@ -3,7 +3,6 @@
 
 #include "columns.hh"
 #include "hippo.hh"
-#include "egoaction.hh"
 #include "alloactionpop.hh"
 #include "computeunit.hh"
 
@@ -31,7 +30,6 @@ private:
   
 private:
 	Hippo hippo_;
-	EgoAction ego_;
 	AlloActionPop allo_pop_;
 	ComputeUnit motivation_;
 	Columns columns_;

@@ -16,7 +16,6 @@ ControlRobot::ControlRobot (const Hippo& hippo, Neurosolver& neuro) :
 	show_inf_sup_or_state_ = 0;
 	show_pc_ = false;
 	show_col_ = true;
-	show_col2_ = false;
 }
 
 void ControlRobot::update ()
@@ -73,14 +72,13 @@ void ControlRobot::update_cols ()
 			node->update();
 			node->hide();
 		}
-		if ((col->level_get() == 0 && !show_col_) || (col->level_get() == 1 && !show_col2_)) {
+		if (!show_col_) {
 			node->hide();
 			continue;
 		}
 		else {
 			double* max_w = col->state_get ().max_syn_get ();
 			if (max_w != 0 && *max_w > 0.5) {
-				if (col->level_get () == 0) {
 				Coord moy (0,0);
 				double norm = 0;
 				vector<ComputeUnit*>::const_iterator itpc;
@@ -97,10 +95,6 @@ void ControlRobot::update_cols ()
 				}
 				moy /= norm;
 				node->move (moy);
-				}
-				else {
-					node->move(*col->pos_get());
-				}
 				node->show ();
 			}
 			else {
@@ -114,7 +108,7 @@ void ControlRobot::update_cols ()
 void ControlRobot::update_mincols ()
 {
 	const vector<Minicol*>& minicols = neuro_.cols_get().pop_minicol_get();
-	Minicol*  bestminicol = neuro_.cols_get().best_minicol (0);
+	Minicol*  bestminicol = neuro_.cols_get().best_minicol ();
 	vector<Minicol*>::const_iterator it;
 	for (it = minicols.begin(); it != minicols.end(); it++) {
 		Minicol* minicol = *it;
@@ -208,9 +202,4 @@ void ControlRobot::show_col ()
 //			edge->show ();
 //		}
 //	}
-}
-
-void ControlRobot::show_col2 () 
-{ 
-	show_col2_ = !show_col2_;
 }

@@ -7,7 +7,7 @@
 
 class Action;
 
-enum behabiorAutomate { GO_ON, DECIDE, DECIDED, GOAL, BLOCK, SLEEP };
+enum behabiorAutomate { GO_ON, INTERSECT, DECIDE, DECIDED, GOAL, BLOCK, SLEEP };
 
 class Behavior
 {

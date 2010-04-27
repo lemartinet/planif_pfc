@@ -20,8 +20,7 @@ enum nType {
 class ComputeUnit
 {
 public:
-	ComputeUnit (nType type);
-	ComputeUnit (nType type, double output);
+	ComputeUnit (nType type, double output=0);
 	   
 	virtual ~ComputeUnit () { --nb_computeunits; };
 	
@@ -30,7 +29,7 @@ public:
 	bool spiking () const;
 	int no_get () const { return no_; }
 	static int nb_computeunits_get () { return nb_computeunits; }
-	const vector<double>& lastT_recent () const;
+	const vector<double>& lastT_recent () const { return lastTrecent_; }
 	void update_recent();
 	 
 protected:

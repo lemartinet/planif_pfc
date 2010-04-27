@@ -74,13 +74,16 @@ void ObstacleAvoidance::avoid (double angle, int& left_speed, int& right_speed)
   	}
   	else if (oam_state_ == OAM_BIGTURN || oam_state_ == OAM_STUCK) {
   		// on freine et on tourne à fond
-  		left_speed = right_speed = 0;
+  		left_speed = right_speed = OAM_FORWARD_SPEED / 4;
 		DeltaS += (angle > 0 ? 1 : -1) * OAM_FORWARD_SPEED;
 	}
 	else {
-		// on ralentit lineairement et on tourne exponentiellement suivant la force du virage
-  		left_speed = right_speed = OAM_FORWARD_SPEED * (1 - fabs(angle) / M_PI);
-		DeltaS += OAM_FORWARD_SPEED * (angle > 0 ? 1 : -1) * (1 - exp(-fabs(1.5 * angle)));
+		// on ralentit lineairement et on tourne exponentiellement
+		// suivant la force du virage
+//		cout << "turning..." << endl;
+  		left_speed = right_speed = OAM_FORWARD_SPEED * (1 - fabs(angle) / (2 * M_PI));
+//		DeltaS += OAM_FORWARD_SPEED * (angle > 0 ? 1 : -1) * (1 - exp(-fabs(1.5 * angle) / 2));
+  		DeltaS += OAM_FORWARD_SPEED * (angle > 0 ? 1 : -1) * fabs(angle) / M_PI;
 	}
 	if (DeltaS > OAM_FORWARD_SPEED) DeltaS = OAM_FORWARD_SPEED;
     if (DeltaS < -OAM_FORWARD_SPEED) DeltaS = -OAM_FORWARD_SPEED;
@@ -93,32 +96,63 @@ void ObstacleAvoidance::avoid (double angle, int& left_speed, int& right_speed)
 
 void ObstacleAvoidance::free_ways (vector<double>& dirs, double robot_angle)
 {
-	// On tient compte du demi-tour
-//	dirs.push_back (pi_pi (robot_angle - M_PI));
+//	cout << "---" << endl;
+//	cout << ps_value[PS_LEFT_45] << " " << ps_value[PS_RIGHT_45] << endl;
+//	cout << ps_value[PS_LEFT_90] << " " << ps_value[PS_RIGHT_90] << endl;
 
 	if (ps_value[PS_LEFT_00] + ps_value[PS_RIGHT_00] < 1500) {
 //		cout << "dir 0 free" << endl;
 		dirs.push_back(pi_pi(robot_angle));
 	}
-	// on divise l'espace des ps (PS_RIGHT_45, PS_RIGHT_90) en deux zones
-	if (ps_value[PS_RIGHT_45] + ps_value[PS_RIGHT_90] < 4000) {
+	// On tient compte du demi-tour
+//	dirs.push_back (pi_pi (robot_angle - M_PI));
+
+
+//	// Méthodes avec les capteurs 45 et 90
+//	// on divise l'espace des ps (PS_RIGHT_45, PS_RIGHT_90) en deux zones
+//	if (ps_value[PS_RIGHT_45] + ps_value[PS_RIGHT_90] < 4000) {
+//		// zone avec quelque chose à droite. On redivise cette zone en deux
+//		if (ps_value[PS_RIGHT_45] > 500 && ps_value[PS_RIGHT_90] > 2500) {
+//			cout << "dir right 90 free" << endl;
+//			dirs.push_back(pi_pi(robot_angle - M_PI/2.0));
+//		} else if (ps_value[PS_RIGHT_45] < 500 && ps_value[PS_RIGHT_90] < 2500) {
+//			cout << "dir right 45 free" << endl;
+//			dirs.push_back(pi_pi(robot_angle - M_PI/4.0));
+//		}
+//	}
+//	if (ps_value[PS_LEFT_45] + ps_value[PS_LEFT_90] < 4000) {
+//		// quelque chose à gauche !
+//		if (ps_value[PS_LEFT_45] > 500 && ps_value[PS_LEFT_90] > 2500) {
+//			cout << "dir left 90 free" << endl;
+//			dirs.push_back(pi_pi(robot_angle + M_PI/2.0));
+//		} else if (ps_value[PS_LEFT_45] < 500 && ps_value[PS_LEFT_90] < 2500) {
+//			cout << "dir left 45 free" << endl;
+//			dirs.push_back(pi_pi(robot_angle + M_PI/4.0));
+//		}
+//	}
+
+	if (ps_value[PS_RIGHT_45]  < 1500) {
 		// zone avec quelque chose à droite. On redivise cette zone en deux
-		if (ps_value[PS_RIGHT_45] > 500 && ps_value[PS_RIGHT_90] > 2500) {
+		if (ps_value[PS_RIGHT_45] < 500) {
+//			cout << "dir right 45/90 free" << endl;
+//			dirs.push_back(pi_pi(robot_angle - M_PI/4.0));
+			dirs.push_back(pi_pi(robot_angle - M_PI/2.0));
+		}
+		else if (ps_value[PS_RIGHT_45] < 1500) {
 //			cout << "dir right 90 free" << endl;
 			dirs.push_back(pi_pi(robot_angle - M_PI/2.0));
-		} else if (ps_value[PS_RIGHT_45] < 500 && ps_value[PS_RIGHT_90] < 2500) {
-//			cout << "dir right 45 free" << endl;
-			dirs.push_back(pi_pi(robot_angle - M_PI/4.0));
 		}
 	}
-	if (ps_value[PS_LEFT_45] + ps_value[PS_LEFT_90] < 4000) {
-		// quelque chose à gauche !
-		if (ps_value[PS_LEFT_45] > 500 && ps_value[PS_LEFT_90] > 2500) {
+	if (ps_value[PS_LEFT_45]  < 1500) {
+		// zone avec quelque chose à droite. On redivise cette zone en deux
+		if (ps_value[PS_LEFT_45] < 500) {
+//			cout << "dir left 45/90 free" << endl;
+//			dirs.push_back(pi_pi(robot_angle + M_PI/4.0));
+			dirs.push_back(pi_pi(robot_angle + M_PI/2.0));
+		}
+		else if (ps_value[PS_LEFT_45] < 1500) {
 //			cout << "dir left 90 free" << endl;
 			dirs.push_back(pi_pi(robot_angle + M_PI/2.0));
-		} else if (ps_value[PS_LEFT_45] < 500 && ps_value[PS_LEFT_90] < 2500) {
-//			cout << "dir left 45 free" << endl;
-			dirs.push_back(pi_pi(robot_angle + M_PI/4.0));
 		}
 	}
 }

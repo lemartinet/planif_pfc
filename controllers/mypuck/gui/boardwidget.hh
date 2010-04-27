@@ -27,8 +27,6 @@ private slots:
 	void on_show_sup_clicked ();
 	void on_show_pc_clicked ();
 	void on_show_col_clicked ();
-	void on_show_col2_clicked ();
-	void on_modulation_spin_valueChanged(const QString& text);
 };
 
 #endif

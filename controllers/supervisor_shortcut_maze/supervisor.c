@@ -36,7 +36,7 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
     else if (strcmp (key, "TIME_STEP") == 0) {
       *time_step = atoi(value);
     }
-    else if (strcmp (key, "SHORTCUT") == 0) {
+    else if (strcmp (key, "INDIRECT_SHORTCUT") == 0) {
       *shortcut = atoi(value);
     }
   }

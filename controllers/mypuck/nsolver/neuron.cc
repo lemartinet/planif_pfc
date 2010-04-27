@@ -20,24 +20,9 @@ Synapse* snd (const pair<const int, Synapse *>& p)
 	return p.second;	
 }
 
-Neuron::Neuron (nType type, bool max): ComputeUnit(type), max_(max),
-	synapse_mod_(0), synapse_mult_(0)
+Neuron::Neuron (nType type, bool max): ComputeUnit(type, 0), pot_(0),
+		max_(max), synapse_mult_(0), output_next_(0), thetaM_(0.3)
 {
-	static const double EPSILON_VR = Params::get_double("EPSILON_VR"); 
-	static const double EPSILON_VF = Params::get_double("EPSILON_VF");
-	static const double VR = Params::get_double("VR");
-  	static const double VF = Params::get_double("VF");
-	double Vr = VR + bruit (EPSILON_VR);
-	double Vf = VF + bruit (EPSILON_VF);
-  	stringstream ss;
-  	string       val;
-
-	ss << no_;
-	ss >> val;
-	thresh_ = Vr - Vf;
-	pot_ = 0.0;
-	output_ = output_next_ = 0.0;
-	thetaM_ = 0.3;
 }
 
 Neuron::~Neuron ()
@@ -60,14 +45,6 @@ double* Neuron::add_synapse_mult (const ComputeUnit& from, double w)
 	return synapse_mult_->w_get();
 }
 
-double* Neuron::add_synapse_modulation (const ComputeUnit& from, double w)
-{
-	if(synapse_mod_ != 0)
-		cout << "synapse déjà allouée" << endl;
-	synapse_mod_ = new Synapse(from, w);
-	return synapse_mod_->w_get();
-}
-
 double Neuron::sum_wi (const map<const int, Synapse *>& syn) const
 {
 	double res = 0.0;
@@ -78,21 +55,19 @@ double Neuron::sum_wi (const map<const int, Synapse *>& syn) const
 	return res;
 }
 
-double Neuron::sigmoid(double x, double phi) const
+double Neuron::sigmoid(double x) const
 {
-//	double a = 10, b = 0.3;
-//	return 1 / (1 + exp(-pow(a, phi) * (x - b)));
-	static const double MAX_LATERAL_WEIGHT = Params::get_double("MAX_LATERAL_WEIGHT");
-  	static const double LVL1_MODULATION = Params::get_double ("LVL1_MODULATION");
-	return phi > 0 ? pow(1 / MAX_LATERAL_WEIGHT, LVL1_MODULATION) * x : x;
+	double a = 10, b = 0.3;
+	return 1 / (1 + exp(-a * (x - b)));
 }
 
 void Neuron::compute ()
 {
 	static const double NEURON_TAU = Params::get_double("NEURON_TAU");
 	static const double DELTA_T = Params::get_double("DELTA_T");
-	static const double NEURON_ACTIVATION_NOISE = Params::get_double("NEURON_ACTIVATION_NOISE");
-	double br = bruit (2 * NEURON_ACTIVATION_NOISE);
+	static const double NEURON_NOISE = Params::get_double("NEURON_NOISE");
+	static const double NEURON_THRESH = Params::get_double("NEURON_THRESH");
+	double br = bruit (2 * NEURON_NOISE);
 
 	double syndrive = 0;
 	if (max_) {
@@ -103,14 +78,9 @@ void Neuron::compute ()
 	}
 	if (synapse_mult_ != 0)
 		syndrive *= synapse_mult_->drive();
-	pot_ += DELTA_T * (-pot_ + thresh_ + syndrive) / NEURON_TAU;
+	pot_ += DELTA_T * (-pot_ + NEURON_THRESH + syndrive) / NEURON_TAU;
 	output_next_ = pot_ * (1 + br);
-	if (synapse_mod_ != 0) {
-		double phi = synapse_mod_->drive();
-//		output_next_ = (sigmoid(output_next_, phi) - sigmoid(0, phi))
-//						/ (sigmoid(1, phi) - sigmoid(0, phi));
-		output_next_ = sigmoid(output_next_, phi);
-	}
+//	output_next_ = sigmoid(output_next_);
 	output_next_ = output_next_ < 0.0 ? 0.0 : output_next_;
 	output_next_ = output_next_ > 1.0 ? 1.0 : output_next_;
 	if (output_next_ < 0.05) {
@@ -139,13 +109,6 @@ double Neuron::syndrive_max (const map<const int, Synapse *>& syn) const
 		}
 	}
 	return max;
-}
-
-double Neuron::syndrive_wta (const map<const int, Synapse *>& syn) const
-{
-	// Pas utilisé !
-	cout << "pas implémenté" << endl;	
-	return syn.size();
 }
 
 double* Neuron::syn_get (const ComputeUnit& from) const

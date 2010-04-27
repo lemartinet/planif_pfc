@@ -23,7 +23,7 @@ public:
 private:
 	void run() {
 		// perform a loop simulation steps
-		const int TIME_STEP = Params::get_int ("TIME_STEP");
+		const int TIME_STEP = robot->getBasicTimeStepParams();
 		do {
 			behavior->synch ();
 		} while (robot->step (TIME_STEP) != -1);

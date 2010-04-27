@@ -15,7 +15,7 @@
 
 const char* robot_name = "ICEASIM";
 
-bool read_simulation_params (char* param_file_path, int* time_step, int* id, int* random_move, int* final_forced, int* write_step, int* sleep_step) 
+bool read_simulation_params (char* param_file_path, int* id, int* random_move, int* final_forced, int* write_step, int* sleep_step)
 {
 	FILE * param_file = fopen (param_file_path, "r");
 	char key[128];
@@ -43,9 +43,6 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
     else if (strcmp (key, "SLEEP_STEP") == 0) {
       *sleep_step = atoi(value);
     }
-    else if (strcmp (key, "TIME_STEP") == 0) {
-      *time_step = atoi(value);
-    }
   }
   fclose (param_file);
   return true;
@@ -60,10 +57,11 @@ void init (int* random_move)
 {
   int simu_id = 1, final_forced = 0, write_step = 1, sleep_step = 0;
   if (!read_simulation_params ("../../data/params.txt", 
-        &TIME_STEP, &simu_id, random_move, &final_forced, &write_step, &sleep_step)) {
+        &simu_id, random_move, &final_forced, &write_step, &sleep_step)) {
 		printf ("Supervisor: erreur d'init. Exit !\n");
 		exit (-1);	
-	}
+  }
+  TIME_STEP = wb_robot_get_basic_time_step();
   printf("Supervisor: SIMULATION_ID %d\n", simu_id);
   
   init_behavior (simu_id, write_step);

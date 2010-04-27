@@ -27,7 +27,6 @@ public:
 	GraphWidget* widget_get () { return &widget_; }
 	void show_pc ();
 	void show_col ();
-	void show_col2 ();
 	
 private:
 	void update_col_appearance (Node& node, Column& col);
@@ -43,7 +42,6 @@ private:
 	int show_inf_sup_or_state_;
 	bool show_pc_;
 	bool show_col_;
-	bool show_col2_;
 	int refresh_;
   
 private slots:

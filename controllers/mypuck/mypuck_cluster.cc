@@ -16,7 +16,7 @@ int main (int argc, char** argv)
 	Behavior* behavior = new Behavior(*robot);
 
 	// perform a loop simulation steps
-	const int TIME_STEP = Params::get_int ("TIME_STEP");
+	const int TIME_STEP = robot->getBasicTimeStep();
 	do {
 		behavior->synch ();
 	} while (robot->step (TIME_STEP) != -1);

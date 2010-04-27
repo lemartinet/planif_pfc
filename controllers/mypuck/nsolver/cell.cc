@@ -55,14 +55,14 @@ void Cell::compute (const Coord& pos, double peak)
 	}
 	else if (r_.size () == 0) {
 		// Noise applied to hippocampus cells activity.
-		static const double CELLS_NOISE_SIGMA = Params::get_double("CELLS_NOISE_SIGMA");
+		static const double NEURON_NOISE = Params::get_double("NEURON_NOISE");
 		// Ecart-type of hippocampus cells activation.
 		static const double CELLS_SIGMA = Params::get_double("CELLS_SIGMA");
 		static const double CELL_THRESH = Params::get_double("CELL_THRESH");
 	  	double dist = (*pos_ - pos).norm ();
 	
-		//output_ = exp (-pow2 (dist) / (2 * CELLS_SIGMA * CELLS_SIGMA)) + bruit (2 * CELLS_NOISE_SIGMA);
-		output_ = exp (-pow2 (dist) / (2 * CELLS_SIGMA * CELLS_SIGMA)) * (1 + bruit (2 * CELLS_NOISE_SIGMA));
+		//output_ = exp (-pow2 (dist) / (2 * CELLS_SIGMA * CELLS_SIGMA)) + bruit (2 * NEURON_NOISE);
+		output_ = exp (-pow2 (dist) / (2 * CELLS_SIGMA * CELLS_SIGMA)) * (1 + bruit (2 * NEURON_NOISE));
 		output_ = output_ < 0.0 ? 0.0 : output_;
 		output_ = output_ > 1.0 ? 1.0 : output_;
 		output_ = output_ > CELL_THRESH ? output_ : 0.0;

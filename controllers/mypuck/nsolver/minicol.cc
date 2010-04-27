@@ -13,11 +13,9 @@
 #include <algorithm>
 #include <cmath>
 
-#define NB_STEP 8
-
 Minicol::Minicol (Columns& columns, int no) :
 	no_(no), sup_(columns.add_neuron_max (SUP)), inf_(columns.add_neuron_max (INF)), 
-	action_(0), recruited_(false), lastTidx_(0)
+	action_(0), recruited_(false)
 {
 	stringstream s1, s2;
 	s1 << inf_.no_get ()+1 << " " << no+1;
@@ -33,12 +31,11 @@ Minicol::~Minicol ()
 	}
 }
 
-void Minicol::new_set (const Action& action, Column& src, Column& dest, int level)
+void Minicol::new_set (const Action& action, Column& src, Column& dest)
 {
 	src_ = &src;
 	dest_ = &dest;
 	action_ = new Action (action);
-	level_ = level;
 	recruited_ = true;
 	
 	// intra-colomn connections
@@ -65,21 +62,10 @@ void Minicol::adapt_action (const Action& action)
 
 void Minicol::synch()
 {
-	if (level_ == 1 && recruited_) {
-	  	lateral_learning_lvl1();
-	}
-
-	// on garde un historique de l'activation sur X time steps
-	if (lastT_.size () < NB_STEP) {
-		lastT_.push_back (inf_.output ());
-	}
-	else {
-		lastT_[lastTidx_] = inf_.output ();
-		lastTidx_ = ++lastTidx_ % NB_STEP;
-	}
+	inf_.update_recent();
 }
 
-void Minicol::lateral_learning_lvl0 (bool increase, double factor)
+void Minicol::lateral_learning (bool increase, double factor)
 {
 	static const double LATERAL_LEARNING_STEP = Params::get_double("LATERAL_LEARNING_STEP");
 	static const double MAX_LATERAL_WEIGHT = Params::get_double("MAX_LATERAL_WEIGHT");
@@ -115,26 +101,10 @@ void Minicol::lateral_learning_lvl0 (bool increase, double factor)
 //	cout << "new " << forw->w_get () << " " << back->w_get () << endl;
 }
 
-void Minicol::lateral_learning_lvl1(bool increase)
-{
-	double* back = sup_.syn_get(dest_->sup_get ());
-	double* from = dest_->inf_get().syn_get(inf_);
-	if (back == 0 || from == 0) {
-		dest_->inf_get().add_synapse(inf_, 0);
-		sup_.add_synapse(dest_->sup_get(), 0);
-	} else if (increase) {
-		*back = lvl0_->sup_get().output() / dest_->sup_activation();
-		*from = lvl0_->inf_get().output() / inf_.output();
-	} else {
-		*back = 0;
-		*from = 0;
-	}
-}
-
 double Minicol::lastT_recent () const
 {
-//	double total = accumulate (lastT_.begin(), lastT_.end(), 0.0);
+//	double total = accumulate (inf_.lastT_recent().begin(), inf_.lastT_recent().end(), 0.0);
 //	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
 //	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
-	return * max_element (lastT_.begin(), lastT_.end());
+	return * max_element (inf_.lastT_recent().begin(), inf_.lastT_recent().end());
 }

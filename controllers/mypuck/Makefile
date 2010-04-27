@@ -18,7 +18,6 @@ CC_SOURCES = \
 	nsolver/cell.cc\
 	nsolver/neuron.cc\
 	nsolver/neurosolver.cc\
-	nsolver/egoaction.cc\
 	nsolver/alloactionpop.cc\
 	nsolver/dcell.cc\
 	tools/coord.cc\

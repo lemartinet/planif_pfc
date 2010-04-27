@@ -8,8 +8,8 @@ WorldInfo {
   displayRefresh 3
 }
 Viewpoint {
-  orientation 1 -0.000380278 -0.000333967 4.82748
-  position 0.300602 2.46317 -0.461409
+  orientation 1 -0.000356803 -0.000335357 4.76748
+  position 0.244453 2.48197 -0.673568
 }
 Background {
   skyColor [
@@ -199,12 +199,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_11 Solid {
-      translation -0.28 0.03 -0.81
+      translation -0.26 0.03 -0.81
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_11_BOX Box {
-            size 0.45 0.06 0.01
+            size 0.42 0.06 0.01
           }
         }
       ]
@@ -212,12 +212,12 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_12 Solid {
-      translation -0.345 0.03 -0.91
+      translation -0.315 0.03 -0.91
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_12_BOX Box {
-            size 0.6 0.06 0.01
+            size 0.53 0.06 0.01
           }
         }
       ]
@@ -276,12 +276,13 @@ DEF LABY Solid {
       boundingObject USE WALL_16_BOX
     }
     DEF WALL_17 Solid {
-      translation -0.64 0.03 -0.86
+      translation -0.61 0.03 -0.86
+      rotation 0 1 0 5.68319
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_17_BOX Box {
-            size 0.01 0.06 0.1
+            size 0.01 0.06 0.12
           }
         }
       ]
@@ -289,13 +290,13 @@ DEF LABY Solid {
       locked TRUE
     }
     DEF WALL_18 Solid {
-      translation -0.36 0.03 -0.62
+      translation -0.35 0.03 -0.61
       rotation 0 1 0 0.65
       children [
         Shape {
           appearance USE WALL_APPEARANCE
           geometry DEF WALL_18_BOX Box {
-            size 0.01 0.06 0.485
+            size 0.01 0.06 0.455
           }
         }
       ]
@@ -324,6 +325,20 @@ DEF LABY Solid {
         }
       ]
       boundingObject USE WALL_20_BOX
+      locked TRUE
+    }
+    DEF WALL_21 Solid {
+      translation -0.48 0.03 -0.8
+      rotation 0 1 0 5.68319
+      children [
+        Shape {
+          appearance USE WALL_APPEARANCE
+          geometry DEF WALL_21_BOX Box {
+            size 0.01 0.06 0.03
+          }
+        }
+      ]
+      boundingObject USE WALL_21_BOX
       locked TRUE
     }
     DEF GOAL Transform {
@@ -2189,7 +2204,7 @@ Supervisor {
       maxPosition 0.06
     }
     DEF SENSOR_MID DistanceSensor {
-      translation -0.04 0.03 -0.64
+      translation -0.04 0.03 -0.59
       name "sensor0"
       lookupTable [
         0 0 0

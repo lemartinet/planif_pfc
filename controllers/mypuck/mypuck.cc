@@ -19,7 +19,7 @@ int main (int argc, char** argv)
 	Gui* gui = GUI ? new Gui (argc, argv, *behavior) : 0;
 
 	// perform a loop simulation steps
-	const int TIME_STEP = Params::get_int ("TIME_STEP");
+	const int TIME_STEP = robot->getBasicTimeStep();
 	do {
 		behavior->synch ();
 		if (GUI) {

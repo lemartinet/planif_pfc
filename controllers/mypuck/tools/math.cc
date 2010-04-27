@@ -26,19 +26,19 @@ double sigmoid (double x, double a, double b)
 
 double pi_pi (double angle)
 {
-	double m = fmod (fmod (angle, 2*PI) + 2*PI, 2*PI);
-	m += m > PI ? -2*PI : 0;
+	double m = fmod (fmod (angle, 2*M_PI) + 2*M_PI, 2*M_PI);
+	m += m > M_PI ? -2*M_PI : 0;
 	return m;
 }
 
 double ecart_angulaire (double reel, double voulu)
 {
-  double a = fmod (voulu, 2*PI) - fmod (reel, 2*PI);
+  double a = fmod (voulu, 2*M_PI) - fmod (reel, 2*M_PI);
 
-  if (a > PI)
-    return a - 2 * PI;
-  else if (a < -PI)
-    return a + 2 * PI;
+  if (a > M_PI)
+    return a - 2 * M_PI;
+  else if (a < -M_PI)
+    return a + 2 * M_PI;
   else
     return a;
 }

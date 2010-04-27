@@ -2,12 +2,13 @@
 #include "dcell.hh"
 #include "math.hh"
 #include "params.hh"
+#include <cmath>
 
 AlloActionPop::AlloActionPop ()
 {
 	const int NB_HD = Params::get_int("NB_HD");
 	for (int i = 0; i < NB_HD; i++) {
-		double angle = -PI + i * 2 * PI / NB_HD;
+		double angle = -M_PI + i * 2 * M_PI / NB_HD;
 		DCell* cell = new DCell (angle);
 		pop_.push_back(cell);
 	}

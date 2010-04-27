@@ -7,8 +7,6 @@
 #include <iostream>
 #include <algorithm>
 
-#define WAIT_BETWEEN_DECISIONS 48
-
 // utilisé pour coder en dur des décisions dans les vidéos
 //int decision_codee = 0;
 //double decision_codee_angle[] = {PI/2, PI/2};
@@ -16,7 +14,7 @@
 Behavior* Behavior::behavior_ = 0;
 
 Behavior::Behavior (RobotDevice& robot): 
-	robot_(robot), next_action_(0), wait_(0), automate_(GO_ON),
+	robot_(robot), next_action_(robot.angle_get()), wait_(0), automate_(GO_ON),
 	cpt_trial_(0), cpt_total_(0), nb_trial_(0), neurosolver_()
 {
 	behavior_ = this;
@@ -42,9 +40,10 @@ void Behavior::synch ()
 	
 	// update du réseau de neurones
 	static const int ONLY_INTERSECT = Params::get_int ("ONLY_INTERSECT");
+	static const int DECISION_TIME = Params::get_int ("DECISION_TIME");
 	neurosolver_.synch (!(automate_ == GOAL && wait_ > 0), 
 						ONLY_INTERSECT == 1 ? automate_ == DECIDE : true,
-						automate_ == GOAL && wait_ == 5 * WAIT_BETWEEN_DECISIONS,
+						automate_ == GOAL && wait_ == 5 * DECISION_TIME,
 						automate_ == BLOCK && wait_ == 96,
 						automate_ == SLEEP, 
 						wait_);
@@ -61,7 +60,7 @@ void Behavior::synch ()
 	}
 	else if (automate_ != GOAL && automate_ != SLEEP && robot_.goal_reached ()) {
 		// on s'arrete au goal
-		wait_ = 5 * WAIT_BETWEEN_DECISIONS;
+		wait_ = 5 * DECISION_TIME;
 		automate_ = GOAL;
 		cpt_trial_ = 0;
 		nb_trial_++;
@@ -71,25 +70,32 @@ void Behavior::synch ()
 	}
 	else if (automate_ != BLOCK && automate_ != SLEEP && automate_ != GOAL && robot_.bloque_get ()) {
 		// utiliser la meme valeur que le rythme d'appr dans neurosolver ?
-		wait_ = 96;
+		wait_ = 2 * DECISION_TIME;
 		automate_ = BLOCK;
 	}
 	else if (automate_ == BLOCK && wait_ == 0) {
 		automate_ = GO_ON;
-	}	
+	}
 	else if (automate_ == GO_ON && dirs.size () > 1) {
+		// we don't choose now because there might be multiple pathway
+		cout << "intersection !!" << endl;
+		automate_ = INTERSECT;
+		wait_ = 2;
+	}
+	else if (automate_ == INTERSECT && wait_ == 0) {
 		// on attend avt de prendre la decision, le tps de la propagation
 		// (on peut prendre une décision seulement aux intersections)
-		wait_ = ONLY_INTERSECT == 1 ? 20 : 0; 
+		cout << "planning !!" << endl;
+		wait_ = ONLY_INTERSECT == 1 ? DECISION_TIME / 2 : 0;
 		automate_ = DECIDE;
 	}
 	else if (automate_ == DECIDE && wait_ == 0) {
 		// on prend la décision
 		automate_ = DECIDED;
-		wait_ = WAIT_BETWEEN_DECISIONS;
+		wait_ = DECISION_TIME;
 		next_action_ = select_action(dirs);
 //		next_action = 	robot_.angle_get () + decision_codee_angle[decision_codee++];
-//		cout << "action :" << next_action << endl;
+		cout << "choosing action :" << next_action_ << endl;
 	}
 	else if (automate_ == DECIDED && wait_ == 0) { //dirs.size () <= 1) {
 		// on attend entre 2 décisions (persistance) 
@@ -173,18 +179,21 @@ bool Behavior::no_exploration (const vector<double>& dirs, double* pa, stringstr
 	int nb_free = dirs.size ();
 	int min = 0;
 	int min_d = -1;
-	for (int i = 0; i < nb_free; i++) {
-		// on cherche le meilleur shortcut
-		int long_shortcut;
-		bool is_short = neurosolver_.shortcut(dirs[i], long_shortcut);
-//		cout << dirs[i] << " " << is_short << " " << long_shortcut << endl;
-		if (is_short && long_shortcut > min) {
-			min	= long_shortcut;
-			min_d = i;
+	static const int USE_SHORT = Params::get_int ("USE_SHORT");
+	if (USE_SHORT) {
+		for (int i = 0; i < nb_free; i++) {
+			// on cherche le meilleur shortcut
+			int long_shortcut;
+			bool is_short = neurosolver_.shortcut(dirs[i], long_shortcut);
+	//		cout << dirs[i] << " " << is_short << " " << long_shortcut << endl;
+			if (is_short && long_shortcut > min) {
+				min	= long_shortcut;
+				min_d = i;
+			}
+			pa[i] = 0;
 		}
-		pa[i] = 0;
 	}
-	if (min_d >= 0) {
+	if (USE_SHORT && min_d >= 0) {
 		pa[min_d] = 1;
 	} else {
 		// le robot explore (dirs equiprobable)
@@ -221,7 +230,7 @@ bool Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s
 	const double* action = best_action();
 	bool found = false;
 	int nb_free = dirs.size ();
-	double min = 4*PI;
+	double min = 4*M_PI;
 	int min_d = -1;
 	for (int i = 0; i < nb_free; i++) {
 		// on cherche la meilleure dir existante
@@ -243,8 +252,8 @@ bool Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s
 		// le robot explore (dirs equiprobable)
 		for (int i = 0; i < nb_free; i++) {
 			// si on est près du but, on va tout droit
-//			double dist_goal_thresh = 0.8;
-			double dist_goal_thresh = 1.6;
+			double dist_goal_thresh = 0.8;
+//			double dist_goal_thresh = 1.6;
 			if (robot_.dist_goal_get() < dist_goal_thresh && angle_equal(dirs[i], 0))
 				pa[i] = 1;
 			else if (robot_.dist_goal_get() < dist_goal_thresh)
@@ -343,6 +352,7 @@ string Behavior::automate_state ()
 	   	case GOAL: return "GOAL"; break;
 	    case BLOCK: return "BLOCK"; break;
 	    case SLEEP: return "SLEEP"; break;
+	    case INTERSECT: return "INTERSECT"; break;
 	    default: return ""; break;
     }
 }

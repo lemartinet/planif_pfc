@@ -15,7 +15,7 @@ RobotDevice::RobotDevice (): ps_value_(new int[NB_SENSORS]), avoid_(ps_value_),
 	position_(0.0, -0.05), orientation_(0.0), num_pixels_goal_(0), 
 	goal_reached_(false), sleep_(false)
 {
-	static const int TIME_STEP = Params::get_int ("TIME_STEP");
+	static const int TIME_STEP = getBasicTimeStep();
 	gps_ = getGPS ("gps");
 	gps_->enable (TIME_STEP);
 	compass_ = getCompass ("compass");

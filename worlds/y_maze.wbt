@@ -6,11 +6,12 @@ WorldInfo {
     "Date: 04 Mar 2009"
   ]
   title "y-maze"
-  runRealTime TRUE
+  basicTimeStep 15
+  displayRefresh 3
 }
 Viewpoint {
-  orientation -0.0162422 0.903993 0.427238 2.89434
-  position 0.5169 1.42766 -1.23916
+  orientation 0.0185678 0.843533 0.536756 3.10503
+  position 0.0943037 1.73813 -0.981542
 }
 Background {
   skyColor [
@@ -122,191 +123,511 @@ DEF CHARGER_RIGHT Charger {
   radius 0.05
   gradual FALSE
 }
-DEF RAT DifferentialWheels {
-  translation 0 0.005 -0.7
-  rotation 0 1 0 -1.5708
+DEF ICEASIM DifferentialWheels {
+  translation 0 0 -0.72
+  rotation 0 1 0 3.1415
   children [
-    DEF LEFT_WHEEL Solid {
-      translation 0.01 0.007 -0.02
-      rotation 0 0 1 0
-      children [
-        DEF WHEEL Transform {
-          rotation 1 0 0 1.5708
-          children [
-            Shape {
-              appearance Appearance {
-                material Material {
-                  diffuseColor 0.752941 0.752941 0.752941
-                  specularColor 0.5 0.5 0.5
-                }
-              }
-              geometry Cylinder {
-                height 0.005
-                radius 0.01
-              }
-            }
-          ]
-        }
-      ]
+    DEF EPUCK_LEFT_WHEEL Solid {
+      translation -0.026 0.02 0
+      rotation 1 0 0 0
       name "left wheel"
-      boundingObject USE WHEEL
-      physics DEF WHEEL_PHYSICS Physics {
+      boundingObject DEF EPUCK_WHEEL_BOUNDING_OBJECT Transform {
+        rotation 0 0 1 1.57
+        children [
+          Cylinder {
+            height 0.005
+            radius 0.02
+          }
+        ]
+      }
+      physics DEF EPUCK_WHEEL_PHYSICS Physics {
         density -1
-        mass 0.01
-        coulombFriction 0.9
-        forceDependentSlip 0.1
+        mass 0.005
       }
     }
-    DEF RIGHT_WHEEL Solid {
-      translation 0.01 0.007 0.02
-      rotation 0 0 1 0
-      children [
-        USE WHEEL
-      ]
+    DEF EPUCK_RIGHT_WHEEL Solid {
+      translation 0.0256 0.02 0
+      rotation 1 0 0 0
       name "right wheel"
-      boundingObject USE WHEEL
-      physics USE WHEEL_PHYSICS
+      boundingObject USE EPUCK_WHEEL_BOUNDING_OBJECT
+      physics USE EPUCK_WHEEL_PHYSICS
     }
-    DEF HIPS_SERVO Servo {
-      translation 0 0.03 0
-      rotation 0 0 1 0
+    DEF EPUCK_INSIDE Transform {
+      translation 0 0.025 0
+    }
+    DEF EPUCK_PLATE Transform {
+      translation 0.0002 0.037 0
+      rotation 0 1 0 3.14159
+      scale 0.01 0.01 0.01
+    }
+    DEF EPUCK_BATTERY Transform {
+      translation 0 0.008 0
+    }
+    DEF EPUCK_TURRET Transform {
+      translation 0 0.0466 0.004
+      scale 0.0128 0.0128 0.0128
+    }
+    DEF EPUCK_RIGHT_COLUMN Transform {
+      translation 0.0193 0.0426 -0.0254
+    }
+    DEF EPUCK_LEFT_COLUMN Transform {
+      translation -0.0193 0.0426 -0.0254
+    }
+    DEF EPUCK_BOTTOM_COLUMN Transform {
+      translation 0 0.0426 0.032
+    }
+    DEF EPUCK_RIGHT_CONNECTOR Transform {
+      translation 0.0033 0.0426 0.0033
+    }
+    DEF EPUCK_LEFT_CONNECTOR Transform {
+      translation -0.012 0.0426 0.0024
+    }
+    DEF EPUCK_PS0 DistanceSensor {
+      translation 0.01 0.033 -0.03
+      rotation 0 1 0 1.27
+      name "ps0"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS1 DistanceSensor {
+      translation 0.025 0.033 -0.022
+      rotation 0 1 0 0.77
+      name "ps1"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS2 DistanceSensor {
+      translation 0.031 0.033 0
+      name "ps2"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS3 DistanceSensor {
+      translation 0.015 0.033 0.03
+      rotation 0 1 0 5.21
+      name "ps3"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS4 DistanceSensor {
+      translation -0.015 0.033 0.03
+      rotation 0 1 0 4.31
+      name "ps4"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS5 DistanceSensor {
+      translation -0.031 0.033 0
+      rotation 0 1 0 3.14159
+      name "ps5"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS6 DistanceSensor {
+      translation -0.025 0.033 -0.022
+      rotation 0 1 0 2.37
+      name "ps6"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_PS7 DistanceSensor {
+      translation -0.01 0.033 -0.03
+      rotation 0 1 0 1.87
+      name "ps7"
+      lookupTable [
+        0 3800 0.03
+        0.13 300 0.03
+      ]
+    }
+    DEF EPUCK_LS0 LightSensor {
+      translation 0.01 0.0329 -0.03
+      rotation 0 1 0 1.27
+      name "ls0"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS1 LightSensor {
+      translation 0.025 0.0329 -0.022
+      rotation 0 1 0 0.77
+      name "ls1"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS2 LightSensor {
+      translation 0.031 0.033 0
+      name "ls2"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS3 LightSensor {
+      translation 0.015 0.0329 0.03
+      rotation 0 1 0 5.21
+      name "ls3"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS4 LightSensor {
+      translation -0.015 0.0329 0.03
+      rotation 0 1 0 4.31
+      name "ls4"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS5 LightSensor {
+      translation -0.031 0.0329 0
+      rotation 0 1 0 3.14159
+      name "ls5"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS6 LightSensor {
+      translation -0.025 0.0329 -0.022
+      rotation 0 1 0 2.37
+      name "ls6"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_LS7 LightSensor {
+      translation -0.01 0.0329 -0.03
+      rotation 0 1 0 1.87
+      name "ls7"
+      lookupTable [
+        0 4095 0.01
+        0.2 0 0.01
+      ]
+    }
+    DEF EPUCK_CAMERA Camera {
+      translation 0 0.028 -0.035
+      name "camera"
+      fieldOfView 1.1
+      width 52
+      height 39
+      near 0.004
+      far 0.65
+      windowPosition 0.75 0.9
+      pixelSize 2
+    }
+    DEF EPUCK_LED0 LED {
+      translation 0 0.041 -0.0335
+      name "led0"
+    }
+    DEF EPUCK_LED1 LED {
+      translation 0.025 0.041 -0.022
+      rotation 0 1 0 5.5
+      name "led1"
+    }
+    DEF EPUCK_LED2 LED {
+      translation 0.0335 0.041 0
+      rotation 0 1 0 1.57
+      name "led2"
+    }
+    DEF EPUCK_LED3 LED {
+      translation 0.02 0.041 0.027
+      rotation 0 1 0 -5.7
+      name "led3"
+    }
+    DEF EPUCK_LED4 LED {
+      translation 0 0.041 0.033
+      name "led4"
+    }
+    DEF EPUCK_LED5 LED {
+      translation -0.02 0.041 0.027
+      rotation 0 1 0 5.7
+      name "led5"
+    }
+    DEF EPUCK_LED6 LED {
+      translation -0.0335 0.041 0
+      rotation 0 1 0 1.57
+      name "led6"
+    }
+    DEF EPUCK_LED7 LED {
+      translation -0.025 0.041 -0.022
+      rotation 0 1 0 -5.5
+      name "led7"
+    }
+    DEF EPUCK_BODY Transform {
+      rotation 0 1 0 3.14159
+      scale 0.01 0.01 0.01
+    }
+    DEF EPUCK_SMALL_LOGO Transform {
+      translation 0 0.031 0.035
+      rotation 0 1 0 3.14159
+    }
+    DEF EPUCK_RING Transform {
+      translation 0 0.035 0
+      scale 0.01 0.01 0.01
+    }
+    Receiver {
+      name "receiver"
+      channel 11
+    }
+    GPS {
+      name "gps"
+    }
+    Compass {
+      name "compass"
+    }
+    DEF RAT Transform {
+      translation 0 0 0.03
+      rotation 0 1 0 1.57
+      scale 0.6 0.6 0.6
       children [
-        DEF RIGHT_ARM_SERVO Servo {
-          translation 0 0.04 0.02
-          children [
-            Transform {
-              translation 0 -0.07 -0.02
-              children [
-                DEF RIGHT_ARM Shape {
-                  appearance DEF FUR_APPEARANCE Appearance {
-                    material Material {
-                      diffuseColor 0.623529 0.568627 0.431373
-                      specularColor 0.5 0.5 0.5
-                    }
-                  }
-                  geometry IndexedFaceSet {
-                    coord Coordinate {
-                      point [
-                        0.0107122 0.0521162 0.018898
-                        0.000621438 0.0678491 0.018998
-                        -0.00442757 0.0717762 0.0209983
-                        -0.00282496 0.0723546 0.0210214
-                        -0.00122217 0.0729329 0.021045
-                        0.0102934 0.0489294 0.0208534
-                        -0.00372356 0.0671986 0.0209468
-                        0.00336564 0.0701942 0.0210558
-                        0.0116466 0.054884 0.0209431
-                        0.0106724 0.0520653 0.0228974
-                        0.000581443 0.0677979 0.0229976
-                        0.0276398 0.0652265 0.0212348
-                        0.035431 0.0643347 0.0213013
-                        0.0351968 0.0645673 0.021302
-                        0.0274142 0.0661459 0.019244
-                        0.0356228 0.0643914 0.0168856
-                        0.0274094 0.0675207 0.0212618
-                        0.0355346 0.0642786 0.0257202
-                        0.0273742 0.0660949 0.0232436
-                      ]
-                    }
-                    coordIndex [
-                      18, 17, 16, -1, 16, 15, 14, -1, 16, 13,
-                      12, 11, -1, 10, 9, 8, 7, -1, 6, 5,
-                      9, 10, -1, 9, 18, 16, 8, -1, 5, 11,
-                      18, 9, -1, 7, 4, 3, 10, -1, 2, 6,
-                      10, 3, -1, 3, 1, 6, 2, -1, 1, 3,
-                      4, 7, -1, 0, 14, 11, 5, -1, 8, 16,
-                      14, 0, -1, 1, 0, 5, 6, -1, 7, 8,
-                      0, 1, -1
-                    ]
-                    creaseAngle 0.785398
-                  }
-                }
+        DEF LEFT_THIGH Shape {
+          appearance DEF FUR_APPEARANCE Appearance {
+            material Material {
+              diffuseColor 0.623529 0.568627 0.431373
+              specularColor 0.5 0.5 0.5
+            }
+          }
+          geometry IndexedFaceSet {
+            coord Coordinate {
+              point [
+                -0.00269996 0.00367926 -0.0261986
+                -0.00567436 0.00113605 -0.0252606
+                -0.00929517 0.000828642 -0.0263008
+                0.00555244 0.013274 -0.0259936
+                -0.00321656 0.0152936 -0.0250552
+                -0.00958776 0.0174931 -0.026091
+                0.0239336 0.0437326 -0.0254212
+                0.0181574 0.0283933 -0.0256746
+                0.00797725 0.0301545 -0.0247538
+                0.000883639 0.0334578 -0.0257826
+                0.022135 0.0425166 -0.0244544
+                0.0156148 0.0464778 -0.0254692
+                0.0174132 0.047694 -0.0264358
+                0.00909463 0.0504393 -0.026484
+                0.0156348 0.0465034 -0.0274688
+                0.0221752 0.0425676 -0.028454
+                0.0239534 0.0437581 -0.0274208
+                0.0257318 0.0449489 -0.0263878
+                -0.00620976 0.0367615 -0.0268114
+                0.000903636 0.0334834 -0.0277824
+                0.00801703 0.0302057 -0.0287532
+                0.0181772 0.0284186 -0.0276744
+                0.0283376 0.0266321 -0.0265956
+                -0.015959 0.0196925 -0.0271268
+                -0.0129158 0.000521455 -0.027341
+                -0.00956797 0.0175187 -0.0280908
+                -0.00927497 0.000854243 -0.0283006
+                -0.00317656 0.0153447 -0.0290548
+                -0.00563416 0.00118703 -0.02926
+                0.00557223 0.0132995 -0.0279934
+                -0.00268016 0.00370464 -0.0281984
+                0.000279635 0.00440087 -0.0271596
+                0.0143212 0.0112542 -0.026932
               ]
             }
-          ]
-          name "right_arm_servo"
-          boundingObject Transform {
-            translation 0.03 -0.005 0
-            children [
-              Cylinder {
-                height 0.002
-                radius 0.001
-              }
+            coordIndex [
+              32, 31, 30, 29, -1, 29, 30, 28, 27, -1,
+              27, 28, 26, 25, -1, 25, 26, 24, 23, -1,
+              22, 32, 29, 21, -1, 21, 29, 27, 20, -1,
+              20, 27, 25, 19, -1, 19, 25, 23, 18, -1,
+              17, 22, 21, 16, -1, 16, 21, 20, 15, -1,
+              15, 20, 19, 14, -1, 14, 19, 18, 13, -1,
+              17, 15, 14, 12, -1, 14, 13, 12, -1, 12,
+              13, 11, -1, 12, 11, 10, 17, -1, 13, 18,
+              9, 11, -1, 11, 9, 8, 10, -1, 10, 8,
+              7, 6, -1, 6, 7, 22, 17, -1, 18, 23,
+              5, 9, -1, 9, 5, 4, 8, -1, 8, 4,
+              3, 7, -1, 7, 3, 32, 22, -1, 23, 24,
+              2, 5, -1, 5, 2, 1, 4, -1, 4, 1,
+              0, 3, -1, 3, 0, 31, 32, -1
             ]
+            creaseAngle 0.785398
           }
-          physics Physics {
-          }
-          minPosition -1
-          maxPosition 0.7
         }
-        DEF LEFT_ARM_SERVO Servo {
-          translation 0 0.04 -0.02
-          children [
-            Transform {
-              translation 0 -0.07 0.02
-              children [
-                DEF LEFT_ARM Shape {
-                  appearance USE FUR_APPEARANCE
-                  geometry IndexedFaceSet {
-                    coord Coordinate {
-                      point [
-                        0.0360416 0.0649265 -0.0250206
-                        0.0359532 0.0648137 -0.0161862
-                        0.0358496 0.0648696 -0.0206048
-                        0.0356156 0.0651022 -0.0206044
-                        0.0278328 0.0666809 -0.0226622
-                        0.0111312 0.0526512 -0.023008
-                        0.00104004 0.0683841 -0.022908
-                        -0.00400896 0.0723114 -0.0209082
-                        -0.00240616 0.0728896 -0.0208848
-                        -0.00080356 0.0734677 -0.0208614
-                        0.0280586 0.0657615 -0.0206714
-                        0.027828 0.0680555 -0.0206444
-                        0.027793 0.0666299 -0.0186626
-                        0.010712 0.0494645 -0.0210528
-                        -0.00330496 0.0677337 -0.0209596
-                        0.00378424 0.0707292 -0.0208506
-                        0.0120654 0.055419 -0.0209634
-                        0.011091 0.0526 -0.0190088
-                        0.00100023 0.068333 -0.0189086
-                      ]
-                    }
-                    coordIndex [
-                      18, 17, 16, 15, -1, 14, 13, 17, 18, -1,
-                      17, 12, 11, 16, -1, 13, 10, 12, 17, -1,
-                      15, 9, 8, 18, -1, 7, 14, 18, 8, -1,
-                      8, 6, 14, 7, -1, 6, 8, 9, 15, -1,
-                      5, 4, 10, 13, -1, 16, 11, 4, 5, -1,
-                      6, 5, 13, 14, -1, 15, 16, 5, 6, -1,
-                      11, 3, 2, 10, -1, 12, 1, 11, -1, 11,
-                      0, 4, -1
-                    ]
-                    creaseAngle 0.785398
-                  }
-                }
+        DEF RIGHT_THIGH Shape {
+          appearance USE FUR_APPEARANCE
+          geometry IndexedFaceSet {
+            coord Coordinate {
+              point [
+                -0.00322737 0.00300564 0.0265597
+                -0.00620136 0.000462431 0.0274976
+                -0.00982217 0.000155244 0.0264574
+                0.00502524 0.0126005 0.0267647
+                -0.00374356 0.0146201 0.0277028
+                -0.010115 0.0168196 0.026667
+                0.0234064 0.043059 0.027337
+                0.0176302 0.0277196 0.0270836
+                0.00745004 0.0294808 0.0280044
+                0.000356443 0.0327843 0.0269756
+                0.021608 0.0418431 0.0283036
+                0.0150878 0.0458043 0.027289
+                0.016886 0.0470207 0.0263224
+                0.00856763 0.0497659 0.0262744
+                0.0151078 0.0458299 0.0252893
+                0.021648 0.041894 0.0243042
+                0.0234264 0.0430847 0.0253372
+                0.0252046 0.0442752 0.0263705
+                -0.00673696 0.0360878 0.0259468
+                0.000376642 0.0328101 0.0249758
+                0.00748983 0.029532 0.024005
+                0.0176502 0.0277452 0.0250838
+                0.0278104 0.0259584 0.0261626
+                -0.0164864 0.0190188 0.0256315
+                -0.0134428 -0.000152167 0.0254172
+                -0.010095 0.016845 0.0246674
+                -0.00980196 0.000180665 0.0244576
+                -0.00370377 0.0146713 0.0237034
+                -0.00616136 0.000513453 0.0234983
+                0.00504524 0.0126258 0.0247648
+                -0.00320716 0.00303124 0.0245598
+                -0.000247568 0.00372723 0.0255985
+                0.013794 0.0105809 0.0258262
               ]
             }
-          ]
-          name "left_arm_servo"
-          boundingObject Transform {
-            translation 0.03 -0.005 0
-            children [
-              Cylinder {
-                height 0.002
-                radius 0.001
-              }
+            coordIndex [
+              32, 31, 30, 29, -1, 29, 30, 28, 27, -1,
+              27, 28, 26, 25, -1, 25, 26, 24, 23, -1,
+              22, 32, 29, 21, -1, 21, 29, 27, 20, -1,
+              20, 27, 25, 19, -1, 19, 25, 23, 18, -1,
+              17, 22, 21, 16, -1, 16, 21, 20, 15, -1,
+              15, 20, 19, 14, -1, 14, 19, 18, 13, -1,
+              17, 15, 14, 12, -1, 14, 13, 12, -1, 12,
+              13, 11, -1, 12, 11, 10, 17, -1, 13, 18,
+              9, 11, -1, 11, 9, 8, 10, -1, 10, 8,
+              7, 6, -1, 6, 7, 22, 17, -1, 18, 23,
+              5, 9, -1, 9, 5, 4, 8, -1, 8, 4,
+              3, 7, -1, 7, 3, 32, 22, -1, 23, 24,
+              2, 5, -1, 5, 2, 1, 4, -1, 4, 1,
+              0, 3, -1, 3, 0, 31, 32, -1
             ]
+            creaseAngle 0.785398
           }
-          physics Physics {
-          }
-          minPosition -0.7
-          maxPosition 1
         }
-        DEF HEAD_TILT_SERVO Servo {
-          translation 0.01 0.065 0
-          rotation 0 0 1 0
+        DEF LEFT_FOOT Shape {
+          appearance DEF FOOT_APPEARANCE Appearance {
+            material Material {
+              diffuseColor 0.8 0.752941 0.796078
+              specularColor 0.5 0.5 0.5
+            }
+          }
+          geometry IndexedFaceSet {
+            coord Coordinate {
+              point [
+                -0.000146165 0.00446843 -0.025913
+                0.0180474 0.00419306 -0.0257348
+                0.0362412 0.00391764 -0.0255564
+                -0.00386375 0.00128964 -0.0247406
+                -0.00838976 0.000905458 -0.0260408
+                0.0157426 0.000958238 -0.0245488
+                0.035349 0.000626836 -0.0243572
+                0.0144628 0.00077704 -0.0258142
+                0.0373154 0.000648443 -0.0255874
+                0.039282 0.000669856 -0.0268176
+                0.0373404 0.000680435 -0.028087
+                -0.0129158 0.000521455 -0.027341
+                0.0131832 0.000595842 -0.0270792
+                -0.00836477 0.000937451 -0.0285406
+                0.0144878 0.000808854 -0.0283138
+                0.0353988 0.000690836 -0.0293564
+                0.0362662 0.00394944 -0.028056
+                0.03714 0.00493144 -0.0267846
+                -0.00381396 0.00135345 -0.0297398
+                0.0157924 0.00102224 -0.0295482
+                -0.000121154 0.00450042 -0.0284126
+                0.0180724 0.00422487 -0.0282342
+                0.0203592 0.00515107 -0.0269494
+                0.00357825 0.00537065 -0.0271144
+              ]
+            }
+            coordIndex [
+              23, 22, 21, 20, -1, 20, 21, 19, 18, -1,
+              22, 17, 16, 21, -1, 21, 16, 15, 19, -1,
+              18, 19, 14, 13, -1, 13, 14, 12, 11, -1,
+              19, 15, 10, 14, -1, 14, 10, 9, 12, -1,
+              12, 9, 8, 7, -1, 7, 8, 6, 5, -1,
+              11, 12, 7, 4, -1, 4, 7, 5, 3, -1,
+              5, 6, 2, 1, -1, 1, 2, 17, 22, -1,
+              3, 5, 1, 0, -1, 0, 1, 22, 23, -1
+            ]
+            creaseAngle 0.785398
+          }
+        }
+        DEF RIGHT_FOOT Shape {
+          appearance DEF FOOT_APPEARANCE Appearance {
+            material Material {
+              diffuseColor 0.8 0.752941 0.796078
+              specularColor 0.5 0.5 0.5
+            }
+          }
+          geometry IndexedFaceSet {
+            coord Coordinate {
+              point [
+                -0.000673369 0.00379505 0.0268452
+                0.0175204 0.00351943 0.0270234
+                0.035714 0.00324387 0.0272016
+                -0.00439095 0.000616062 0.0280176
+                -0.00891697 0.000232074 0.0267174
+                0.0152154 0.000284661 0.0282094
+                0.0348218 -4.67412e-05 0.0284011
+                0.0139356 0.000103462 0.026944
+                0.0367882 -2.51345e-05 0.0271708
+                0.038755 -3.54275e-06 0.0259406
+                0.0368134 6.85826e-06 0.0246713
+                -0.0134428 -0.000152167 0.0254172
+                0.012656 -7.77356e-05 0.0256788
+                -0.00889196 0.000264067 0.0242176
+                0.0139606 0.000135455 0.0244446
+                0.0348716 1.72593e-05 0.0234016
+                0.035739 0.00327586 0.0247022
+                0.036613 0.00425806 0.0259736
+                -0.00434096 0.000680063 0.0230184
+                0.0152654 0.000348661 0.02321
+                -0.000648357 0.00382685 0.0243456
+                0.0175452 0.00355123 0.0245239
+                0.019832 0.00447745 0.0258089
+                0.00305124 0.00469703 0.0256438
+              ]
+            }
+            coordIndex [
+              23, 22, 21, 20, -1, 20, 21, 19, 18, -1,
+              22, 17, 16, 21, -1, 21, 16, 15, 19, -1,
+              18, 19, 14, 13, -1, 13, 14, 12, 11, -1,
+              19, 15, 10, 14, -1, 14, 10, 9, 12, -1,
+              12, 9, 8, 7, -1, 7, 8, 6, 5, -1,
+              11, 12, 7, 4, -1, 4, 7, 5, 3, -1,
+              5, 6, 2, 1, -1, 1, 2, 17, 22, -1,
+              3, 5, 1, 0, -1, 0, 1, 22, 23, -1
+            ]
+            creaseAngle 0.785398
+          }
+        }
+        DEF HIPS Transform {
+          translation 0 0.03 0
+          rotation 0 0 1 -1.4
           children [
-            DEF HEAD_PAN_SERVO Servo {
+            DEF HEAD_TILT Transform {
+              translation 0.01 0.065 0
+              rotation 0 0 1 1.75
               children [
                 DEF LEFT_EYE_PAN_SERVO Servo {
                   translation 0.032 -0.001 -0.007
@@ -353,7 +674,17 @@ DEF RAT DifferentialWheels {
                       children [
                         DEF RIGHT_CAM Camera {
                           children [
-                            USE EYE_SHAPE
+                            DEF EYE_SHAPE Shape {
+                              appearance Appearance {
+                                material Material {
+                                  diffuseColor 0 0 0
+                                  specularColor 0.5 0.5 0.5
+                                }
+                              }
+                              geometry Sphere {
+                                radius 0.002
+                              }
+                            }
                           ]
                           name "right_cam"
                           fieldOfView 2.2
@@ -369,28 +700,6 @@ DEF RAT DifferentialWheels {
                   name "right_eye_pan_servo"
                   minPosition -1.5
                   maxPosition 1.5
-                }
-                DistanceSensor {
-                  translation 0.052 -0.025 0.001
-                  rotation 0 1 0 5
-                  name "right_whiskers"
-                  lookupTable [
-                    0 0 0
-                    0.05 1000 0
-                  ]
-                  numberOfRays 8
-                  aperture 1
-                }
-                DistanceSensor {
-                  translation 0.051 -0.025 0.001
-                  rotation 0 1 0 1.2
-                  name "left_whiskers"
-                  lookupTable [
-                    0 0 0
-                    0.05 1000 0
-                  ]
-                  numberOfRays 8
-                  aperture 1
                 }
                 DEF HEAD_RENDERING Transform {
                   translation -0.01 -0.095 0
@@ -475,7 +784,6 @@ DEF RAT DifferentialWheels {
                             0.0625608 0.0701094 0.00140265
                           ]
                         }
-                        solid FALSE
                         coordIndex [
                           67, 66, 65, 64, -1, 63, 67, 64, 62, -1,
                           61, 63, 62, 60, -1, 59, 61, 60, 58, -1,
@@ -534,7 +842,6 @@ DEF RAT DifferentialWheels {
                             0.0509094 0.0728089 0.000605445
                           ]
                         }
-                        solid FALSE
                         coordIndex [
                           6, 5, 4, -1, 4, 5, 3, -1, 3, 5,
                           6, -1, 6, 2, 1, -1, 1, 2, 0, -1,
@@ -583,7 +890,6 @@ DEF RAT DifferentialWheels {
                             0.0283804 0.103881 -0.0128842
                           ]
                         }
-                        solid FALSE
                         ccw FALSE
                         coordIndex [
                           27, 26, 25, 24, -1, 24, 25, 23, 22, -1,
@@ -600,7 +906,12 @@ DEF RAT DifferentialWheels {
                       }
                     }
                     DEF RIGHT_EAR_INSIDE Shape {
-                      appearance USE EAR_INSIDE_APPEARANCE
+                      appearance DEF EAR_INSIDE_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.8 0.752941 0.796078
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry IndexedFaceSet {
                         coord Coordinate {
                           point [
@@ -634,7 +945,6 @@ DEF RAT DifferentialWheels {
                             0.0370882 0.121242 0.0175592
                           ]
                         }
-                        solid FALSE
                         ccw FALSE
                         coordIndex [
                           27, 26, 25, 24, -1, 24, 25, 23, 22, -1,
@@ -651,7 +961,12 @@ DEF RAT DifferentialWheels {
                       }
                     }
                     DEF LEFT_EAR_OUTSIDE Shape {
-                      appearance USE FUR_APPEARANCE
+                      appearance DEF FUR_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.623529 0.568627 0.431373
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry IndexedFaceSet {
                         coord Coordinate {
                           point [
@@ -688,7 +1003,6 @@ DEF RAT DifferentialWheels {
                             0.0366402 0.120618 -0.0180502
                           ]
                         }
-                        solid FALSE
                         coordIndex [
                           30, 29, 28, -1, 27, 30, 28, -1, 26, 25,
                           27, 28, -1, 24, 23, 25, 26, -1, 22, 23,
@@ -706,7 +1020,12 @@ DEF RAT DifferentialWheels {
                       }
                     }
                     DEF LEFT_EAR_SMALL_PART Shape {
-                      appearance USE FUR_APPEARANCE
+                      appearance DEF FUR_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.623529 0.568627 0.431373
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry IndexedFaceSet {
                         coord Coordinate {
                           point [
@@ -724,7 +1043,12 @@ DEF RAT DifferentialWheels {
                       }
                     }
                     DEF RIGHT_EAR_OUTSIDE Shape {
-                      appearance USE FUR_APPEARANCE
+                      appearance DEF FUR_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.623529 0.568627 0.431373
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry IndexedFaceSet {
                         coord Coordinate {
                           point [
@@ -761,7 +1085,6 @@ DEF RAT DifferentialWheels {
                             0.027697 0.104087 0.00447565
                           ]
                         }
-                        solid FALSE
                         coordIndex [
                           30, 29, 28, 27, -1, 26, 25, 29, 30, -1,
                           24, 23, 25, 26, -1, 22, 21, 23, 24, -1,
@@ -801,7 +1124,6 @@ DEF RAT DifferentialWheels {
                             0.0414656 0.0720993 0.00424564
                           ]
                         }
-                        solid FALSE
                         coordIndex [
                           14, 13, 12, 11, -1, 10, 9, 13, 14, -1,
                           8, 7, 9, 10, -1, 6, 5, 7, 8, -1,
@@ -882,7 +1204,6 @@ DEF RAT DifferentialWheels {
                             0.0495144 0.0835914 -0.00618795
                           ]
                         }
-                        solid FALSE
                         convex FALSE
                         coordIndex [
                           63, 62, 61, 60, -1, 59, 58, 62, 63, -1,
@@ -916,60 +1237,122 @@ DEF RAT DifferentialWheels {
                     }
                   ]
                 }
+                DEF LEFT_LARGE_WHISKER Transform {
+                  translation 0.049 -0.025 0.001
+                  rotation 0 1 0 2.2
+                  children [
+                    DEF LARGE_WHISKER_TRANS Transform {
+                      translation 0.025 0 0
+                      children [
+                        DEF LARGE_WHISKER_SHAPE Shape {
+                          appearance DEF WHISKER_APPEARANCE Appearance {
+                            material Material {
+                            }
+                          }
+                          geometry Box {
+                            size 0.05 0.001 0.001
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                DEF LEFT_MEDIUM_WHISKER Transform {
+                  translation 0.051 -0.025 0.001
+                  rotation 0 1 0 1.9
+                  children [
+                    DEF MEDIUM_WHISKER_TRANS Transform {
+                      translation 0.02 0 0
+                      children [
+                        DEF MEDIUM_WHISKER_SHAPE Shape {
+                          appearance USE WHISKER_APPEARANCE
+                          geometry Box {
+                            size 0.04 0.001 0.001
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                DEF LEFT_SMALL_WHISKER Transform {
+                  translation 0.053 -0.025 0.001
+                  rotation 0 1 0 1.57
+                  children [
+                    DEF SMALL_WHISKER_TRANS Transform {
+                      translation 0.015 0 0
+                      children [
+                        DEF SMALL_WHISKER_SHAPE Shape {
+                          appearance DEF WHISKER_APPEARANCE Appearance {
+                            material Material {
+                            }
+                          }
+                          geometry Box {
+                            size 0.03 0.001 0.001
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                DEF RIGHT_LARGE_WHISKER Transform {
+                  translation 0.049 -0.025 0.001
+                  rotation 0 1 0 -2.2
+                  children [
+                    DEF LARGE_WHISKER_TRANS Transform {
+                      translation 0.025 0 0
+                      children [
+                        DEF LARGE_WHISKER_SHAPE Shape {
+                          appearance USE WHISKER_APPEARANCE
+                          geometry Box {
+                            size 0.05 0.001 0.001
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                DEF RIGHT_MEDIUM_WHISKER Transform {
+                  translation 0.051 -0.025 0.001
+                  rotation 0 1 0 -1.9
+                  children [
+                    DEF MEDIUM_WHISKER_TRANS Transform {
+                      translation 0.02 0 0
+                      children [
+                        DEF MEDIUM_WHISKER_SHAPE Shape {
+                          appearance USE WHISKER_APPEARANCE
+                          geometry Box {
+                            size 0.04 0.001 0.001
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+                DEF RIGHT_SMALL_WHISKER Transform {
+                  translation 0.053 -0.025 0.001
+                  rotation 0 1 0 -1.57
+                  children [
+                    DEF SMALL_WHISKER_TRANS Transform {
+                      translation 0.015 0 0
+                      children [
+                        DEF SMALL_WHISKER_SHAPE Shape {
+                          appearance DEF WHISKER_APPEARANCE Appearance {
+                            material Material {
+                            }
+                          }
+                          geometry Box {
+                            size 0.03 0.001 0.001
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
               ]
-              name "head_pan_servo"
-              boundingObject Group {
-                children [
-                  Transform {
-                    translation 0.02 -0.007 0
-                    rotation 0 0 1 1.1
-                    children [
-                      Cylinder {
-                        height 0.023
-                        radius 0.009
-                      }
-                    ]
-                  }
-                  Transform {
-                    translation 0.04 -0.018 0
-                    rotation 0 0 1 1.1
-                    children [
-                      Cylinder {
-                        height 0.01
-                        radius 0.003
-                      }
-                    ]
-                  }
-                ]
-              }
-              physics Physics {
-                centerOfMass 0.02 -0.01 0
-              }
-              minPosition -1.5708
-              maxPosition 1.5708
             }
-          ]
-          name "head_tilt_servo"
-          boundingObject Transform {
-            translation 0 -0.002 0
-            children [
-              Cylinder {
-                height 0.01
-                radius 0.004
-              }
-            ]
-          }
-          physics Physics {
-          }
-          position 1.75
-          minPosition -0.5
-          maxPosition 2
-        }
-        DEF TAIL_SERVO Servo {
-          translation -0.022 -0.015 0
-          rotation 0 0 1 0
-          children [
-            DEF TAIL_GROUP Group {
+            DEF TAIL_GROUP Transform {
+              translation -0.022 -0.015 0
+              rotation 0 0 1 0.4
               children [
                 DEF TAIL_SEG_1_TRANSFO Transform {
                   translation -0.019 0.004 0
@@ -994,7 +1377,12 @@ DEF RAT DifferentialWheels {
                   rotation 0 0 1 0.6
                   children [
                     Shape {
-                      appearance USE TAIL_APPEARANCE
+                      appearance DEF TAIL_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.8 0.752941 0.796078
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry Cylinder {
                         height 0.055
                         radius 0.003
@@ -1007,7 +1395,12 @@ DEF RAT DifferentialWheels {
                   rotation 0 0 1 2.55
                   children [
                     Shape {
-                      appearance USE TAIL_APPEARANCE
+                      appearance DEF TAIL_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.8 0.752941 0.796078
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry Cylinder {
                         height 0.0285
                         radius 0.003
@@ -1020,7 +1413,12 @@ DEF RAT DifferentialWheels {
                   rotation 0 0 1 1.3
                   children [
                     Shape {
-                      appearance USE TAIL_APPEARANCE
+                      appearance DEF TAIL_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.8 0.752941 0.796078
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry Cylinder {
                         height 0.025
                         radius 0.002
@@ -1033,7 +1431,12 @@ DEF RAT DifferentialWheels {
                   rotation 0 0 1 0.48
                   children [
                     Shape {
-                      appearance USE TAIL_APPEARANCE
+                      appearance DEF TAIL_APPEARANCE Appearance {
+                        material Material {
+                          diffuseColor 0.8 0.752941 0.796078
+                          specularColor 0.5 0.5 0.5
+                        }
+                      }
                       geometry Cylinder {
                         height 0.014
                         radius 0.001
@@ -1043,459 +1446,356 @@ DEF RAT DifferentialWheels {
                 }
               ]
             }
-          ]
-          name "tail_servo"
-          boundingObject USE TAIL_GROUP
-          physics Physics {
-            centerOfMass -0.028 0.03 0
-          }
-          position 1.6
-          minPosition -0.3
-          maxPosition 2.5
-        }
-        DEF BODY_RENDERING Transform {
-          translation 0 -0.03 0
-          children [
-            DEF BODY Shape {
-              appearance USE FUR_APPEARANCE
-              geometry IndexedFaceSet {
-                coord Coordinate {
-                  point [
-                    0.0153224 0.023207 -0.0180008
-                    0.0176198 0.0169324 -0.00924915
-                    0.0149704 0.0227577 0.0172252
-                    0.0174438 0.0167075 0.00836385
-                    0.0147334 0.0539268 -0.0171218
-                    0.016537 0.0630174 -0.00842535
-                    0.0143912 0.0534896 0.0171188
-                    0.016366 0.0627989 0.00869505
-                    -0.00258956 0.00220922 -0.000398555
-                    -0.00274016 0.00221004 -0.000501356
-                    -0.00283996 0.00221184 -0.000653953
-                    -0.00287376 0.00221385 -0.000832953
-                    -0.00283636 0.00221624 -0.00101155
-                    -0.00273356 0.00221843 -0.00116195
-                    -0.00258076 0.00222025 -0.00126195
-                    -0.00240177 0.00222125 -0.00129555
-                    -0.00222337 0.00222105 -0.00125815
-                    -0.00207257 0.00222025 -0.00115535
-                    0.0183014 0.0107619 -0.00906635
-                    -0.00197297 0.00221867 -0.00100276
-                    0.0199172 0.0106572 -0.000497556
-                    -0.00193895 0.00221643 -0.000823555
-                    0.0181306 0.0105434 0.00803705
-                    -0.00197636 0.00221405 -0.000645156
-                    -0.00207916 0.00221184 -0.000494556
-                    -0.00241096 0.00220922 -0.000361156
-                    -0.00223177 0.00221004 -0.000394955
-                    -0.018392 0.0103473 0.0149214
-                    -0.01119 0.010306 0.0198384
-                    -0.0247798 0.0105303 -0.000945754
-                    -0.023164 0.010426 0.00762305
-                    -0.0229932 0.0106442 -0.00948035
-                    -0.0180762 0.0107507 -0.0166818
-                    -0.0107774 0.0108333 -0.0214532
-                    -0.00220796 0.0108793 -0.0230686
-                    0.0135292 0.0108405 -0.0163648
-                    0.00632744 0.0108818 -0.0212816
-                    0.0132136 0.0104371 0.0152384
-                    -0.00265457 0.0103086 0.021625
-                    0.00591484 0.0103547 0.0200098
-                    -0.0221248 0.0349675 0.0188223
-                    -0.0132714 0.034917 0.0248665
-                    -0.029977 0.0351927 -0.000682955
-                    -0.0279908 0.0350644 0.00985045
-                    -0.0277808 0.0353328 -0.0111742
-                    -0.0217364 0.0354635 -0.0200264
-                    -0.0127642 0.0355648 -0.025892
-                    -0.00223016 0.0356215 -0.0278776
-                    0.0171154 0.0355739 -0.019637
-                    0.00826224 0.0356246 -0.025681
-                    0.0167272 0.0350779 0.0192118
-                    -0.00277896 0.0349201 0.027063
-                    0.00775483 0.0349767 0.0250772
-                    0.00858584 0.0994817 0.00612144
-                    -0.0108264 0.0717785 0.0193388
-                    0.00663343 0.0994929 0.00478865
-                    -0.0175792 0.0718172 0.0147284
-                    0.00533963 0.0995141 0.00281004
-                    -0.0220536 0.0718911 0.00788545
-                    0.00490163 0.0995425 0.000487247
-                    -0.0235686 0.0719889 -0.000148954
-                    0.00538602 0.0995734 -0.00182635
-                    -0.0218934 0.0720959 -0.00815156
-                    0.00671904 0.0996021 -0.00377875
-                    -0.017283 0.0721955 -0.0149036
-                    0.00869764 0.0996244 -0.00507215
-                    -0.0104396 0.0722729 -0.0193774
-                    0.0110206 0.0996371 -0.00551015
-                    -0.00240436 0.0723159 -0.020892
-                    0.0133344 0.0996376 -0.00502575
-                    0.00559863 0.0723184 -0.0192168
-                    0.0152868 0.0996264 -0.00369276
-                    0.0123516 0.0722796 -0.0146064
-                    0.0165806 0.0996053 -0.00171415
-                    0.0168258 0.0722057 -0.00776315
-                    0.0170186 0.0995768 0.000608645
-                    0.0183408 0.0721079 0.000271244
-                    0.0165342 0.099546 0.00292224
-                    0.0166656 0.0720011 0.00827364
-                    0.0152012 0.0995172 0.00487444
-                    0.0120552 0.0719015 0.0150258
-                    -0.00282335 0.0717809 0.0210142
-                    0.0108996 0.0994823 0.00660584
-                    0.0132226 0.0994949 0.00616805
-                    0.00521184 0.0718241 0.0194996
-                  ]
+            DEF BODY_RENDERING Transform {
+              translation 0 -0.03 0
+              children [
+                DEF BODY Shape {
+                  appearance DEF FUR_APPEARANCE Appearance {
+                    material Material {
+                      diffuseColor 0.623529 0.568627 0.431373
+                      specularColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry IndexedFaceSet {
+                    coord Coordinate {
+                      point [
+                        0.0153224 0.023207 -0.0180008
+                        0.0176198 0.0169324 -0.00924915
+                        0.0149704 0.0227577 0.0172252
+                        0.0174438 0.0167075 0.00836385
+                        0.0147334 0.0539268 -0.0171218
+                        0.016537 0.0630174 -0.00842535
+                        0.0143912 0.0534896 0.0171188
+                        0.016366 0.0627989 0.00869505
+                        -0.00258956 0.00220922 -0.000398555
+                        -0.00274016 0.00221004 -0.000501356
+                        -0.00283996 0.00221184 -0.000653953
+                        -0.00287376 0.00221385 -0.000832953
+                        -0.00283636 0.00221624 -0.00101155
+                        -0.00273356 0.00221843 -0.00116195
+                        -0.00258076 0.00222025 -0.00126195
+                        -0.00240177 0.00222125 -0.00129555
+                        -0.00222337 0.00222105 -0.00125815
+                        -0.00207257 0.00222025 -0.00115535
+                        0.0183014 0.0107619 -0.00906635
+                        -0.00197297 0.00221867 -0.00100276
+                        0.0199172 0.0106572 -0.000497556
+                        -0.00193895 0.00221643 -0.000823555
+                        0.0181306 0.0105434 0.00803705
+                        -0.00197636 0.00221405 -0.000645156
+                        -0.00207916 0.00221184 -0.000494556
+                        -0.00241096 0.00220922 -0.000361156
+                        -0.00223177 0.00221004 -0.000394955
+                        -0.018392 0.0103473 0.0149214
+                        -0.01119 0.010306 0.0198384
+                        -0.0247798 0.0105303 -0.000945754
+                        -0.023164 0.010426 0.00762305
+                        -0.0229932 0.0106442 -0.00948035
+                        -0.0180762 0.0107507 -0.0166818
+                        -0.0107774 0.0108333 -0.0214532
+                        -0.00220796 0.0108793 -0.0230686
+                        0.0135292 0.0108405 -0.0163648
+                        0.00632744 0.0108818 -0.0212816
+                        0.0132136 0.0104371 0.0152384
+                        -0.00265457 0.0103086 0.021625
+                        0.00591484 0.0103547 0.0200098
+                        -0.0221248 0.0349675 0.0188223
+                        -0.0132714 0.034917 0.0248665
+                        -0.029977 0.0351927 -0.000682955
+                        -0.0279908 0.0350644 0.00985045
+                        -0.0277808 0.0353328 -0.0111742
+                        -0.0217364 0.0354635 -0.0200264
+                        -0.0127642 0.0355648 -0.025892
+                        -0.00223016 0.0356215 -0.0278776
+                        0.0171154 0.0355739 -0.019637
+                        0.00826224 0.0356246 -0.025681
+                        0.0167272 0.0350779 0.0192118
+                        -0.00277896 0.0349201 0.027063
+                        0.00775483 0.0349767 0.0250772
+                        0.00858584 0.0994817 0.00612144
+                        -0.0108264 0.0717785 0.0193388
+                        0.00663343 0.0994929 0.00478865
+                        -0.0175792 0.0718172 0.0147284
+                        0.00533963 0.0995141 0.00281004
+                        -0.0220536 0.0718911 0.00788545
+                        0.00490163 0.0995425 0.000487247
+                        -0.0235686 0.0719889 -0.000148954
+                        0.00538602 0.0995734 -0.00182635
+                        -0.0218934 0.0720959 -0.00815156
+                        0.00671904 0.0996021 -0.00377875
+                        -0.017283 0.0721955 -0.0149036
+                        0.00869764 0.0996244 -0.00507215
+                        -0.0104396 0.0722729 -0.0193774
+                        0.0110206 0.0996371 -0.00551015
+                        -0.00240436 0.0723159 -0.020892
+                        0.0133344 0.0996376 -0.00502575
+                        0.00559863 0.0723184 -0.0192168
+                        0.0152868 0.0996264 -0.00369276
+                        0.0123516 0.0722796 -0.0146064
+                        0.0165806 0.0996053 -0.00171415
+                        0.0168258 0.0722057 -0.00776315
+                        0.0170186 0.0995768 0.000608645
+                        0.0183408 0.0721079 0.000271244
+                        0.0165342 0.099546 0.00292224
+                        0.0166656 0.0720011 0.00827364
+                        0.0152012 0.0995172 0.00487444
+                        0.0120552 0.0719015 0.0150258
+                        -0.00282335 0.0717809 0.0210142
+                        0.0108996 0.0994823 0.00660584
+                        0.0132226 0.0994949 0.00616805
+                        0.00521184 0.0718241 0.0194996
+                      ]
+                    }
+                    coordIndex [
+                      84, 83, 82, 81, -1, 80, 79, 83, 84, -1,
+                      78, 77, 79, 80, -1, 76, 75, 77, 78, -1,
+                      74, 73, 75, 76, -1, 72, 71, 73, 74, -1,
+                      70, 69, 71, 72, -1, 68, 67, 69, 70, -1,
+                      66, 65, 67, 68, -1, 64, 63, 65, 66, -1,
+                      62, 61, 63, 64, -1, 60, 59, 61, 62, -1,
+                      58, 57, 59, 60, -1, 56, 55, 57, 58, -1,
+                      54, 53, 55, 56, -1, 81, 82, 53, 54, -1,
+                      52, 84, 81, 51, -1, 50, 80, 84, 52, -1,
+                      49, 70, 72, 48, -1, 47, 68, 70, 49, -1,
+                      46, 66, 68, 47, -1, 45, 64, 66, 46, -1,
+                      44, 62, 64, 45, -1, 43, 58, 60, 42, -1,
+                      41, 54, 56, 40, -1, 51, 81, 54, 41, -1,
+                      39, 52, 51, 38, -1, 37, 50, 52, 39, -1,
+                      36, 49, 48, 35, -1, 34, 47, 49, 36, -1,
+                      33, 46, 47, 34, -1, 32, 45, 46, 33, -1,
+                      31, 44, 45, 32, -1, 30, 43, 42, 29, -1,
+                      28, 41, 40, 27, -1, 38, 51, 41, 28, -1,
+                      26, 39, 38, 25, -1, 24, 37, 39, 26, -1,
+                      23, 22, 37, 24, -1, 21, 20, 22, 23, -1,
+                      19, 18, 20, 21, -1, 17, 35, 18, 19, -1,
+                      16, 36, 35, 17, -1, 15, 34, 36, 16, -1,
+                      14, 33, 34, 15, -1, 13, 32, 33, 14, -1,
+                      12, 31, 32, 13, -1, 11, 29, 31, 12, -1,
+                      10, 30, 29, 11, -1, 9, 27, 30, 10, -1,
+                      8, 28, 27, 9, -1, 25, 38, 28, 8, -1,
+                      7, 78, 80, 6, -1, 78, 7, 76, -1, 76,
+                      5, 74, -1, 5, 4, 72, 74, -1, 22, 3,
+                      2, 37, -1, 3, 22, 20, -1, 20, 18, 1,
+                      -1, 18, 35, 0, 1, -1, 43, 40, 56, 58,
+                      -1, 40, 43, 30, 27, -1, 31, 29, 42, 44,
+                      -1, 60, 62, 44, 42, -1
+                    ]
+                    creaseAngle 0.785398
+                  }
                 }
-                solid FALSE
-                coordIndex [
-                  84, 83, 82, 81, -1, 80, 79, 83, 84, -1,
-                  78, 77, 79, 80, -1, 76, 75, 77, 78, -1,
-                  74, 73, 75, 76, -1, 72, 71, 73, 74, -1,
-                  70, 69, 71, 72, -1, 68, 67, 69, 70, -1,
-                  66, 65, 67, 68, -1, 64, 63, 65, 66, -1,
-                  62, 61, 63, 64, -1, 60, 59, 61, 62, -1,
-                  58, 57, 59, 60, -1, 56, 55, 57, 58, -1,
-                  54, 53, 55, 56, -1, 81, 82, 53, 54, -1,
-                  52, 84, 81, 51, -1, 50, 80, 84, 52, -1,
-                  49, 70, 72, 48, -1, 47, 68, 70, 49, -1,
-                  46, 66, 68, 47, -1, 45, 64, 66, 46, -1,
-                  44, 62, 64, 45, -1, 43, 58, 60, 42, -1,
-                  41, 54, 56, 40, -1, 51, 81, 54, 41, -1,
-                  39, 52, 51, 38, -1, 37, 50, 52, 39, -1,
-                  36, 49, 48, 35, -1, 34, 47, 49, 36, -1,
-                  33, 46, 47, 34, -1, 32, 45, 46, 33, -1,
-                  31, 44, 45, 32, -1, 30, 43, 42, 29, -1,
-                  28, 41, 40, 27, -1, 38, 51, 41, 28, -1,
-                  26, 39, 38, 25, -1, 24, 37, 39, 26, -1,
-                  23, 22, 37, 24, -1, 21, 20, 22, 23, -1,
-                  19, 18, 20, 21, -1, 17, 35, 18, 19, -1,
-                  16, 36, 35, 17, -1, 15, 34, 36, 16, -1,
-                  14, 33, 34, 15, -1, 13, 32, 33, 14, -1,
-                  12, 31, 32, 13, -1, 11, 29, 31, 12, -1,
-                  10, 30, 29, 11, -1, 9, 27, 30, 10, -1,
-                  8, 28, 27, 9, -1, 25, 38, 28, 8, -1,
-                  7, 78, 80, 6, -1, 78, 7, 76, -1, 76,
-                  5, 74, -1, 5, 4, 72, 74, -1, 22, 3,
-                  2, 37, -1, 3, 22, 20, -1, 20, 18, 1,
-                  -1, 18, 35, 0, 1, -1, 43, 40, 56, 58,
-                  -1, 40, 43, 30, 27, -1, 31, 29, 42, 44,
-                  -1, 60, 62, 44, 42, -1
-                ]
-                creaseAngle 0.785398
-              }
+                DEF BELLY Shape {
+                  appearance Appearance {
+                    material Material {
+                      specularColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry IndexedFaceSet {
+                    coord Coordinate {
+                      point [
+                        0.0153224 0.023207 -0.0180008
+                        0.0171154 0.0355739 -0.019637
+                        0.0147334 0.0539268 -0.0171218
+                        0.0183408 0.0721079 0.000271244
+                        0.0143912 0.0534896 0.0171188
+                        0.0216544 0.0537284 6.98473e-05
+                        0.0199172 0.0106572 -0.000497556
+                        0.0149704 0.0227577 0.0172252
+                        0.0167272 0.0350779 0.0192118
+                        0.0249678 0.0353488 -0.000131955
+                      ]
+                    }
+                    coordIndex [
+                      9, 8, 7, 6, -1, 8, 9, 5, 4, -1,
+                      3, 4, 5, -1, 5, 2, 3, -1, 9, 1,
+                      2, 5, -1, 1, 9, 6, 0, -1
+                    ]
+                    creaseAngle 0.785398
+                  }
+                }
+              ]
             }
-            DEF BELLY Shape {
-              appearance Appearance {
-                material Material {
-                  specularColor 0.5 0.5 0.5
+            DEF RIGHT_ARM Transform {
+              translation 0 -0.03 0
+              children [
+                DEF RIGHT_ARM Shape {
+                  appearance DEF FUR_APPEARANCE Appearance {
+                    material Material {
+                      diffuseColor 0.623529 0.568627 0.431373
+                      specularColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry IndexedFaceSet {
+                    coord Coordinate {
+                      point [
+                        0.0107122 0.0521162 0.018898
+                        0.000621438 0.0678491 0.018998
+                        -0.00442757 0.0717762 0.0209983
+                        -0.00282496 0.0723546 0.0210214
+                        -0.00122217 0.0729329 0.021045
+                        0.0102934 0.0489294 0.0208534
+                        -0.00372356 0.0671986 0.0209468
+                        0.00336564 0.0701942 0.0210558
+                        0.0116466 0.054884 0.0209431
+                        0.0106724 0.0520653 0.0228974
+                        0.000581443 0.0677979 0.0229976
+                        0.0276398 0.0652265 0.0212348
+                        0.035431 0.0643347 0.0213013
+                        0.0351968 0.0645673 0.021302
+                        0.0274142 0.0661459 0.019244
+                        0.0356228 0.0643914 0.0168856
+                        0.0274094 0.0675207 0.0212618
+                        0.0355346 0.0642786 0.0257202
+                        0.0273742 0.0660949 0.0232436
+                      ]
+                    }
+                    coordIndex [
+                      18, 17, 16, -1, 16, 15, 14, -1, 16, 13,
+                      12, 11, -1, 10, 9, 8, 7, -1, 6, 5,
+                      9, 10, -1, 9, 18, 16, 8, -1, 5, 11,
+                      18, 9, -1, 7, 4, 3, 10, -1, 2, 6,
+                      10, 3, -1, 3, 1, 6, 2, -1, 1, 3,
+                      4, 7, -1, 0, 14, 11, 5, -1, 8, 16,
+                      14, 0, -1, 1, 0, 5, 6, -1, 7, 8,
+                      0, 1, -1
+                    ]
+                    creaseAngle 0.785398
+                  }
                 }
-              }
-              geometry IndexedFaceSet {
-                coord Coordinate {
-                  point [
-                    0.0153224 0.023207 -0.0180008
-                    0.0171154 0.0355739 -0.019637
-                    0.0147334 0.0539268 -0.0171218
-                    0.0183408 0.0721079 0.000271244
-                    0.0143912 0.0534896 0.0171188
-                    0.0216544 0.0537284 6.98473e-05
-                    0.0199172 0.0106572 -0.000497556
-                    0.0149704 0.0227577 0.0172252
-                    0.0167272 0.0350779 0.0192118
-                    0.0249678 0.0353488 -0.000131955
-                  ]
+              ]
+            }
+            DEF LEFT_ARM Transform {
+              translation 0 -0.03 0
+              children [
+                DEF LEFT_ARM Shape {
+                  appearance DEF FUR_APPEARANCE Appearance {
+                    material Material {
+                      diffuseColor 0.623529 0.568627 0.431373
+                      specularColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry IndexedFaceSet {
+                    coord Coordinate {
+                      point [
+                        0.0360416 0.0649265 -0.0250206
+                        0.0359532 0.0648137 -0.0161862
+                        0.0358496 0.0648696 -0.0206048
+                        0.0356156 0.0651022 -0.0206044
+                        0.0278328 0.0666809 -0.0226622
+                        0.0111312 0.0526512 -0.023008
+                        0.00104004 0.0683841 -0.022908
+                        -0.00400896 0.0723114 -0.0209082
+                        -0.00240616 0.0728896 -0.0208848
+                        -0.00080356 0.0734677 -0.0208614
+                        0.0280586 0.0657615 -0.0206714
+                        0.027828 0.0680555 -0.0206444
+                        0.027793 0.0666299 -0.0186626
+                        0.010712 0.0494645 -0.0210528
+                        -0.00330496 0.0677337 -0.0209596
+                        0.00378424 0.0707292 -0.0208506
+                        0.0120654 0.055419 -0.0209634
+                        0.011091 0.0526 -0.0190088
+                        0.00100023 0.068333 -0.0189086
+                      ]
+                    }
+                    coordIndex [
+                      18, 17, 16, 15, -1, 14, 13, 17, 18, -1,
+                      17, 12, 11, 16, -1, 13, 10, 12, 17, -1,
+                      15, 9, 8, 18, -1, 7, 14, 18, 8, -1,
+                      8, 6, 14, 7, -1, 6, 8, 9, 15, -1,
+                      5, 4, 10, 13, -1, 16, 11, 4, 5, -1,
+                      6, 5, 13, 14, -1, 15, 16, 5, 6, -1,
+                      11, 3, 2, 10, -1, 12, 1, 11, -1, 11,
+                      0, 4, -1
+                    ]
+                    creaseAngle 0.785398
+                  }
                 }
-                solid FALSE
-                coordIndex [
-                  9, 8, 7, 6, -1, 8, 9, 5, 4, -1,
-                  3, 4, 5, -1, 5, 2, 3, -1, 9, 1,
-                  2, 5, -1, 1, 9, 6, 0, -1
-                ]
-                creaseAngle 0.785398
-              }
+              ]
+            }
+          ]
+        }
+        DEF LEFT_WHEEL Transform {
+          translation 0.01 0.007 -0.02
+          rotation 0 0 1 0
+          children [
+            DEF WHEEL Transform {
+              rotation 1 0 0 1.5708
+              children [
+                Shape {
+                  appearance Appearance {
+                    material Material {
+                      diffuseColor 0.752941 0.752941 0.752941
+                      specularColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry Cylinder {
+                    height 0.005
+                    radius 0.01
+                  }
+                }
+              ]
+            }
+          ]
+        }
+        DEF RIGHT_WHEEL Transform {
+          translation 0.01 0.007 0.02
+          rotation 0 0 1 0
+          children [
+            DEF WHEEL Transform {
+              rotation 1 0 0 1.5708
+              children [
+                Shape {
+                  appearance Appearance {
+                    material Material {
+                      diffuseColor 0.752941 0.752941 0.752941
+                      specularColor 0.5 0.5 0.5
+                    }
+                  }
+                  geometry Cylinder {
+                    height 0.005
+                    radius 0.01
+                  }
+                }
+              ]
             }
           ]
         }
       ]
-      name "hips_servo"
-      boundingObject DEF BODY_BOUNDS Transform {
-        translation -0.003 0.011 0
-        children [
-          Cylinder {
-            height 0.057
-            radius 0.019
-          }
-        ]
-      }
-      physics Physics {
-        centerOfMass 0 0.01 0
-      }
-      position -1.4
-      minPosition -2
-      maxPosition 0.5
-    }
-    DEF LEFT_THIGH Shape {
-      appearance USE FUR_APPEARANCE
-      geometry IndexedFaceSet {
-        coord Coordinate {
-          point [
-            -0.00269996 0.00367926 -0.0261986
-            -0.00567436 0.00113605 -0.0252606
-            -0.00929517 0.000828642 -0.0263008
-            0.00555244 0.013274 -0.0259936
-            -0.00321656 0.0152936 -0.0250552
-            -0.00958776 0.0174931 -0.026091
-            0.0239336 0.0437326 -0.0254212
-            0.0181574 0.0283933 -0.0256746
-            0.00797725 0.0301545 -0.0247538
-            0.000883639 0.0334578 -0.0257826
-            0.022135 0.0425166 -0.0244544
-            0.0156148 0.0464778 -0.0254692
-            0.0174132 0.047694 -0.0264358
-            0.00909463 0.0504393 -0.026484
-            0.0156348 0.0465034 -0.0274688
-            0.0221752 0.0425676 -0.028454
-            0.0239534 0.0437581 -0.0274208
-            0.0257318 0.0449489 -0.0263878
-            -0.00620976 0.0367615 -0.0268114
-            0.000903636 0.0334834 -0.0277824
-            0.00801703 0.0302057 -0.0287532
-            0.0181772 0.0284186 -0.0276744
-            0.0283376 0.0266321 -0.0265956
-            -0.015959 0.0196925 -0.0271268
-            -0.0129158 0.000521455 -0.027341
-            -0.00956797 0.0175187 -0.0280908
-            -0.00927497 0.000854243 -0.0283006
-            -0.00317656 0.0153447 -0.0290548
-            -0.00563416 0.00118703 -0.02926
-            0.00557223 0.0132995 -0.0279934
-            -0.00268016 0.00370464 -0.0281984
-            0.000279635 0.00440087 -0.0271596
-            0.0143212 0.0112542 -0.026932
-          ]
-        }
-        solid FALSE
-        coordIndex [
-          32, 31, 30, 29, -1, 29, 30, 28, 27, -1,
-          27, 28, 26, 25, -1, 25, 26, 24, 23, -1,
-          22, 32, 29, 21, -1, 21, 29, 27, 20, -1,
-          20, 27, 25, 19, -1, 19, 25, 23, 18, -1,
-          17, 22, 21, 16, -1, 16, 21, 20, 15, -1,
-          15, 20, 19, 14, -1, 14, 19, 18, 13, -1,
-          17, 15, 14, 12, -1, 14, 13, 12, -1, 12,
-          13, 11, -1, 12, 11, 10, 17, -1, 13, 18,
-          9, 11, -1, 11, 9, 8, 10, -1, 10, 8,
-          7, 6, -1, 6, 7, 22, 17, -1, 18, 23,
-          5, 9, -1, 9, 5, 4, 8, -1, 8, 4,
-          3, 7, -1, 7, 3, 32, 22, -1, 23, 24,
-          2, 5, -1, 5, 2, 1, 4, -1, 4, 1,
-          0, 3, -1, 3, 0, 31, 32, -1
-        ]
-        creaseAngle 0.785398
-      }
-    }
-    DEF RIGHT_THIGH Shape {
-      appearance USE FUR_APPEARANCE
-      geometry IndexedFaceSet {
-        coord Coordinate {
-          point [
-            -0.00322737 0.00300564 0.0265597
-            -0.00620136 0.000462431 0.0274976
-            -0.00982217 0.000155244 0.0264574
-            0.00502524 0.0126005 0.0267647
-            -0.00374356 0.0146201 0.0277028
-            -0.010115 0.0168196 0.026667
-            0.0234064 0.043059 0.027337
-            0.0176302 0.0277196 0.0270836
-            0.00745004 0.0294808 0.0280044
-            0.000356443 0.0327843 0.0269756
-            0.021608 0.0418431 0.0283036
-            0.0150878 0.0458043 0.027289
-            0.016886 0.0470207 0.0263224
-            0.00856763 0.0497659 0.0262744
-            0.0151078 0.0458299 0.0252893
-            0.021648 0.041894 0.0243042
-            0.0234264 0.0430847 0.0253372
-            0.0252046 0.0442752 0.0263705
-            -0.00673696 0.0360878 0.0259468
-            0.000376642 0.0328101 0.0249758
-            0.00748983 0.029532 0.024005
-            0.0176502 0.0277452 0.0250838
-            0.0278104 0.0259584 0.0261626
-            -0.0164864 0.0190188 0.0256315
-            -0.0134428 -0.000152167 0.0254172
-            -0.010095 0.016845 0.0246674
-            -0.00980196 0.000180665 0.0244576
-            -0.00370377 0.0146713 0.0237034
-            -0.00616136 0.000513453 0.0234983
-            0.00504524 0.0126258 0.0247648
-            -0.00320716 0.00303124 0.0245598
-            -0.000247568 0.00372723 0.0255985
-            0.013794 0.0105809 0.0258262
-          ]
-        }
-        solid FALSE
-        coordIndex [
-          32, 31, 30, 29, -1, 29, 30, 28, 27, -1,
-          27, 28, 26, 25, -1, 25, 26, 24, 23, -1,
-          22, 32, 29, 21, -1, 21, 29, 27, 20, -1,
-          20, 27, 25, 19, -1, 19, 25, 23, 18, -1,
-          17, 22, 21, 16, -1, 16, 21, 20, 15, -1,
-          15, 20, 19, 14, -1, 14, 19, 18, 13, -1,
-          17, 15, 14, 12, -1, 14, 13, 12, -1, 12,
-          13, 11, -1, 12, 11, 10, 17, -1, 13, 18,
-          9, 11, -1, 11, 9, 8, 10, -1, 10, 8,
-          7, 6, -1, 6, 7, 22, 17, -1, 18, 23,
-          5, 9, -1, 9, 5, 4, 8, -1, 8, 4,
-          3, 7, -1, 7, 3, 32, 22, -1, 23, 24,
-          2, 5, -1, 5, 2, 1, 4, -1, 4, 1,
-          0, 3, -1, 3, 0, 31, 32, -1
-        ]
-        creaseAngle 0.785398
-      }
-    }
-    DEF LEFT_FOOT Shape {
-      appearance DEF FOOT_APPEARANCE Appearance {
-        material Material {
-          diffuseColor 0.8 0.752941 0.796078
-          specularColor 0.5 0.5 0.5
-        }
-      }
-      geometry IndexedFaceSet {
-        coord Coordinate {
-          point [
-            -0.000146165 0.00446843 -0.025913
-            0.0180474 0.00419306 -0.0257348
-            0.0362412 0.00391764 -0.0255564
-            -0.00386375 0.00128964 -0.0247406
-            -0.00838976 0.000905458 -0.0260408
-            0.0157426 0.000958238 -0.0245488
-            0.035349 0.000626836 -0.0243572
-            0.0144628 0.00077704 -0.0258142
-            0.0373154 0.000648443 -0.0255874
-            0.039282 0.000669856 -0.0268176
-            0.0373404 0.000680435 -0.028087
-            -0.0129158 0.000521455 -0.027341
-            0.0131832 0.000595842 -0.0270792
-            -0.00836477 0.000937451 -0.0285406
-            0.0144878 0.000808854 -0.0283138
-            0.0353988 0.000690836 -0.0293564
-            0.0362662 0.00394944 -0.028056
-            0.03714 0.00493144 -0.0267846
-            -0.00381396 0.00135345 -0.0297398
-            0.0157924 0.00102224 -0.0295482
-            -0.000121154 0.00450042 -0.0284126
-            0.0180724 0.00422487 -0.0282342
-            0.0203592 0.00515107 -0.0269494
-            0.00357825 0.00537065 -0.0271144
-          ]
-        }
-        solid FALSE
-        coordIndex [
-          23, 22, 21, 20, -1, 20, 21, 19, 18, -1,
-          22, 17, 16, 21, -1, 21, 16, 15, 19, -1,
-          18, 19, 14, 13, -1, 13, 14, 12, 11, -1,
-          19, 15, 10, 14, -1, 14, 10, 9, 12, -1,
-          12, 9, 8, 7, -1, 7, 8, 6, 5, -1,
-          11, 12, 7, 4, -1, 4, 7, 5, 3, -1,
-          5, 6, 2, 1, -1, 1, 2, 17, 22, -1,
-          3, 5, 1, 0, -1, 0, 1, 22, 23, -1
-        ]
-        creaseAngle 0.785398
-      }
-    }
-    DEF RIGHT_FOOT Shape {
-      appearance USE FOOT_APPEARANCE
-      geometry IndexedFaceSet {
-        coord Coordinate {
-          point [
-            -0.000673369 0.00379505 0.0268452
-            0.0175204 0.00351943 0.0270234
-            0.035714 0.00324387 0.0272016
-            -0.00439095 0.000616062 0.0280176
-            -0.00891697 0.000232074 0.0267174
-            0.0152154 0.000284661 0.0282094
-            0.0348218 -4.67412e-05 0.0284011
-            0.0139356 0.000103462 0.026944
-            0.0367882 -2.51345e-05 0.0271708
-            0.038755 -3.54275e-06 0.0259406
-            0.0368134 6.85826e-06 0.0246713
-            -0.0134428 -0.000152167 0.0254172
-            0.012656 -7.77356e-05 0.0256788
-            -0.00889196 0.000264067 0.0242176
-            0.0139606 0.000135455 0.0244446
-            0.0348716 1.72593e-05 0.0234016
-            0.035739 0.00327586 0.0247022
-            0.036613 0.00425806 0.0259736
-            -0.00434096 0.000680063 0.0230184
-            0.0152654 0.000348661 0.02321
-            -0.000648357 0.00382685 0.0243456
-            0.0175452 0.00355123 0.0245239
-            0.019832 0.00447745 0.0258089
-            0.00305124 0.00469703 0.0256438
-          ]
-        }
-        solid FALSE
-        coordIndex [
-          23, 22, 21, 20, -1, 20, 21, 19, 18, -1,
-          22, 17, 16, 21, -1, 21, 16, 15, 19, -1,
-          18, 19, 14, 13, -1, 13, 14, 12, 11, -1,
-          19, 15, 10, 14, -1, 14, 10, 9, 12, -1,
-          12, 9, 8, 7, -1, 7, 8, 6, 5, -1,
-          11, 12, 7, 4, -1, 4, 7, 5, 3, -1,
-          5, 6, 2, 1, -1, 1, 2, 17, 22, -1,
-          3, 5, 1, 0, -1, 0, 1, 22, 23, -1
-        ]
-        creaseAngle 0.785398
-      }
-    }
-    Emitter {
-      name "emitter"
-    }
-    GPS {
-      name "gps"
     }
   ]
-  name "Rat"
+  name "ICEAsim"
+  model "ICEAsim"
+  author "Louis-Emmanuel Martinet"
+  constructor "ICEA"
+  description "A7-WP2 model demonstration"
   boundingObject Group {
     children [
-      DEF FRONT_TRANS Transform {
-        translation 0.04 0.002 0
+      Transform {
+        translation 0 0.025 0
         children [
-          Sphere {
-            radius 0.004
+          Cylinder {
+            height 0.045
+            radius 0.035
           }
         ]
       }
-      DEF REAR_TRANS Transform {
-        translation -0.016 0.002 0
-        children [
-          Sphere {
-            radius 0.004
-          }
-        ]
-      }
-      DEF BOX_TRANS Transform {
-        translation 0.012 0.003 0
+      Transform {
+        translation 0 0.0051 0
         children [
           Box {
-            size 0.055 0.005 0.055
+            size 0.04 0.01 0.05
           }
         ]
       }
     ]
   }
   physics Physics {
-    coulombFriction 0
+    density -1
+    mass 0.15
   }
-  controller "rat_controller"
-  battery [
-    1, 2, 100
-  ]
-  axleLength 0.04
-  maxSpeed 50
+  controller "mypuck"
+  axleLength 0.052
+  wheelRadius 0.0205
 }
 Supervisor {
   children [
