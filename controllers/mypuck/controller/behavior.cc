@@ -78,14 +78,14 @@ void Behavior::synch ()
 	}
 	else if (automate_ == GO_ON && dirs.size () > 1) {
 		// we don't choose now because there might be multiple pathway
-		cout << "intersection !!" << endl;
+//		cout << "intersection !!" << endl;
 		automate_ = INTERSECT;
 		wait_ = 2;
 	}
 	else if (automate_ == INTERSECT && wait_ == 0) {
 		// on attend avt de prendre la decision, le tps de la propagation
 		// (on peut prendre une décision seulement aux intersections)
-		cout << "planning !!" << endl;
+//		cout << "planning !!" << endl;
 		wait_ = ONLY_INTERSECT == 1 ? DECISION_TIME / 2 : 0;
 		automate_ = DECIDE;
 	}
@@ -95,7 +95,7 @@ void Behavior::synch ()
 		wait_ = DECISION_TIME;
 		next_action_ = select_action(dirs);
 //		next_action = 	robot_.angle_get () + decision_codee_angle[decision_codee++];
-		cout << "choosing action :" << next_action_ << endl;
+//		cout << "choosing action :" << next_action_ << endl;
 	}
 	else if (automate_ == DECIDED && wait_ == 0) { //dirs.size () <= 1) {
 		// on attend entre 2 décisions (persistance) 

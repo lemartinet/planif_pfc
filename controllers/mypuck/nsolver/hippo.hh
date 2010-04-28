@@ -35,7 +35,6 @@ private:
 	vector<double> activ_;
 	int nb_used_pc_; 
 	int step_;
-	int nb_stable_;
 };
 
 #endif

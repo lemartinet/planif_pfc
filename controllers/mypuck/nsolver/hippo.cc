@@ -125,10 +125,6 @@ void Hippo::synch (const Coord & position, bool sleeping, int ripples)
 //	bool winner = (nb_spiking_cells () >= 6);
 	if (!LOAD_PC && !winner && peak > 0) {
 		cell_add (position);
-		nb_stable_ = 0;
-	}
-	else {
-		nb_stable_++;
 	}
 //	cout << "nb_spiking_cells: " << nb_spiking_cells () << endl;
 }

@@ -96,6 +96,9 @@ void ObstacleAvoidance::avoid (double angle, int& left_speed, int& right_speed)
 
 void ObstacleAvoidance::free_ways (vector<double>& dirs, double robot_angle)
 {
+	// NOTE : on ne détecte pas les chemins à 45°, à changer dans le code en dessous
+
+
 //	cout << "---" << endl;
 //	cout << ps_value[PS_LEFT_45] << " " << ps_value[PS_RIGHT_45] << endl;
 //	cout << ps_value[PS_LEFT_90] << " " << ps_value[PS_RIGHT_90] << endl;

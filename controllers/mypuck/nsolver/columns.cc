@@ -36,7 +36,7 @@ Columns::Columns (const vector<ComputeUnit*>& hippo_pop)
 		minicols_.push_back(mc);
 	}
 	// ajoute une connexion aléatoire avec hippo et entre colonnes
-//	winner_takes_all (hippo_pop);
+	winner_takes_all (hippo_pop);
 	
 	win_col_lvl_ = 0;
 	prec_col_lvl_ = 0;
@@ -59,27 +59,13 @@ void Columns::winner_col ()
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); ++it) {
 //		if (best_col == 0 || (best_col->state_activation () < (*it)->state_activation ())){
-//		if (best_col == 0 ||
-//				((*it)->lastT_recent () > 0.3 && best_col->lastT_recent () < (*it)->lastT_recent ())){
 		if (best_col == 0 || best_col->lastT_recent () < (*it)->lastT_recent ()){
-//		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ()
-//					&& ((*it)->state_activation () > 0.2 || (*it)->state_activation () < 0.1))){
 			best_col = *it;
 		}
 	}
-	if (best_col->lastT_recent () < 0.3) {
-		best_col = 0;
-		double min_sumw = 0;
-		// on initialise avec celle qui a les plus petits poids = qui n'a pas de selectivité
-		for (it = columns_.begin (); it != columns_.end (); ++it) {
-			double sumw = (*it)->state_get().sum_wE_get();
-			if (best_col == 0 || sumw < min_sumw) {
-				min_sumw = sumw;
-				best_col = *it;
-			}
-		}		
-	}
-//	cout << best_col->no_get() << " " << best_col->state_activation() << endl;
+//	if (best_col != 0) {
+//		cout << best_col->no_get() << " " << best_col->state_activation() << endl;
+//	}
 	win_col_lvl_ = best_col;
 }
 
@@ -258,14 +244,14 @@ void Columns::lateral_learning (Column& from, Column& to, const Action& action, 
 		Logger::log ("network", message.str (), true);
 	}
 	
-//	// on ajoute la competition entre les minicols d'une meme col
-//	// cela permettrait de diminuer les poids parasites
-//	vector<Minicol*>::const_iterator it;
-//	for (it = minicols_.begin (); it != minicols_.end (); it++) {
-//		if ((*it)->recruited_get () && (*it)->from_get () == from && (*it) != minicol) {
-//			(*it)->lateral_learning (false, 0.05);
-//		}
-//	}
+	// on ajoute la competition entre les minicols d'une meme col
+	// cela permettrait de diminuer les poids parasites
+	vector<Minicol*>::const_iterator it;
+	for (it = minicols_.begin (); it != minicols_.end (); it++) {
+		if ((*it)->recruited_get () && (*it)->from_get () == from && (*it) != minicol) {
+			(*it)->lateral_learning (false, 0.1);
+		}
+	}
 }
 
 void Columns::show_activities () const
@@ -343,30 +329,27 @@ Neuron& Columns::add_neuron_max (nType type)
 
 void Columns::winner_takes_all (const vector<ComputeUnit*>& pop_state)
 {
-	if (Behavior::behavior_get().nb_trial_get() < 1)
-		return; 
+//	cout << "learning" << endl;
+//	if (Behavior::behavior_get().nb_trial_get() < 1)
+//		return;
 	static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
-//	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
+	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
 	int nbunits = pop_state.size ();
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
-//		if (win_col_lvl_ == *it || newcol) {
 		Neuron& state = (*it)->state_get ();
 		for (int i = 0; i < nbunits; i++) {
 			ComputeUnit* unit = pop_state.at (i);
 			double* w = state.syn_get(*unit);
-//			if (w == 0) {
-//				double init_val = INIT_PC_COL * drand ();
-			if (w == 0 && *it == win_col_lvl_) {
-				double init_val = unit->spiking () ? unit->output () : 0;
-//				double init_val = 1 / (1 + exp(-10*(unit->output() - 0.3)));
+			if (w == 0) {
+				double init_val = INIT_PC_COL * drand ();
 				state.add_synapse (*unit, init_val);
 			}
-			else if (w != 0 && *it == win_col_lvl_) {
-//				if (*it == win_col_lvl_) {
-//					cout << "delta_w " << (*it)->weight_change (unit, s->w_get (), win_col_lvl_);
-//				}
+			else {
 				double new_w = (*it)->weight_change (unit, *w, win_col_lvl_);
+//				if (*it == win_col_lvl_) {
+//					cout << new_w;
+//				}
 				static const string LEARN_RULE = Params::get ("LEARN_RULE");
 				if (LEARN_RULE == "simple") {
 					*w = *w + RATE_PC_COL * new_w;
@@ -382,9 +365,9 @@ void Columns::winner_takes_all (const vector<ComputeUnit*>& pop_state)
 				}
 				else if (LEARN_RULE == "mult") {
 					// !!! j'ai *2 pour compenser l'appr plus lent du au *w
-					*w = *w + *w * 2 * RATE_PC_COL * new_w;
+					*w = *w + *w * RATE_PC_COL * new_w;
 				}
 			}
 		}
-	}	
+	}
 }

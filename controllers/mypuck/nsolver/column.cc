@@ -64,38 +64,31 @@ double Column::lastT_recent() const
 
 double Column::weight_change (const ComputeUnit* cell, double old_w, Column* winner)
 {
-	if (this == winner) {
-		// ancienne methode simple
-	//	return (cell->lastT_recent_max () - old_w) * lastT_recent ()
-		// code pour la regle BCM (marche pas)
-	//	double t = state_.thetaM_get (), y = state_.output ();
-	//	state_.thetaM_set (t + 0.1 * (exp(y) - t));
-	//	return 1 / t * cell->output () * (y - t) * y);
+//	// ancienne methode simple
+//	return (cell->lastT_recent_max () - old_w) * state_.lastT_recent ()
+//	// code pour la regle BCM (marche pas)
+//	double t = state_.thetaM_get (), y = state_.output ();
+//	state_.thetaM_set (t + 0.1 * (exp(y) - t));
+//	return 1 / t * cell->output () * (y - t) * y);
 		
-		vector<double> corr;
-		const vector<double>& cell_last = cell->lastT_recent();
-		const vector<double>& state_last = state_.lastT_recent();
-		int last_size = min(cell_last.size(), state_last.size());
-		for (int i = 0; i < last_size; i++) {
+	vector<double> corr;
+	const vector<double>& cell_last = cell->lastT_recent();
+	const vector<double>& state_last = state_.lastT_recent();
+	int last_size = min(cell_last.size(), state_last.size());
+	static const double SPARSE_P = Params::get_double ("SPARSE_P");
+	for (int i = 0; i < last_size; i++) {
+		if (this == winner) {
 			corr.push_back ((cell_last[i] - old_w) * state_last[i]);
 			if (i < last_size - 1) {
 				corr.push_back ((cell_last[i] - old_w) * state_last[i+1]);
-			}	
+			}
+		} else {
+			const vector<double>& win_last = winner->state_get().lastT_recent();
+			corr.push_back(cell_last[i] * (win_last[i] * state_last[i] - SPARSE_P * SPARSE_P));
+			if (i < last_size - 1) {
+				corr.push_back(cell_last[i] * (win_last[i+1] * state_last[i+1] - SPARSE_P * SPARSE_P));
+			}
 		}
-		return *max_element (corr.begin(), corr.end());
 	}
-//	else {
-//		vector<double> corr;
-//		const vector<double>& cell_last = cell->lastT_recent();
-//		static const double SPARSE_P = Params::get_double ("SPARSE_P");
-//		for (int i = 0; i < NB_STEP; i++) {
-//			corr.push_back (cell_last[i] * (winner->lastTrecent_[i] * lastTrecent_[i] - SPARSE_P * SPARSE_P));
-//			if (i < NB_STEP - 1) {
-//				corr.push_back (cell_last[i] * (winner->lastTrecent_[i+1] * lastTrecent_[i+1] - SPARSE_P * SPARSE_P));
-//			}	
-////			corr.push_back (winner->lastTrecent_[i] * lastTrecent_[i] - SPARSE_P * SPARSE_P);
-//		}
-//		return -2 * *max_element (corr.begin(), corr.end());
-//	}
-	return 0;
+	return (this == winner ? 1 : -2) * *max_element (corr.begin(), corr.end());
 } 
