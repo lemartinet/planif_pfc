@@ -2,8 +2,10 @@ QTDIR_INC = /usr/include/qt4
 MY_INC	  = -Icontroller -Igui -Insolver -Itools -I.
 QT_INC 	  = -I$(QTDIR_INC)/QtCore -I$(QTDIR_INC)/QtGui -I$(QTDIR_INC)
 
-CFLAGS    = -W $(QT_INC) $(MY_INC) -g -O3 -pg 
-LIBRARIES = -lQtGui -lQtCore -gdb -pg
+#CFLAGS    = -W $(QT_INC) $(MY_INC) -g -O3 -pg 
+#LIBRARIES = -lQtGui -lQtCore -gdb -pg
+CFLAGS    = -W $(QT_INC) $(MY_INC) -O3 
+LIBRARIES = -lQtGui -lQtCore
 
 CC_SOURCES = \
 	controller/action.cc\

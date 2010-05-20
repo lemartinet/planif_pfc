@@ -25,7 +25,7 @@ Neurosolver::~Neurosolver ()
 void Neurosolver::goal_learning ()
 {
 	Column* col = columns_.best_state_col ();
-	if (col && col->lastT_recent () >= 0.3) {
+	if (col && col->lastT_recent () >= 0.3 && columns_.nb_spiking_cols () < 3) {
 		set_goal_weight (col, 1);
 	}
 	// ajouter la détection de l'absence d'un goal attendu
@@ -98,20 +98,21 @@ void Neurosolver::synch (bool learning, bool decision_point, bool goal_found, bo
 void Neurosolver::sleep (int sleep_step)
 {
 //	cout << "sleep " << sleep_step << endl;
-	// des ripples tous les 8 cycles theta (ici au 8eme cycle, entre bin 56 et 64 )
-	// car 8 bins dans 1 cycle (8 * 15ms = 120ms)
+	// des ripples toutes les secondes, i.e. tous les 8 cycles theta (8 * 120ms ~ 1s)
+	// comme il y a 8 bins dans 1 cycle theta (8 * 15ms = 120ms)
+	// c'est donc pendant 8 bins sur 64, ici du bin 56 au 63
 	if (sleep_step % 64 == 56) {
 		ripples_ = 8;
-	}
-	else if (ripples_ >= 0) {
+	} else if (ripples_ >= 0) {
 		ripples_--;
 	}
-	columns_.synch (true, hippo_.pop_get ());
-	hippo_.synch (Behavior::behavior_get().position_get (), true, ripples_);
-	Logger::log ();
+	// apprentissage seulement à la fin d'un cycle de ripple
+	columns_.synch(ripples_ == 0, hippo_.pop_get());
+	hippo_.synch(Behavior::behavior_get().position_get(), true, ripples_);
+	Logger::log();
 
 	if (sleep_step == 1) {
-		Logger::logw ("weight");
+		Logger::logw("weight");
 	}
 }
 

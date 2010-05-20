@@ -25,6 +25,7 @@ public:
 	double angle_get () const { return robot_.angle_get(); }
 	const Coord& position_get () const { return robot_.position_get(); }
 	bool goal_reached () const { return robot_.goal_reached(); }
+	bool is_sleeping() const { return automate_ == SLEEP; }
 	
 	static Behavior& behavior_get() { return *behavior_; }
   	

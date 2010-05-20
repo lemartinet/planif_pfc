@@ -163,7 +163,7 @@ bool Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Co
 //	columns_.show_activities();
   	if (learn) {
   		winner_takes_all(hippo_pop);
-  		return topology_learning ();	
+		return !Behavior::behavior_get().is_sleeping() ? topology_learning() : false;
   	}
   	else {
   		return false;	
@@ -183,7 +183,8 @@ bool Columns::topology_learning ()
 	if (current && prec && prec != current
 //		&& prec->lastT_recent () * current->lastT_recent () > 0.1
 //		&& prec->lastT_recent () * current->lastT_recent () < 0.3
-		&& nb_spiking_cols () < 10) {
+		&& prec->lastT_recent() > 0.3
+		&& nb_spiking_cols () < 3) { // peut-être utiliser un critère lié à la règle inhib
 //		cout << "update minicol" << endl;
     	col_changed = true;
       	Action action (Behavior::behavior_get().angle_get());
@@ -236,9 +237,11 @@ void Columns::lateral_learning (Column& from, Column& to, const Action& action, 
   	else {
   		// on recrute une nouvelle minicolonne
       	minicol = add_minicol (action, from, to);
-      	minicol->lateral_learning(true);
-      	message << "2 " << from.no_get ()+1 << " " << to.no_get ()+1
-   				<< " " << action.angle_get ();
+      	if (minicol != 0) {
+			minicol->lateral_learning(true);
+			message << "2 " << from.no_get ()+1 << " " << to.no_get ()+1
+					<< " " << action.angle_get ();
+      	}
     }
 	if (message.str () != "") {
 		Logger::log ("network", message.str (), true);
@@ -334,19 +337,19 @@ void Columns::winner_takes_all (const vector<ComputeUnit*>& pop_state)
 //		return;
 	static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
 	static const double INIT_PC_COL = Params::get_double ("INIT_PC_COL");
-	int nbunits = pop_state.size ();
+	const int nbunits = pop_state.size ();
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
 		Neuron& state = (*it)->state_get ();
 		for (int i = 0; i < nbunits; i++) {
-			ComputeUnit* unit = pop_state.at (i);
+			const ComputeUnit* unit = pop_state.at (i);
 			double* w = state.syn_get(*unit);
 			if (w == 0) {
-				double init_val = INIT_PC_COL * drand ();
+				const double init_val = INIT_PC_COL * drand ();
 				state.add_synapse (*unit, init_val);
 			}
 			else {
-				double new_w = (*it)->weight_change (unit, *w, win_col_lvl_);
+				const double new_w = (*it)->weight_change (unit, *w, win_col_lvl_);
 //				if (*it == win_col_lvl_) {
 //					cout << new_w;
 //				}
@@ -364,8 +367,9 @@ void Columns::winner_takes_all (const vector<ComputeUnit*>& pop_state)
 					}
 				}
 				else if (LEARN_RULE == "mult") {
-					// !!! j'ai *2 pour compenser l'appr plus lent du au *w
-					*w = *w + *w * RATE_PC_COL * new_w;
+					const double sleep_factor =
+							Behavior::behavior_get().is_sleeping() ? H(*w - 0.7) : 1;
+					*w *= 1 + RATE_PC_COL * new_w * sleep_factor;
 				}
 			}
 		}

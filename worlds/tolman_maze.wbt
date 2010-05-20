@@ -9,7 +9,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 1 -0.000356803 -0.000335357 4.76748
-  position 0.244453 2.48197 -0.673568
+  position 0.244469 2.88136 -0.651543
 }
 Background {
   skyColor [
@@ -2288,5 +2288,5 @@ Supervisor {
     }
   ]
   locked TRUE
-  controller "mypuck_supervisor"
+  controller "supervisor_tolman_maze_switch"
 }

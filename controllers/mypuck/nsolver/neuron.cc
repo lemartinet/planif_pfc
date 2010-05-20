@@ -67,7 +67,6 @@ void Neuron::compute ()
 	static const double DELTA_T = Params::get_double("DELTA_T");
 	static const double NEURON_NOISE = Params::get_double("NEURON_NOISE");
 	static const double NEURON_THRESH = Params::get_double("NEURON_THRESH");
-	double br = bruit (2 * NEURON_NOISE);
 
 	double syndrive = 0;
 	if (max_) {
@@ -79,7 +78,7 @@ void Neuron::compute ()
 	if (synapse_mult_ != 0)
 		syndrive *= synapse_mult_->drive();
 	pot_ += DELTA_T * (-pot_ + NEURON_THRESH + syndrive) / NEURON_TAU;
-	output_next_ = pot_ * (1 + br);
+	output_next_ = pot_ * (1 + bruit (2 * NEURON_NOISE));
 //	output_next_ = sigmoid(output_next_);
 	output_next_ = output_next_ < 0.0 ? 0.0 : output_next_;
 	output_next_ = output_next_ > 1.0 ? 1.0 : output_next_;
@@ -100,10 +99,10 @@ double Neuron::syndrive_sum (const map<const int, Synapse *>& syn) const
 
 double Neuron::syndrive_max (const map<const int, Synapse *>& syn) const
 {
-	map<const int, Synapse *>::const_iterator it;
 	double max = 0;
-	for (it = syn.begin(); it != syn.end(); ++it) {
-		double dr = it->second->drive();
+	map<const int, Synapse *>::const_iterator it = syn.begin();
+	for (; it != syn.end(); ++it) {
+		const double dr = it->second->drive();
 		if (dr > max) {
 			max = dr;
 		}

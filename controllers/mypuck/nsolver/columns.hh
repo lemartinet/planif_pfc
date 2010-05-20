@@ -32,11 +32,11 @@ public:
 	Neuron& add_neuron_max (nType type);
 	bool synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const Coord* pos = 0);
 	void correct_transition ();
+	double nb_spiking_cols () const;
 
 private:	
 	Minicol* add_minicol (const Action& action, Column& src, Column& dest);
 	void show_activities () const;
-	double nb_spiking_cols () const;
 	double nb_spiking_cells (const vector<ComputeUnit*>& hippo_pop) const;
 	double cells_activity () const;
 	void winner_takes_all (const vector<ComputeUnit*>& pop_state);

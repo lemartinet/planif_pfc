@@ -45,8 +45,7 @@ void Behavior::synch ()
 						ONLY_INTERSECT == 1 ? automate_ == DECIDE : true,
 						automate_ == GOAL && wait_ == 5 * DECISION_TIME,
 						automate_ == BLOCK && wait_ == 96,
-						automate_ == SLEEP, 
-						wait_);
+						automate_ == SLEEP, wait_);
 	
 	// màj de l'automate
 	static const int SLEEP_STEP = Params::get_int ("SLEEP_STEP");
