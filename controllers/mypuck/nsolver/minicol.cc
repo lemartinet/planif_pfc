@@ -67,15 +67,16 @@ void Minicol::synch()
 
 void Minicol::lateral_learning (bool increase, double factor)
 {
-	static const double LATERAL_LEARNING_STEP = Params::get_double("LATERAL_LEARNING_STEP");
+	static const double LATERAL_LTP = Params::get_double("LATERAL_LTP");
+	static const double LATERAL_LTD = Params::get_double("LATERAL_LTD");
 	static const double MAX_LATERAL_WEIGHT = Params::get_double("MAX_LATERAL_WEIGHT");
 		
 	double* forw = dest_->inf_get ().syn_get (inf_);
 	double* back = sup_.syn_get (dest_->sup_get ());
 	if (forw == 0 || back == 0) {
 		// on recrute une synapse
-		double init_val = MAX_LATERAL_WEIGHT;
-//		double init_val = 0.1 * drand ();
+//		double init_val = MAX_LATERAL_WEIGHT;
+		double init_val = LATERAL_LTP ;
 //		forw = dest_->inf_get ().add_synapse (inf_, init_val);
 		forw = dest_->inf_get ().add_synapse (inf_, 1);
 		back = sup_.add_synapse (dest_->sup_get (), init_val);
@@ -84,21 +85,19 @@ void Minicol::lateral_learning (bool increase, double factor)
 	// on modifie les synapses forw & back
 	double valb;
 	if (increase) {
-//		valf = (MAX_LATERAL_WEIGHT - *forw) * LATERAL_LEARNING_STEP * factor;
-//		valb = (MAX_LATERAL_WEIGHT - *back) * LATERAL_LEARNING_STEP * factor;
-//		valf = (MAX_LATERAL_WEIGHT - *forw) * factor;
-		valb = (MAX_LATERAL_WEIGHT - *back) * factor;
-//		valf = 2* (MAX_LATERAL_WEIGHT - forw->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
-//		valb = 2* (MAX_LATERAL_WEIGHT - back->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
+//		valf = (MAX_LATERAL_WEIGHT - *forw) * LATERAL_LTP;
+		valb = (MAX_LATERAL_WEIGHT - *back) * LATERAL_LTP;
+//		valf = 2* (MAX_LATERAL_WEIGHT - *forw) * src_->lastT_recent () * dest_->lastT_recent ();
+//		valb = 2* (MAX_LATERAL_WEIGHT - *back) * src_->lastT_recent () * dest_->lastT_recent ();
 	}
 	else {
-//		valf = *forw * -LATERAL_LEARNING_STEP * factor;
-		valb = *back * -LATERAL_LEARNING_STEP * factor;
+//		valf = *forw * -LATERAL_LTD;
+		valb = *back * -LATERAL_LTD * factor;
 	}
-//	cout << "old " << forw->w_get () << " " << back->w_get () << " // ";
+//	cout << "old " << *forw << " " << *back << " // ";
 //	*forw = *forw + valf;
 	*back = *back + valb;
-//	cout << "new " << forw->w_get () << " " << back->w_get () << endl;
+//	cout << "new " << *forw << " " << *back << endl;
 }
 
 double Minicol::lastT_recent () const

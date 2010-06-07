@@ -108,6 +108,7 @@ void Neurosolver::sleep (int sleep_step)
 	}
 	// apprentissage seulement à la fin d'un cycle de ripple
 	columns_.synch(ripples_ == 0, hippo_.pop_get());
+	//columns_.synch(false, hippo_.pop_get());
 	hippo_.synch(Behavior::behavior_get().position_get(), true, ripples_);
 	Logger::log();
 

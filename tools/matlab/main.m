@@ -2,6 +2,15 @@ function main(data_path, exp, reload, maze)
 % function main(data_path, exp, reload, maze)
 % maze = 1, 2 or 3 (resp. small, big ang huge tolman maze)
 
+%pour afficher : 
+%∘ des infos sur un neurone en fonction de son centre (e.g., la valeur de son kurtosis)
+%	‣ plot3(centers(:,1), centers(:,2), truc, 'o')
+%∘ des infos sur une position (e.g., le kurtosis de pop en ce point)
+%	‣ plot3(x, y, truc, 'o') avec [x,y] = find (places > 0)
+%∘ un fr en fonction d'un angle
+%	‣ ro = 1 : size(fr,1); ro = ro .* 0.2; polar(ro, fr);
+%∘ scatterhist pour afficher un hist sur les bords d'un graph
+
 % !!! Should be able to deal with a list of days and trials !!!
 % !!! Should also be able to compute fr for other than vars x,y !!!
 

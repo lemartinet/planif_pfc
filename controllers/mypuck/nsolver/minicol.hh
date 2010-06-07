@@ -32,7 +32,7 @@ public:
 	
 	void synch ();
 	void adapt_action (const Action& action);
-	void lateral_learning (bool increase, double factor = 1);
+	void lateral_learning (bool increase, double factor=1.0);
 
 private:
 	const int no_;

@@ -252,7 +252,7 @@ void Columns::lateral_learning (Column& from, Column& to, const Action& action, 
 	vector<Minicol*>::const_iterator it;
 	for (it = minicols_.begin (); it != minicols_.end (); it++) {
 		if ((*it)->recruited_get () && (*it)->from_get () == from && (*it) != minicol) {
-			(*it)->lateral_learning (false, 0.1);
+			(*it)->lateral_learning (false, 0.05);
 		}
 	}
 }

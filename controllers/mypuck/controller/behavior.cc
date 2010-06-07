@@ -219,7 +219,8 @@ bool Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s
 {
 	// Mecanisme epsilon-greedy	
 	// on explore exponentiellement moins au cours des essais
-	double epsilon = 0.9 * exp (-0.1 * (nb_trial_ - 3)) + 0.1;
+//	double epsilon = 0.9 * exp (-0.1 * (nb_trial_ - 3)) + 0.1;
+	double epsilon = 0.3 * exp (-0.2 * nb_trial_) + 0.2;
 	// aide au cas d'une plannif mauvaise: explo augmente après 5000 steps
 //	double epsilon_help = (exp (0.001 * (robot_.cpt_trial_get () - 5000))-1)/6.4;
 //	epsilon_help = epsilon_help > 0 ? epsilon_help : 0;
