@@ -9,7 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-//#include <numeric>
+#include <numeric>
 #include <algorithm>
 #include <cmath>
 
@@ -98,12 +98,4 @@ void Minicol::lateral_learning (bool increase, double factor)
 //	*forw = *forw + valf;
 	*back = *back + valb;
 //	cout << "new " << *forw << " " << *back << endl;
-}
-
-double Minicol::lastT_recent () const
-{
-//	double total = accumulate (inf_.lastT_recent().begin(), inf_.lastT_recent().end(), 0.0);
-//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
-//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
-	return * max_element (inf_.lastT_recent().begin(), inf_.lastT_recent().end());
 }

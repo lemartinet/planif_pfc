@@ -1,7 +1,7 @@
 #include "computeunit.hh"
-#include "params.hh"
 #include "logger.hh"
 #include <sstream>
+#include <numeric>
 
 int ComputeUnit::nb_computeunits = 0;
 
@@ -13,13 +13,6 @@ ComputeUnit::ComputeUnit (nType type, double output) : output_(output), no_(nb_c
 	Logger::log("type", s.str());
 	Logger::add ("fr", this);
 	Logger::add ("weight", this);
-}
-
-
-bool ComputeUnit::spiking () const
-{
-	static const double NEURON_SPIKING_THRESH = Params::get_double("NEURON_SPIKING_THRESH");
-	return output () > NEURON_SPIKING_THRESH;
 }
 
 bool operator== (const ComputeUnit& n1, const ComputeUnit& n2)
@@ -38,4 +31,10 @@ void ComputeUnit::update_recent()
 		lastTrecent_[lastTidx_] = output_;
 		lastTidx_ = ++lastTidx_ % NB_STEP;
 	}
+}
+
+double ComputeUnit::mean_recent() const
+{
+	static const unsigned int NB_STEP = Params::get_int("NEURON_HISTORY");
+	return accumulate (lastTrecent_.begin(), lastTrecent_.end(), 0.0) / NB_STEP;
 }

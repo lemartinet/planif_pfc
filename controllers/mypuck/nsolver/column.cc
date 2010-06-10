@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 #include "behavior.hh"
 
 bool operator== (const Column& c1, const Column& c2)
@@ -57,12 +58,6 @@ void Column::center_rf (const Coord& pos, bool winner)
 	}
 }
 
-double Column::lastT_recent() const
-{
-	const vector<double>& last = state_.lastT_recent();
-	return *max_element (last.begin(), last.end());
-}
-
 double Column::weight_change (const ComputeUnit* cell, double old_w, Column* winner)
 {
 //	// ancienne methode simple
@@ -72,53 +67,17 @@ double Column::weight_change (const ComputeUnit* cell, double old_w, Column* win
 //	state_.thetaM_set (t + 0.1 * (exp(y) - t));
 //	return 1 / t * cell->output () * (y - t) * y);
 		
-	const vector<double>& cell_last = cell->lastT_recent();
-	const vector<double>& state_last = state_.lastT_recent();
-	const vector<double>& win_last = winner->state_get().lastT_recent();
-	const int last_size = min(cell_last.size(), state_last.size());
 	static const double SPARSE_P = Params::get_double ("SPARSE_P");
-	double max_corr = 0;
-	for (int i = 0; i < last_size; i++) {
-		// pas de compétition pendant le sommeil
-		if (Behavior::behavior_get().is_sleeping()) {
-			const double val1 = cell_last[i] * state_last[i],
-				val2 = (i < last_size - 1) ? cell_last[i] * state_last[i+1] : 0;
-			max_corr = max(max(val1, val2), max_corr);
-		} else if (this == winner) {
-			const double val1 = (cell_last[i] - old_w) * state_last[i],
-				val2 = (i < last_size - 1) ? (cell_last[i] - old_w) * state_last[i+1] : 0;
-			max_corr = max(max(val1, val2), max_corr);
-		} else {
-			const double val1 = cell_last[i] * (win_last[i] * state_last[i] - SPARSE_P * SPARSE_P),
-				val2 = (i < last_size - 1) ? cell_last[i] * (win_last[i+1] * state_last[i+1] - SPARSE_P * SPARSE_P) : 0;
-			max_corr = max(max(val1, val2), max_corr);
-		}
+	double sum_corr = 0;
+	// pas de compétition pendant le sommeil
+	if (Behavior::behavior_get().is_sleeping()) {
+		sum_corr = cell->mean_recent() * state_.mean_recent();
+	} else if (this == winner) {
+		const double m = state_.mean_recent();
+		sum_corr = cell->mean_recent() * m - old_w * m * m;
+	} else {
+		sum_corr = winner->state_get().mean_recent() * state_.mean_recent()
+				- SPARSE_P * SPARSE_P;
 	}
-	return max_corr * ((this == winner || Behavior::behavior_get().is_sleeping()) ? 1 : -0.5);
-
-//	for (int i = 0; i < last_size; i++) {
-//		// pas de compétition pendant le sommeil
-//		if (Behavior::behavior_get().is_sleeping()) {
-//			corr.push_back (cell_last[i] * state_last[i]);
-//			if (i < last_size - 1) {
-//				corr.push_back (cell_last[i] * state_last[i+1]);
-//			}
-//		} else if (this == winner) {
-//			corr.push_back ((cell_last[i] - old_w) * state_last[i]);
-//			if (i < last_size - 1) {
-//				corr.push_back ((cell_last[i] - old_w) * state_last[i+1]);
-//			}
-//		} else {
-//			const vector<double>& win_last = winner->state_get().lastT_recent();
-//			corr.push_back(cell_last[i] * (win_last[i] * state_last[i] - SPARSE_P * SPARSE_P));
-//			if (i < last_size - 1) {
-//				corr.push_back(cell_last[i] * (win_last[i+1] * state_last[i+1] - SPARSE_P * SPARSE_P));
-//			}
-//		}
-//	}
-//	vector<double>::iterator it = max_element (corr.begin(), corr.end());
-//	if (it != corr.end())
-//		return ((this == winner || Behavior::behavior_get().is_sleeping()) ? 1 : -1) * *it;
-//	else
-//		return 0;
+	return sum_corr * ((this == winner || Behavior::behavior_get().is_sleeping()) ? 1 : -0.5);
 } 

@@ -2,6 +2,7 @@
 # define COMPUTEUNIT_H
 
 #include <vector>
+#include "params.hh"
 
 using namespace std;
 
@@ -24,13 +25,14 @@ public:
 	   
 	virtual ~ComputeUnit () { --nb_computeunits; };
 	
-	double output () const { return output_; }
+	double output () const { return spiking(); }
 	void output_set (double output) { output_ = output; }
-	bool spiking () const;
+	inline bool spiking () const;
 	int no_get () const { return no_; }
 	static int nb_computeunits_get () { return nb_computeunits; }
 	const vector<double>& lastT_recent () const { return lastTrecent_; }
 	void update_recent();
+	double mean_recent() const;
 	 
 protected:
 	double output_;
@@ -41,6 +43,12 @@ private:
 	vector<double> lastTrecent_;
 	int lastTidx_;
 };
+
+bool ComputeUnit::spiking () const
+{
+	static const double NEURON_SPIKING_THRESH = Params::get_double("NEURON_SPIKING_THRESH");
+	return output_ > NEURON_SPIKING_THRESH;
+}
 
 bool operator== (const ComputeUnit& n1, const ComputeUnit& n2);
 

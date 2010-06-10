@@ -22,7 +22,7 @@ public:
 	Action& action_get () const { return *action_; }
 	const Column& from_get () const { return *src_; }
 	const Column& to_get () const { return *dest_; }
-	double lastT_recent () const;
+	double lastT_recent () const { return inf_.mean_recent(); }
 	bool recruited_get () const { return recruited_; }
 	
 	double activation () const { return inf_.output (); }

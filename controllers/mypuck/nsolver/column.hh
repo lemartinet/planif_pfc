@@ -25,7 +25,7 @@ public:
 	int no_get () const { return no_; }
 	const Coord* pos_get () const { return pos_; }
 	double maxr_get () { return maxr; }
-	double lastT_recent () const;
+	double lastT_recent () const { return state_.mean_recent(); }
 
 	void synch ();
 	void center_rf (const Coord& pos, bool winner);
