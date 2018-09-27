@@ -81,17 +81,12 @@ double Column::weight_change (const ComputeUnit* cell, double old_w, Column* win
 	for (int i = 0; i < last_size; i++) {
 		// pas de compétition pendant le sommeil
 		if (Behavior::behavior_get().is_sleeping()) {
-			const double val1 = cell_last[i] * state_last[i],
-				val2 = (i < last_size - 1) ? cell_last[i] * state_last[i+1] : 0;
-			max_corr = max(max(val1, val2), max_corr);
+			max_corr = max(cell_last[i] * state_last[i], max_corr);
 		} else if (this == winner) {
-			const double val1 = (cell_last[i] - old_w) * state_last[i],
-				val2 = (i < last_size - 1) ? (cell_last[i] - old_w) * state_last[i+1] : 0;
-			max_corr = max(max(val1, val2), max_corr);
+			max_corr = max((cell_last[i] - old_w * state_last[i]) * state_last[i], max_corr);
 		} else {
-			const double val1 = cell_last[i] * (win_last[i] * state_last[i] - SPARSE_P * SPARSE_P),
-				val2 = (i < last_size - 1) ? cell_last[i] * (win_last[i+1] * state_last[i+1] - SPARSE_P * SPARSE_P) : 0;
-			max_corr = max(max(val1, val2), max_corr);
+			max_corr = max(cell_last[i] * (win_last[i] * state_last[i] - SPARSE_P * SPARSE_P),
+					max_corr);
 		}
 	}
 	return max_corr * ((this == winner || Behavior::behavior_get().is_sleeping()) ? 1 : -0.5);
