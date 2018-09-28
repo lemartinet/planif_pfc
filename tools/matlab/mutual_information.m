@@ -16,22 +16,24 @@ max_fr = max(fr_all); min_fr = min(fr_all);
 
 % bins for the firing rate
 %std(fr_all), nanmean(s_all), sum(s_all.*s), max(s_all), 0.1
-bin = 10;
-nb_bin = ceil((1 - 0) * bin);
+% bin = 10;
+% nb_bin = ceil((1 - 0) * bin)
+bin = 10 * 1 / (max_fr + 10*eps);
+nb_bin = 10; % ceil(length(fr_all)^(1/3));
 joint_proba = zeros(nb_stim, nb_bin); % P(r,si)
 cond_proba = zeros(nb_stim, nb_bin); % P(r|si)
 MI.ce_all = zeros(1, nb_stim); % H(R|si)
 Rs = zeros(1, nb_stim);
 for i = 1 : nb_stim
 	% normalisation 
-    %c2m = (fr_vect{i} - min_fr) / (max_fr - min_fr); 
+    % c2m = (fr_vect{i} - min_fr) / (max_fr - min_fr); 
     c2m = fr_vect{i}; 
     % trick to avoid fr=1, which creates an unwanted bin
-    c2m(c2m == 1) = 1 - eps;
+    % c2m(c2m == 1) = 1 - eps;
     bins = zeros(1, nb_bin);
     cpt = count_element(fix(c2m .* bin));
     bins(1 + cpt.keys) = cpt.value;
-    cond_proba(i, :) = bins ./ sum(bins);
+    cond_proba(i, :) = bins(1:size(cond_proba, 2)) ./ sum(bins);
 	joint_proba(i, :) = cond_proba(i, :) .* s(i);
 	MI.ce_all(i) = -nansum(cond_proba(i, :) .* log2(cond_proba(i, :)));
     Rs(i) = length(find(cond_proba(i, :) > 0));

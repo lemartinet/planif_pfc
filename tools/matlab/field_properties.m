@@ -48,8 +48,7 @@ for i = 1 : length(rfx)
     end
 end
 
-% This code computes the center of mass
-% it is independant of the nb of dimension of the matrix (not anymore !!!)
+% This code computes the center of mass of the largest field
 if fsize > 0
     [smax, idmax] = max(fsize);
     rf = rf{idmax};

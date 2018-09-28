@@ -313,3 +313,27 @@ plot(sum(a(10:end,:),2))
 [a,b]=hist(m2, 100);
 plot(a(10:end,:))
 plot(sum(a(10:end,:),2))
+
+
+%% figure de l'article
+exp_data.day(15)
+v=exp_data.from_type(4);
+FR=[];figure, hold on, 
+for i=v([2,6:19])
+fr=exp_data.load_neuron(i);
+fr2 = fr(21700:22887);
+FR(i,:) = fr2;
+end
+vlist=FR(v([2,6:19]),:)
+figure, hold on 
+for i=1:length(vlist)-1
+hist(vlist(i,:))
+end
+xlim([0.4 0.95])
+ylim([0 350])
+
+figure, hold on 
+for i=1:size(vlist,1)
+[n,x]=hist(vlist(i,:),0:0.01:1);
+plot(x,n)
+end
