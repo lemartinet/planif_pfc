@@ -45,8 +45,6 @@ public:
     enum { Type = UserType + 2 };
     int type() const { return Type; }
 
-    void mydel ();
-    
   inline
   void color_set (QColor col) { col_ = col; update (); }
 

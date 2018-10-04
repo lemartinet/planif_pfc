@@ -1,32 +1,12 @@
 #include "gui.hh"
+#include <QtGui>
+#include "controlrobot.hh"
+#include "controlcells.hh"
+#include "boardwidget.hh"
 #include "behavior.hh"
 
-void Gui::clean ()
+Gui::Gui (int& argc, char**& argv, Behavior& behavior)
 {
-  if (boardwidget_)
-    delete boardwidget_;
-  if (colscontrol_)
-    delete colscontrol_;
-  if (colswidget_)
-    delete colswidget_;
-  if (robotcontrol_)
-    delete robotcontrol_;
-  if (cellscontrol_)
-    delete cellscontrol_;
-  if (eventloop_)
-    delete eventloop_;
-  if (app_)
-    delete app_;
-}
-
-Gui::~Gui ()
-{
-  clean ();
-}
-
-void Gui::init (int& argc, char**& argv, Behavior& behavior, RobotDevice& robot) 
-{
-  	clean ();
   	app_ = new QApplication (argc, argv);
   	eventloop_ = new QEventLoop ();
   	qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
@@ -34,23 +14,35 @@ void Gui::init (int& argc, char**& argv, Behavior& behavior, RobotDevice& robot)
   	colswidget_ = new GraphWidget ();
   	boardwidget_->show ();
   	//colswidget_->show ();
-  	colscontrol_ = new ControlCols (behavior.neurosolver_get ().cols_get (), *colswidget_);
-  	robotcontrol_ = new ControlRobot (robot, *colswidget_);
+  	colscontrol_ = new ControlCols (behavior.neurosolver_get (), *colswidget_);
+  	robotcontrol_ = new ControlRobot (behavior.robot_get (), *colswidget_);
   	cellscontrol_ = new ControlCells (behavior.neurosolver_get ().hippo_get (), *colswidget_);
 }
 
-void Gui::draw ()
+Gui::~Gui ()
 {
-  if (eventloop_)
-    eventloop_->processEvents(QEventLoop::AllEvents);
+	delete cellscontrol_;
+	delete robotcontrol_;
+	delete colscontrol_;
+	delete colswidget_;
+	delete boardwidget_;
+	delete eventloop_;
+	delete app_;
 }
 
-void Gui::update ()
+void Gui::synch ()
 {
-  if (colscontrol_)
-    colscontrol_->update ();
-  if (robotcontrol_)
-    robotcontrol_->update ();
-  if (cellscontrol_)
-    cellscontrol_->update ();
+	if (colscontrol_) {
+		colscontrol_->update ();
+	}
+	if (robotcontrol_) {
+		robotcontrol_->update ();
+	}
+	if (cellscontrol_) {
+		cellscontrol_->update ();
+	}
+	
+	if (eventloop_) {
+		eventloop_->processEvents(QEventLoop::AllEvents);
+	}
 }

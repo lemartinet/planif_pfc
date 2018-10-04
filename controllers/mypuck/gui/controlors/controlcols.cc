@@ -1,23 +1,26 @@
-#include <iostream>
 #include "controlcols.hh"
-#include "graphwidget.h"
+#include "neurosolver.hh"
+#include "columns.hh"
+#include "column.hh"
+#include "minicol.hh"
 #include "params.hh"
+#include <iostream>
 
 extern Params* params;
 
-ControlCols::ControlCols (Colomns& cols, GraphWidget& widget)
+ControlCols::ControlCols (Neurosolver& neuro, GraphWidget& widget)
 {
-  cols_ = &cols;
-  widget_ = &widget;
-  show_inf_sup_or_state_ = 0;
-
-  QObject::connect (cols_, SIGNAL (sig_addcol (int)), this, SLOT (slot_addcol (int)));
-  QObject::connect (cols_, SIGNAL (sig_addlink (int, int)), this, SLOT (slot_addlink (int, int)));
-  QObject::connect (cols_, SIGNAL (sig_delcol (int)), this, SLOT (slot_delcol (int)));
-  QObject::connect (widget_, SIGNAL (sig_node_clicked (NodeType, int)), this, SLOT (slot_setgoalcol (NodeType, int)));
+	neuro_ = &neuro;
+	widget_ = &widget;
+	show_inf_sup_or_state_ = 0;
+	
+	const Columns* cols = &(neuro_->cols_get ());
+	QObject::connect (cols, SIGNAL (sig_addcol (int)), this, SLOT (slot_addcol (int)));
+	QObject::connect (cols, SIGNAL (sig_addlink (int, int)), this, SLOT (slot_addlink (int, int)));
+	QObject::connect (widget_, SIGNAL (sig_node_clicked (NodeType, int)), this, SLOT (slot_setgoalcol (NodeType, int)));
 }
 
-void ControlCols::update_col_appearance (Node& node, Colomn& col)
+void ControlCols::update_col_appearance (Node& node, Column& col)
 {
 	if (show_inf_sup_or_state_ == 2) {
 		node.color_set (COLOR_GOAL);
@@ -35,9 +38,6 @@ void ControlCols::update_col_appearance (Node& node, Colomn& col)
 
 void update_mincol_appearance (Edge& edge, Minicol& mincol)
 {
-  //double   state_link_activation = mincol.state_link_activation ();
-//  double   goal_link_activation = mincol.goal_link_activation ();
-
   if (mincol.spiking ())
     edge.arrow_activ (true);
   else
@@ -47,7 +47,7 @@ void update_mincol_appearance (Edge& edge, Minicol& mincol)
 //  edge.lightlevel_set (state_link_activation);
 }
 
-void update_mincols_appearance (GraphWidget& graph, Colomn& col)
+void update_mincols_appearance (GraphWidget& graph, Column& col)
 {
   int        size = col.size ();
   Edge*      edge = 0;
@@ -61,45 +61,38 @@ void update_mincols_appearance (GraphWidget& graph, Colomn& col)
     }
 }
 
-void highlight_current_mincol (Colomns& cols, GraphWidget& graph)
+void highlight_current_mincol (const Columns& cols, GraphWidget& graph)
 {
-  Edge*     edge = 0;
-  Colomn*   col = 0;  
-  Minicol*  mincol = 0;
-
-  col = cols.best_state_col (0);
-  if (!col)
-    return;
-  mincol = col->best_mean_minicol ();
-  if (!mincol)
-    return;
-  edge = graph.edge_get (COL, col->no_get (), mincol->to_get ().no_get ());
-
-  edge->color_set (COLOR_SPIKING);
-  edge->lightlevel_set (// mincol->state_link_activation ()
-                        1.0);
+	Minicol*  minicol = cols.best_minicol (0);
+	
+	if (!minicol){// || !minicol->spiking ()) {
+		return;
+	}
+	Edge* edge = graph.edge_get (COL, minicol->from_get ().no_get (), minicol->to_get ().no_get ());
+	edge->color_set (COLOR_SPIKING);
+	edge->lightlevel_set (// mincol->state_link_activation () 
+							1.0);
 }
 
 void ControlCols::update ()
 {
-  int       size = cols_->size ();
-  Colomn*   col = 0;
+  int       size = neuro_->cols_get ().size ();
+  Column*   col = 0;
   Node*     node = 0;
 
   for (int i = 0; i < size; i++)
     {
-      col = cols_->col_get (i);
+      col = neuro_->cols_get ().col_get (i);
 		if (!col->draw_get ()) {
 			continue;
 		}
       node = widget_->node_get (COL, col->no_get ());
-      assert (node);
       node->move (col->pos_get ());
       update_col_appearance (*node, *col);
       update_mincols_appearance (*widget_, *col);
     }
 
-  highlight_current_mincol (*cols_, *widget_);
+  highlight_current_mincol (neuro_->cols_get (), *widget_);
 }
 
 void ControlCols::slot_addcol (int no)
@@ -114,23 +107,18 @@ void ControlCols::slot_addlink (int from, int to)
   widget_->add_edge (COL, from, to);
 }
 
-void ControlCols::slot_delcol (int no)
-{
-  widget_->del_node (COL, no);
-}
-
 void ControlCols::slot_setgoalcol (NodeType type, int no)
 {
-  if (type != COL)
-    return;
+	if (type != COL) {
+		return;
+	}
 
-  Colomn*   col = cols_->nocol_get (no);
-  if (col->goal_activity_setted ()) {
-    col->goal_activity_unset ();
-  }
-  else {
-  	static const double GOAL_ACTIVITY = params->get_double("GOAL_ACTIVITY");
-    col->goal_activity_set (GOAL_ACTIVITY);
-  }
+	Column* col = neuro_->cols_get ().nocol_get (no);
+	if (neuro_->is_goal_position (col)) {
+		neuro_->unlearn_goal_position (col);
+	}
+	else {
+		neuro_->learn_goal_position (col);
+	}
 }
 

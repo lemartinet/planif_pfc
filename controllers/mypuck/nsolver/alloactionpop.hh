@@ -11,12 +11,11 @@ class AlloActionPop
 {
 public:
 	AlloActionPop ();
-	virtual ~AlloActionPop () {}
+	virtual ~AlloActionPop ();
 	
 	void synch (double current_action);
 	
-	inline
-	vector<ComputeUnit*>& pop_get () { return pop_; }
+	const vector<ComputeUnit*>& pop_get () const { return pop_; }
 	
 private:
 	vector<ComputeUnit*> pop_;

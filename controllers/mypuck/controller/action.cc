@@ -15,10 +15,10 @@ Action::Action (double angle) : angle_(angle)
 
 Action::Action (double angle, int speed) : speed_(speed), angle_(angle) {}
   		
-bool Action::equal (Action& a2)
+bool Action::equals (const Action& a2) const
 {
-	static const double ANGLES_EQUALITY_THRESH = params->get_double("ANGLES_EQUALITY_THRESH");
-	if (fabs (ecart_angulaire (angle_, a2.angle_get ())) < ANGLES_EQUALITY_THRESH) {
+	static const double ANGLE_THRESH = params->get_double("ANGLE_THRESH");
+	if (fabs (ecart_angulaire (angle_, a2.angle_get ())) < ANGLE_THRESH) {
 		return true;
 	}
 	else {
@@ -26,7 +26,7 @@ bool Action::equal (Action& a2)
 	}
 }
 
-bool operator== (Action& a1, Action& a2)
+bool operator== (const Action& a1, const Action& a2)
 {
-  return a1.equal (a2);
+  return a1.equals (a2);
 }

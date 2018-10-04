@@ -2,89 +2,54 @@
 # define COLUMNS_HH_
 
 #include <QObject>
-#include <assert.h>
-#include "column.hh"
+#include "neuralnet.hh"
 
 class ComputeUnit;
 class Neuron;
+class Column;
+class Action;
+class Minicol;
 
-class Colomns : public QObject
+class Columns : public QObject
 {
-  Q_OBJECT
+	Q_OBJECT
 
 public:
-  Colomns ();
-
-  ~Colomns ();
-
-  inline
-  Colomn* col_get (int i) { return colomns_[i]; }
-  
-  inline
-  int size () { return colomns_.size (); }
-
-  inline
-  enum e_mode mode_get () { return mode_; }
-
-  inline
-  Minicol* newmincol_get () { return newmincol_; }
-
-  inline
-  Colomn* newcol_get () { return newcol_; }
-
-  inline
-  void net_draw (ostream& os) { net_.draw_graph (os); }
-
-  inline
-  void learning_set (bool learn) { learning_ = learn; }
-
-  inline
-  bool learning_get () { return learning_; }
-
-  bool lateral_learning (Colomn& from, Colomn& to, Action* action, bool increase, string & message);
-
-  void mode_set (enum e_mode mode);
-
-  Colomn* best_state_col (int level);
-
-  Colomn& add_colomn (int level, vector<ComputeUnit*>& pop, bool draw);
-
-  void del_colomn (Colomn* col);
-
-  void synch ();
-
-  void propagate ();
-
-  void draw (ostream& os);
-
-  void draw_links (ostream& os);
-
-  Colomn* nocol_get (int no);
-
-  void reset ();
-  
-  inline
-  vector<ComputeUnit*>& pop_get () { return pop_; }
-  
-  void show_activities (int level);
-  
-  void winner_set (int col_winner);
-  void winner_reset ();
+	Columns ();
+	~Columns ();
+	
+	Column* col_get (int i) const { return colomns_[i]; }
+	int size () const { return colomns_.size (); }
+	Column* newcol_get () const { return newcol_; }
+	void learning_set (bool learn) { learning_ = learn; }
+	bool learning_get () const { return learning_; }
+	Column* nocol_get (int no) const;
+	const vector<ComputeUnit*>& pop_get () const { return pop_; }
+	
+	void lateral_learning (Column& from, const Column& to, Action* action, bool increase, string & message);
+	Column* best_state_col (int level) const;
+	Minicol* best_minicol (int level) const;
+	Column& add_colomn (int level, const vector<ComputeUnit*>& pop, bool draw, ComputeUnit* egoaction);
+	void synch ();
+	void show_activities (int level) const;
+	void winner_set (int level);
+	double nb_spiking_cells (int level) const;
+	
+	void net_draw (ostream& os) const { net_.draw_graph (os); }
+	void draw (ostream& os) const;
+	void draw_links (ostream& os) const;
 
 private:
-  int               cpt_;
-  enum e_mode       mode_;
-  vector<Colomn*>  colomns_;
-  vector<ComputeUnit*> pop_;
-  Neuralnet         net_;
-  Colomn*           newcol_;
-  Minicol*          newmincol_;
-  bool              learning_;
+	int cpt_;
+	vector<Column*> colomns_;
+	vector<ComputeUnit*> pop_;
+	Neuralnet net_;
+	Column* newcol_;
+	bool learning_;
 
 signals:
-  void sig_addcol (int no);
-  void sig_addlink (int from, int to);
-  void sig_delcol (int no);
+	void sig_addcol (int no);
+	void sig_addlink (int from, int to);
 };
 
 #endif

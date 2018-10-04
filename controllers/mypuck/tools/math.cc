@@ -8,9 +8,19 @@ double pow2 (double v)
   return v * v;
 }
 
+double drand ()
+{
+	return static_cast<double>(rand ()) / RAND_MAX;	
+}
+
 double bruit (double sigma)
 {
-  return (drand48 () - 0.5) * sigma;
+  return (drand () - 0.5) * sigma;
+}
+
+double sigmoid (double x, double a, double b)
+{
+	return 1.0 / (1.0 + exp (-a * (x + b)));
 }
 
 double ecart_angulaire (double reel, double voulu)

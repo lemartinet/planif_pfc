@@ -14,10 +14,10 @@ public:
   ~RepereConverter () {};
   
   inline
-  float convertx (Coord& coord) { return (coord.x_get () - x1min_) / (x1max_ - x1min_) * (x2max_ - x2min_) + x2min_; }
+  float convertx (const Coord& coord) { return (coord.x_get () - x1min_) / (x1max_ - x1min_) * (x2max_ - x2min_) + x2min_; }
 
   inline
-  float converty (Coord& coord) { return (coord.y_get () - y1max_) / (y1min_ - y1max_) * (y2min_ - y2max_) + y2max_; }
+  float converty (const Coord& coord) { return (coord.y_get () - y1max_) / (y1min_ - y1max_) * (y2min_ - y2max_) + y2max_; }
 
   inline
   float x2min_get () { return x2min_; }

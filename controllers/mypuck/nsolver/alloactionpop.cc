@@ -1,25 +1,32 @@
 #include "alloactionpop.hh"
-#include "computeunit.hh"
 #include "dcell.hh"
 #include "math.hh"
+#include "params.hh"
+
+extern Params* params;
 
 AlloActionPop::AlloActionPop ()
 {
-	DCell* cell = new DCell (-PI/2);
-	pop_.push_back(cell);
-	cell = new DCell (0);
-	pop_.push_back(cell);
-	cell = new DCell (PI/2);
-	pop_.push_back(cell);
-	cell = new DCell (PI);
-	pop_.push_back(cell);
+	static const int NB_HD = params->get_int("NB_HD");
+	for (int i = 0; i < NB_HD; i++) {
+		double angle = -PI + i * 2 * PI / NB_HD;
+		DCell* cell = new DCell (angle);
+		pop_.push_back(cell);
+	}
+}
+
+AlloActionPop::~AlloActionPop ()
+{
+	vector<ComputeUnit*>::iterator it;
+	for (it = pop_.begin(); it != pop_.end(); it++) {
+		delete (*it);
+	}		
 }
 
 void AlloActionPop::synch (double current_action)
 {
-//	printf("%f %f %f %f\n", pop_.at (0)->compute (), pop_.at (1)->compute (), pop_.at (2)->compute (), pop_.at (3)->compute ());
-	dynamic_cast<DCell *>(pop_.at (0))->compute (current_action);
-	dynamic_cast<DCell *>(pop_.at (1))->compute (current_action);
-	dynamic_cast<DCell *>(pop_.at (2))->compute (current_action);
-	dynamic_cast<DCell *>(pop_.at (3))->compute (current_action);
+	vector<ComputeUnit*>::iterator it;
+	for (it = pop_.begin(); it != pop_.end(); it++) {
+		dynamic_cast<DCell *>(*it)->compute (current_action);
+	}
 }

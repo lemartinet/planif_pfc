@@ -1,15 +1,16 @@
 QTDIR_INC = /usr/include/qt4
 MYINC	  = -Icontroller -Igui -Igui/controlors -Igui/widgets/graphwidget -Insolver -Itools -Igui/widgets/boardwidget -I. -Itesty
 INCQT 	  = -I$(QTDIR_INC)/QtCore -I$(QTDIR_INC)/QtGui -I$(QTDIR_INC)
-LINKING   = -lQtGui -lQtCore -gdb -lController	
+LINKING   = -lQtGui -lQtCore -gdb -lCppController -lController
 
-CFLAGS    = -W $(INCQT) $(MYINC) -g
+CFLAGS    = -W $(INCQT) $(MYINC) -g -O2 -I/usr/local/webots/include/controllers/cpp
 LIBRARIES = $(LINKING)
 
 CC_SOURCES = \
 	controller/action.cc\
 	controller/behavior.cc\
 	controller/device.cc\
+	controller/obstacleavoidance.cc\
 	nsolver/minicol.cc\
 	nsolver/column.cc\
 	nsolver/columns.cc\
@@ -50,8 +51,8 @@ CPP_SOURCES = \
 include /usr/local/webots/projects/default/controllers/Makefile.include
 
 myclean:
-	find . -name "*.o" | xargs rm
-	find . -name "*.d" | xargs rm
+	find . -name "*.o" | xargs -r rm
+	find . -name "*.d" | xargs -r rm
 
 moc:
 	find . -name "moc*.c*[cp]" | xargs rm

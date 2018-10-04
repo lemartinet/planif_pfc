@@ -2,6 +2,7 @@
 #define EGOACTIONPOP_HH_
 
 #include <vector>
+#include <queue>
 
 class ComputeUnit;
 
@@ -11,17 +12,15 @@ class EgoActionPop
 {
 public:
 	EgoActionPop ();
-	virtual ~EgoActionPop () {}
+	virtual ~EgoActionPop ();
 	
-	void synch (double last_orientation, double orientation);
+	void synch (double orientation);
 	
-	inline
-	vector<ComputeUnit*>& pop_get () { return pop_; }
+	const vector<ComputeUnit*>& pop_get () const { return pop_; }
 	
 private:
 	vector<ComputeUnit*> pop_;
-	double begin_orientation_;
-	double choosen_ego_action_;
+	queue<double> angles_;
 };
 
 #endif /*EGOACTIONPOP_HH_*/

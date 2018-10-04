@@ -56,27 +56,10 @@ GraphWidget::GraphWidget ()
 
 GraphWidget::~GraphWidget ()
 {
-  Node* node = 0;
-
-  foreach (QGraphicsItem *item, scene()->items())
-    {
-      if ((node = qgraphicsitem_cast< Node *>(item)))
-	del_node (node);
-    }
-  //Remove de la scene?
-  delete scene_;
-  delete conv_;
-}
-
-void GraphWidget::reset (NodeType type)
-{
-  Node* node = 0;
-
-  foreach (QGraphicsItem *item, scene()->items())
-    {
-      if ((node = qgraphicsitem_cast< Node *>(item)) && node->nodetype_get () == type)
-	del_node (node);
-    }
+	// supprime automatiquement tous les items de la scene
+	// (Edge, Node, ...) -> ne pas les supprimer ailleurs
+	delete scene_;
+	delete conv_;
 }
 
 void GraphWidget::itemMoved ()
@@ -107,7 +90,7 @@ Edge* GraphWidget::edge_get (NodeType type, int from, int to)
   return 0;
 }
 
-Node* GraphWidget::add_node (NodeType type, int no, Coord& coord_webots, int size, QColor col)
+Node* GraphWidget::add_node (NodeType type, int no, const Coord& coord_webots, int size, QColor col)
 {
   //assert (coord_webots.x_get () != 0.0 && coord_webots.y_get () != 0.0);
 
@@ -134,40 +117,6 @@ Edge* GraphWidget::add_edge (NodeType type, int from, int to)
   edge = new Edge (node1, node2);
   scene_->addItem (edge);
   return edge;
-}
-
-void GraphWidget::del_node (Node* node)
-{
-  if (!node)
-    return;
-  scene()->removeItem (node);
-  delete node;
-}
-
-void GraphWidget::del_edge (Edge* edge)
-{
-  if (!edge)
-    return;
-  scene()->removeItem (edge);
-  delete edge;
-}
-
-void GraphWidget::del_node (NodeType type, int no)
-{
-  Node*   node = node_get (type, no);
-
-  if (!node)
-    return;
-  del_node (node);
-}
-
-void GraphWidget::del_edge (NodeType type, int from, int to)
-{
-  Edge* edge = edge_get (type, from, to);
-
-  if (!edge)
-    return;
-  del_edge (edge);
 }
 
 void GraphWidget::keyPressEvent(QKeyEvent *event)

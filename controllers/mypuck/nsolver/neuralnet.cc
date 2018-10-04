@@ -1,18 +1,21 @@
-#include <iostream>
-#include <assert.h>
 #include "neuralnet.hh"
 #include "hippo.hh"
 #include "cell.hh"
 #include "params.hh"
+#include <iostream>
+#include <assert.h>
+#include <algorithm>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
+
+using namespace boost::lambda;
 
 extern Params* params;
 
 Neuralnet::~Neuralnet ()
 {
-  int size = neurons_.size ();
-
-  for (int i = 0; i < size; i++)
-    delete neurons_[i];
+	for_each (neurons_.begin (), neurons_.end (), bind (delete_ptr(), _1));
 }
 
 double Neuralnet::lateral_learning (Neuron& from, Neuron& to, bool increase)
@@ -23,10 +26,10 @@ double Neuralnet::lateral_learning (Neuron& from, Neuron& to, bool increase)
 	// on apprend le lien en un coup (valeur à MAX_LATERAL_WEIGHT) 
 	// mais on desapprend 4 fois moins vite
 	
-	Synapse* s = get_synapse (from, to);
+	Synapse* s = to.syn_get (from);
 	if (!s) {
 		// on recrute une synapse
-		add_synapse (from, to, MAX_LATERAL_WEIGHT, true);
+		to.add_synapse (from, MAX_LATERAL_WEIGHT, true);
 		return MAX_LATERAL_WEIGHT;
 	}
 	else {
@@ -48,17 +51,8 @@ double Neuralnet::lateral_learning (Neuron& from, Neuron& to, bool increase)
 
 void Neuralnet::synch ()
 {
-	int size = neurons_.size ();
-
-	for (int i = 0; i < size; i++) {
-		neurons_[i]->compute ();
-	}
-}
-
-void Neuralnet::propagate (int nb)
-{
-  for (int i = 0; i < nb; i++)
-    synch ();
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::compute, _1));
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::update, _1));
 }
 
 void Neuralnet::synch_learn ()
@@ -67,97 +61,34 @@ void Neuralnet::synch_learn ()
 	
 	synch ();
 	if (!(freq_ % TETA_RYTHM)) {
-		int size = neurons_.size ();
-		for (int i = 0; i < size; i++)
-		neurons_[i]->learn ();
+		for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::learn, _1));
 	}
 	freq_++;
 }
 
-Neuron* Neuralnet::add_neuron (double Vr, double Vf, string& path, int no_col, double ip_step, 
+Neuron& Neuralnet::add_neuron (const string& path, int no_col, double ip_step, 
 								double ip_mu, double a, double b, int level)
 {
-  Neuron* res;
-
-  res = new Neuron (Vr, Vf, path, no_col, neurons_.size (), false, ip_step, ip_mu, a, b, level);
+  Neuron* res = new Neuron (path, no_col, false, ip_step, ip_mu, a, b, level);
   neurons_.push_back (res);
-  return res;
+  return *res;
 }
 
-Neuron* Neuralnet::add_neuron_max (double Vr, double Vf, string& path, int no_col, int level)
+Neuron& Neuralnet::add_neuron_max (const string& path, int no_col, int level)
 {
-  Neuron* res;
-
-  res = new Neuron (Vr, Vf, path, no_col, neurons_.size (), true, 0.0, 0.0, 0.0, 0.0, level);
+  Neuron* res = new Neuron (path, no_col, true, 0.0, 0.0, 0.0, 0.0, level);
   neurons_.push_back (res);
-  return res;
+  return *res;
 }
 
-void Neuralnet::del_neuron (Neuron* neuron)
+void Neuralnet::draw_graph (ostream& os) const
 {
-  int nbneurons = neurons_.size ();
-  vector<Neuron *>::iterator it;
-
-  if (!neuron)
-    return;
-  for (int i = 0; i < nbneurons; i++)
-    {
-      neurons_[i]->del_synapse (*neuron);
-    }
-  it = find (neurons_.begin (), neurons_.end (), neuron);
-  //certains neurones semblent etre supp. plusieurs fois. chercher l'erreur...
-  assert (it != neurons_.end ());
-  if (it != neurons_.end ())
-    {
-      delete *it;
-      neurons_.erase (it);
-    }
+	os << "digraph G {" << endl;
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::draw_graph, _1, var (os)));
+	os << "}" << endl;
 }
 
-void Neuralnet::draw_graph (ostream& os)
+void Neuralnet::draw_links (ostream& os) const
 {
-  int size = neurons_.size ();
-  int nbsyn = 0;
-  Cell* cell = 0;
-  Neuron* neuron = 0;
-
-  os << "digraph G {" << endl;
-  for (int i = 0; i < size; i++)
-    {
-      os << "n" << neurons_[i]->no_get () << " [label=\""<< i << ":" << neurons_[i]->output () << "\"]" << endl;
-      nbsyn = neurons_[i]->size ();
-      for (int j = 0; j < nbsyn; j++)
-	{
-	  if ((cell = dynamic_cast <Cell *>(&(neurons_[i]->syn_get (j)->from_get ())))/*neurons_[i]->syn_get (j)->input_get ()*/)
-	    {
-	    	double cell_output = cell->output ();
-	      os << "c" << &cell_output << " [label=\"" << j << ":" << &cell_output << "\", color=grey, style=filled];" << endl;
-	      os << "c" << &cell_output;
-	    }
-	  else
-	    {
-	      neuron = dynamic_cast <Neuron *> (&(neurons_[i]->syn_get (j)->from_get ()));
-	      os << "n" << neuron->no_get ();
-	    }
-	  os << " -> n" << neurons_[i]->no_get () << " [label=\"" << neurons_[i]->syn_get (j)->w_get () << "\"];" << endl;
-	}
-    }
-  os << "}" << endl;
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::draw_links, _1, var (os)));
 }
-
-void Neuralnet::draw_links (ostream& os)
-{
-  int size = neurons_.size ();
-
-  for (int i = 0; i < size; i++)
-    neurons_[i]->draw_links (os);
-}
-
-// void Neuralnet::unset_all ()
-// {
-//   int size = neurons_.size ();
-
-//   for (int i = 0; i < size; i++)
-//     neurons_[i]->unset_activity ();
-// }
-

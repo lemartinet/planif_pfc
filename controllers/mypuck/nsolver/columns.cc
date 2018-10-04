@@ -1,83 +1,58 @@
-#include <iostream>
 #include "columns.hh"
+#include "column.hh"
+#include "action.hh"
 #include "neuron.hh"
 #include "params.hh"
+#include <algorithm>
+#include <iostream>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/if.hpp>
 
+using namespace boost::lambda;
 
-Colomns::Colomns () : cpt_(0), mode_(LEARNING), newcol_(0), newmincol_(0), learning_(false) 
+Columns::Columns () : cpt_(0), newcol_(0), learning_(false) {};
+
+Columns::~Columns ()
 {
-	string s = "";
-};
-
-
-Colomns::~Colomns ()
-{
-  int size = colomns_.size ();
-
-  for (int i = 0; i < size; i++) {
-    delete colomns_[i];
-  }
+	for_each (colomns_.begin (), colomns_.end (), bind (delete_ptr(), _1));
 }
 
-void Colomns::mode_set (enum e_mode mode)
+Column* Columns::best_state_col (int level) const
 {
-  	int size = colomns_.size ();
-
-  	if (mode_ != mode) {
-  		mode_ = mode;
-  		for (int i = 0; i < size; i++) {
-  			colomns_[i]->mode_set (mode);
-  		}
-    }
-}
-
-Colomn* Colomns::best_state_col (int level)
-{
-	int      size = colomns_.size ();
-	double   max = 0.0;
-	double   activation = 0.0;
-	int      best = 0;
-	
-	if (size == 0) {
-		return 0;
-	}
-	for (int i = 0; i < size; i++) {
-		activation = colomns_[i]->state_activation ();
-		if (colomns_[i]->level_get () == level && activation > max) {
-			max = activation;
-			best = i;
+	Column* best_col = 0;
+	vector<Column*>::const_iterator it;
+	for (it = colomns_.begin (); it != colomns_.end (); it++) {
+		if ((*it)->level_get () != level) {
+			continue;
+		}
+		if (!best_col || (best_col->state_activation () < (*it)->state_activation ())) {
+			best_col = *it;	
 		}
 	}
-	if (max > 0) {
-		return colomns_[best];
-	}
-	else return 0;
+	return best_col;
 }
 
-// Colomn* Colomns::best_goal_col ()
-// {
-//   int      size = colomns_.size ();
-//   double   max = 0.0;
-//   double   activation = 0.0;
-//   int      best = 0;
-
-//   if (size == 0)
-//     return 0;
-//   for (int i = 0; i < size; i++)
-//     {
-//       activation = colomns_[i]->goals_activation ();
-//       if (activation > max)
-// 	{
-// 	  max = activation;
-// 	  best = i;
-// 	}
-//     }
-//   return colomns_[best];
-// }
-
-Colomn& Colomns::add_colomn (int level, vector<ComputeUnit*>& pop, bool draw)
+Minicol* Columns::best_minicol (int level) const
 {
-	Colomn* col = new Colomn (net_, pop, cpt_, level, draw);
+	Minicol* best_minicol = 0;
+	vector<Column*>::const_iterator it;
+	for (it = colomns_.begin (); it != colomns_.end (); it++) {
+		if ((*it)->level_get () != level) {
+			continue;
+		}
+		Minicol* tmp = (*it)->best_minicol ();
+		if (!best_minicol || (tmp && best_minicol->activation () < tmp->activation ())) {
+			best_minicol = tmp;	
+		}
+	}
+	return best_minicol;
+}
+
+Column& Columns::add_colomn (int level, const vector<ComputeUnit*>& pop, bool draw, ComputeUnit* ego_action)
+{
+	Column* col = new Column (net_, *this, pop, cpt_, level, draw, ego_action);
 	cpt_++;
 	colomns_.push_back (col);
 	pop_.push_back (&col->state_get());
@@ -90,107 +65,65 @@ Colomn& Colomns::add_colomn (int level, vector<ComputeUnit*>& pop, bool draw)
 	return *col;
 }
 
-void Colomns::del_colomn (Colomn* col)
+double Columns::nb_spiking_cells (int level) const
 {
-  int                         nbcols = colomns_.size ();
-  vector<Colomn *>::iterator  it;  
-  int                         no = col->no_get ();
-
-  //robot_console_printf ("del_colomn (%i)\n", no);
-  if (!col)
-    return;
-  for (int i = 0; i < nbcols; i++)
-    colomns_[i]->del_minicols (*col);
-  it = find (colomns_.begin (), colomns_.end (), col);
-  assert (it != colomns_.end ());
-  delete *it;
-  colomns_.erase (it);
-  emit sig_delcol (no);
+//	return count_if (pop_.begin (), pop_.end (), 
+//		bind (&ComputeUnit::level_get, _1) == level && bind (&ComputeUnit::spiking, _1));
+	double sum = 0;
+	vector<ComputeUnit*>::const_iterator it;
+	for (it = pop_.begin (); it != pop_.end (); it++) {
+		if ((*it)->level_get () == level) {
+			sum += (*it)->output ();	
+		}
+	}
+	return sum;
 }
 
-void Colomns::synch ()
+void Columns::synch ()
 {
-  	int nbcols = colomns_.size ();
-  
-  	if (learning_) {
+	if (learning_) {
     	net_.synch_learn ();
   	}
   	else {
     	net_.synch ();
   	}
-  	for (int i = 0; i < nbcols; i++) {
-    	colomns_[i]->synch ();
-  	}
+  	for_each (colomns_.begin (), colomns_.end (), bind (&Column::synch, _1));
   	newcol_ = 0;
-  	newmincol_ = 0;
+  	
+  	winner_set (0);
+  	winner_set (1);
+//  	printf ("nb_spiking_cells: %f\n", nb_spiking_cells (0));
 }
 
-void Colomns::draw (ostream& os)
+void Columns::draw (ostream& os) const
 {
-  int size = colomns_.size ();
-
-  for (int i = 0; i < size; i++)
-    colomns_[i]->draw (os);
+	for_each (colomns_.begin (), colomns_.end (), bind (&Column::draw, _1, var (os)));
 }
 
-void Colomns::draw_links (ostream& os)
+void Columns::draw_links (ostream& os) const
 {
-  int size = colomns_.size ();
-
-  for (int i = 0; i < size; i++)
-    colomns_[i]->draw_links (os);
-  net_.draw_links (os);
+	for_each (colomns_.begin (), colomns_.end (), bind (&Column::draw_links, _1, var (os)));
+	net_.draw_links (os);
 }
 
-void Colomns::propagate ()
+Column* Columns::nocol_get (int no) const
 {
-	// TODO: a ameliorer : attendre une "epsilon-convergence" du reseau
-	// tenir compte du nb de propagation qu'on peut faire en TIME_STEP ms ???
-  	for (int i = 0; i < 100; i++) {
-  		synch ();
-  	}
+	vector<Column*>::const_iterator it;
+	it = find_if (colomns_.begin (), colomns_.end (), bind (&Column::no_get, _1) == no);
+	return (it == colomns_.end ()) ? 0 : *it;
 }
 
-Colomn* Colomns::nocol_get (int no)
+void Columns::lateral_learning (Column& from, const Column& to, Action* action, bool increase, string & message)
 {
-  int sizecols = size ();
-
-  for (int i = 0; i < sizecols; i++)
-    {
-      if (col_get (i)->no_get () == no)
-	return col_get (i);
-    }
-  return 0;
+	// fonction intermediaire uniquement utile pour l'affichage (sig_addlink)
+	bool new_minicol = from.lateral_learning (action, to, increase, message);
+	if (new_minicol) {
+		emit sig_addlink (from.no_get (), to.no_get ());
+		//cout << "from " << from.no_get () << " to " << to.no_get () << " " << action->angle_get() << endl;
+	}
 }
 
-bool Colomns::lateral_learning (Colomn& from, Colomn& to, Action* action, bool increase, string & message)
-{
-	Minicol*  mincol1 = from.lateral_learning (action, to, increase, message);
-  	if (!mincol1) {
-    	return false;
-  	}
-  	newmincol_ = mincol1;
-  	emit sig_addlink (from.no_get (), to.no_get ());
-  	//cout << "from " << from.no_get () << " to " << to.no_get () << " " << action->angle_get() << endl;
-  	return true;
-}
-
-void Colomns::reset ()
-{
-  int size = colomns_.size ();
-  
-  cpt_ = 0;
-  for (int i = 0; i < size; i++)
-    del_colomn (colomns_[0]);
-    //delete colomns_[i];
-  //colomns_.clear ();
-  assert (net_.size () == 0);
-  newcol_ = 0;
-  newmincol_ = 0;
-  //reset_ = true;
-}
-
-void Colomns::show_activities (int level)
+void Columns::show_activities (int level) const
 {
 	bool written = false;
 	int size = colomns_.size ();
@@ -205,27 +138,21 @@ void Colomns::show_activities (int level)
 	}
 }
 
-void Colomns::winner_set (int col_winner)
+void Columns::winner_set (int level)
 {
-//	cancel_inhib ();
-	int size = colomns_.size ();
-	for (int i = 0; i < size; i++) {
-		if (colomns_.at (i)->no_get () != col_winner
-			&& colomns_.at (i)->level_get () == 1) {
-			colomns_.at (i)->winner_set (false);
+	int winner = -1;
+	Column* col = best_state_col (level);
+	if (col && col->state_get ().spiking ()) {
+		winner = col->no_get ();
+	}
+	vector<Column*>::iterator it;
+	for (it = colomns_.begin (); it != colomns_.end (); it++) {
+		if ((*it)->no_get () == winner) {
+			(*it)->winner_set (true);
 		}
-		else {
-			colomns_.at (i)->winner_set (true);	
+		else if ((*it)->level_get () == level) {
+			(*it)->winner_set (false);	
 		}
 	}
-}
-
-void Colomns::winner_reset ()
-{
-	int size = colomns_.size ();
-	for (int i = 0; i < size; i++) {
-		if (colomns_.at (i)->level_get () == 1) {
-			colomns_.at (i)->winner_set (false);
-		}
-	}	
+//	printf("winner level %d is %d\n", level, winner);
 }

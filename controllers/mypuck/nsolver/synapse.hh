@@ -7,16 +7,6 @@
 using namespace std;
 
 /**
- * BCM rule.
- * @param wij 
- * The weight between presynaptic neuron \a rj axnd postsynaptic neuron \a ri.
- * @param tetaV A parameterx specific of the postsynaptic neuron.
- * @param rj Presynaptic value.
- * @param ri Postsynaptic value.
- */
-void BCM (double& wij, double rj, double ri, double& tetaV);
-
-/**
  * Synaptic model for the firing rates neuron's model Neuron.
  * This is a cross recursive class with Neuron.
  * @note One neuron can be connected with others and with \c double values.
@@ -25,54 +15,52 @@ void BCM (double& wij, double rj, double ri, double& tetaV);
 class Synapse
 {
 public:
-  /**
-   * Synapse constructor.
-   * Build a synapse between two neurons.
-   * @param from Input neuron.
-   * @param to Output neuron.
-   * @param w Synaptic weight.
-   * @param constw constant synapse (no learning)
-   */
-  //Synapse (Neuron& from, Neuron& to, double w, bool constw) : from_(from), val_(w_), to_(to), w_(w), input_(false), constw_(constw) {};
-  Synapse (ComputeUnit & from, ComputeUnit& to, double w, bool constw) : from_(&from), to_(&to), w_(w), constw_(constw) {};
+	/**
+	 * Build a synapse between two neurons.
+	 * @param from Input neuron.
+	 * @param to Output neuron.
+	 * @param w Synaptic weight.
+	 * @param constw constant synapse (no learning)
+	 */
+	Synapse (const ComputeUnit& from, const ComputeUnit& to, double w, bool constw);
+	
+	// Synapse multiplicatrice
+	Synapse (const ComputeUnit& from, const ComputeUnit& from_mult, const ComputeUnit& to, 
+		double w, double a, double b);
 
-  /// Synapse destructor.
-  // TODO: doit supprimer la synapse des neurones pre et post
-  ~Synapse () {};
+	~Synapse ();
 
-  /// Synaptic weight getter.
-  inline
-  double w_get () { return w_; }
+	double w_get () const { return w_; }
+	void w_set (double v) { w_ = v; }
+	void b_set (double b) { b_ = b; }
+	ComputeUnit& to_get () const { return const_cast<ComputeUnit&>(to_); }
+	ComputeUnit& from_get () const { return const_cast<ComputeUnit&>(from_); }
+	void from_mult_set (const ComputeUnit& from_mult) { from_mult_ = &from_mult; }
+	
+	double drive () const;
 
-  inline
-  void w_set (double v) { w_ = v; }
+	/**
+	 * Synapse hebbian learning.
+	 * @note Update only one synapse, using current neurons potential values.
+	 */
+	void hlearn ();
 
-  inline
-  double& w_ref_get () { return w_; }
-
-  /// Potentials difference of synapse connection.
-  inline
-  double drive () { return from_->output () * w_; }
-
-  inline
-  ComputeUnit& to_get () { return *to_; }
-
-  inline
-  ComputeUnit& from_get () { return *from_; }
-
-  /**
-   * Synapse hebbian learning.
-   * @note Update only one synapse, using current neurons potential values.
-   */
-  void   hlearn ();
-
-  void draw_links (ostream& os);
+	void draw_links (ostream& os) const;
 
 private:
-  ComputeUnit*  from_;
-  ComputeUnit*  to_;
-  double        w_;     ///< Synaptic weight.
-  bool          constw_;
+	/**
+	 * Learning using a BCM rule.
+	 */
+	void BCM ();
+
+private:
+	const ComputeUnit& from_;
+	const ComputeUnit* from_mult_;
+	const ComputeUnit& to_;
+	double w_;
+	const bool constw_;
+	const double a_;
+	double b_;
 };
 
 #endif

@@ -25,14 +25,10 @@ class Behavior;
 class Testy
 {
 public:
-	Testy (RobotDevice& robot, Behavior& behav, Neurosolver& solver);
+	Testy (Behavior& behav);
 	~Testy ();
 
-	void init ();
 	void synch ();
-	void end_simu ();
-	double weights_sum_mean ();
-	double weights_sum_max ();
 
 private:
 	vector<ofstream*> files_weights_;
@@ -41,8 +37,6 @@ private:
   	RobotDevice*  robot_;
   	Behavior* behav_;
   	Neurosolver* solver_;
-	double weights0_;
-  	double weights1_;
   	int cpt_;
   	int cpt_goal;
   	int simu_id_;

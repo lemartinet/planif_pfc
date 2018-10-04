@@ -9,6 +9,8 @@
 
 double pow2 (double v);
 
+double drand ();
+
 /**
  * Noise function.
  * Random values between +- \a sigma.
@@ -16,6 +18,8 @@ double pow2 (double v);
  * @return Noise value
  */
 double bruit (double sigma);
+
+double sigmoid (double x, double a, double b);
 
 double ecart_angulaire (double reel, double voulu);
 

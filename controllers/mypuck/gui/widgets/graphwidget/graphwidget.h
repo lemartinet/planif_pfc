@@ -46,15 +46,8 @@ public:
 
     Node* node_get (NodeType type, int no);
     Edge* edge_get (NodeType type, int from, int to);
-    Node* add_node (NodeType type, int no, Coord& coord_webots, int size, QColor col);
+    Node* add_node (NodeType type, int no, const Coord& coord_webots, int size, QColor col);
     Edge* add_edge (NodeType type, int from, int to);
-    void del_node (Node* node);
-    void del_edge (Edge* edge);
-
-    void del_node (NodeType type, int no);
-    void del_edge (NodeType type, int from, int to);
-
-    void reset (NodeType type);
 
     inline
     QGraphicsScene* scene_get () { return scene_; }

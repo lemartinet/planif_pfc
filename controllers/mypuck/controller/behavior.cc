@@ -1,17 +1,10 @@
-/*
- * Changement de direction a la revision 2375 du SVN : on enleve le systeme 
- * de taxon qui dirige le robot vers le but. On revient sur une simple selection
- * aleatoire pour simplifier le message  
- */
+#include "behavior.hh"
 #include <iostream>
 #include <fstream>
-#include <device/robot.h>
 #include "params.hh"
-#include "behavior.hh"
-#include "device.hh"
-#include "action.hh"
 #include "math.hh"
 #include "mystr.hh"
+#include "action.hh"
 
 #define WAIT_BETWEEN_DECISIONS 10
 
@@ -19,13 +12,13 @@ extern Params* params;
 ofstream * output_mypuck;
 ofstream * output_neurosolver;
 
-void Behavior::reset () 
+
+Behavior::Behavior () : cpt_(0), robot_(), neurosolver_(robot_), left_near_(false), 
+		right_near_(false), action_done_(true), wait_(0), nb_goal_reached_(0), nb_free_(0), dirs_(0), 
+		go_random_(false)
 {
 	const int SIMULATION_ID = params->get_int ("SIMULATION_ID");
 	 
-	cpt_ = 0; 
-	neurosolver_.reset (); 
-	delete current_; 
 	current_ = new Action(0.0);
   	
   	string filename ("../../data/data_raw/");
@@ -38,6 +31,13 @@ void Behavior::reset ()
 	filename += i2str (SIMULATION_ID);
 	filename += "/output_neurosolver.txt";
   	output_neurosolver = new ofstream (filename.c_str ());
+}
+
+Behavior::~Behavior () 
+{
+	if (current_) {
+		delete current_;
+	}
 }
 
 void Behavior::write_message (ofstream* file, string message)
@@ -56,62 +56,62 @@ double Behavior::e_greedy () {
 	return 0.9 * exp (-0.1 * (nb_goal_reached_ - 3)) + 0.1;
 }
 
-void Behavior::do_action (RobotDevice& robot)
+void Behavior::do_action ()
 {
 	static const int RANDOM_MOVE = params->get_int("RANDOM_MOVE");
   	if (RANDOM_MOVE && nb_goal_reached_ > 5) {
-  		robot.speed_set(10,10);
+  		robot_.speed_set(10,10);
   		return;
   	} 
   	
 	double angle = current_->angle_get();
-	double diff = ecart_angulaire (robot.angle_get (), angle);
-	static const double ROT_THRESH = params->get_double ("ROT_THRESH");
+	double diff = ecart_angulaire (robot_.angle_get (), angle);
+	static const double ANGLE_THRESH = params->get_double ("ANGLE_THRESH");
 	if (!action_done_) {
-  		action_done_ = (fabs (diff) < ROT_THRESH)?true:false;
+  		action_done_ = (fabs (diff) < ANGLE_THRESH)?true:false;
 	}
 	if (action_done_) {
 		diff = 0;
 	}
-	bool bloque = robot.obstacle_avoidance_module(diff);
+	bool bloque = avoid_.obstacle_avoidance_module(diff, robot_.position_get ());
 	string message = neurosolver_.correct_transition (bloque);
 	if (message != "") {
 		write_message (output_neurosolver, message);
 	}
 }
 
-int Behavior::analyse_cross_road (RobotDevice& robot, bool& left, bool& straight, bool& right)
+int Behavior::analyse_cross_road (bool& left, bool& straight, bool& right)
 {
 	// fonction adaptée au laby de tolman. 
 	
 	// on analyse les alentours du robot
 	// le test > 0 est pour supprimer l'artefact de debut de simulation
-	if (robot.obstacle_left_mid_get () > 0 && robot.obstacle_left_mid_get () < 500) {
+	if (avoid_.obstacle_left_mid_get () > 0 && avoid_.obstacle_left_mid_get () < 500) {
 		left_near_ = true;
 	} 
-	else if (robot.obstacle_left_mid_get () > 2000) {
+	else if (avoid_.obstacle_left_mid_get () > 2000) {
 		left_near_ = false;
 	}		
-	if (robot.obstacle_right_mid_get () > 0 && robot.obstacle_right_mid_get () < 500) {
+	if (avoid_.obstacle_right_mid_get () > 0 && avoid_.obstacle_right_mid_get () < 500) {
 		right_near_ = true;
 	}
-	else if (robot.obstacle_right_mid_get () > 2000) {
+	else if (avoid_.obstacle_right_mid_get () > 2000) {
 		right_near_ = false;
 	}
 	bool left_reached = false;
-	if (robot.obstacle_left_get () > 0 && robot.obstacle_left_get ()  < 500) {
+	if (avoid_.obstacle_left_get () > 0 && avoid_.obstacle_left_get ()  < 500) {
 		left_reached = true;
 	}
 	bool right_reached = false;
-	if (robot.obstacle_right_get () > 0 && robot.obstacle_right_get ()  < 500) {
+	if (avoid_.obstacle_right_get () > 0 && avoid_.obstacle_right_get ()  < 500) {
 		right_reached = true;
 	}
 	bool front_reached = false;
-	//if (robot.obstacle_left_front_get() > 2000 && robot.obstacle_right_front_get()) {
-	if (robot.obstacle_left_front_get() > 1500 && robot.obstacle_right_front_get()) {
+	//if (robot_.obstacle_left_front_get() > 2000 && robot_.obstacle_right_front_get()) {
+	if (avoid_.obstacle_left_front_get() > 1500 && avoid_.obstacle_right_front_get()) {
 		front_reached = true;
 	}
-	//cout << robot.obstacle_left_front_get() << endl;
+	//cout << robot_.obstacle_left_front_get() << endl;
 
 	left = straight = right = false;
 	// Quel type d'intersection ?
@@ -180,22 +180,22 @@ int Behavior::analyse_cross_road (RobotDevice& robot, bool& left, bool& straight
 	return 0;	
 } 
 
-//int analyse_cross_road_bis (RobotDevice& robot)
+//int analyse_cross_road_bis ()
 //{
 //	// fonction adaptée au laby de tolman. 
 //	
 //	// on analyse les alentours du robot
 //	// le test > 0 est pour supprimer l'artefact de debut de simulation
 //	bool left_reached = false;
-//	if (robot.obstacle_left_get () > 0 && robot.obstacle_left_get ()  < 500) {
+//	if (robot_.obstacle_left_get () > 0 && robot_.obstacle_left_get ()  < 500) {
 //		left_reached = true;
 //	}
 //	bool right_reached = false;
-//	if (robot.obstacle_right_get () > 0 && robot.obstacle_right_get ()  < 500) {
+//	if (robot_.obstacle_right_get () > 0 && robot_.obstacle_right_get ()  < 500) {
 //		right_reached = true;
 //	}
 //	bool front_reached = false;
-//	if (robot.obstacle_left_front_get() > 1500 && robot.obstacle_right_front_get()) {
+//	if (robot_.obstacle_left_front_get() > 1500 && robot_.obstacle_right_front_get()) {
 //		front_reached = true;
 //	}
 //	
@@ -208,36 +208,36 @@ int Behavior::analyse_cross_road (RobotDevice& robot, bool& left, bool& straight
 //} 
 
 
-void Behavior::free_ways (RobotDevice& robot)
+void Behavior::free_ways ()
 {
 	// à modifier pour que plus généralement, elle serve à découvrir
 	// les directions empruntables par le robot selon un échantillonnage
 	// ici on regarde tous les 90° (gauche, tout droit et droite)
 	// ajouter le demi-tour ???
 	bool go_left = false, go_straight = false, go_right = false;
-	nb_free_ = analyse_cross_road(robot, go_left, go_straight, go_right);
+	nb_free_ = analyse_cross_road(go_left, go_straight, go_right);
 	delete dirs_;
 	dirs_ = new double[nb_free_];
 	int index = 0;
 	if (go_left) {
-		dirs_[index++] = robot.angle_get () + PI/2.0;
+		dirs_[index++] = robot_.angle_get () + PI/2.0;
 	}
 	if (go_right) {
-		dirs_[index++] = robot.angle_get () - PI/2.0;
+		dirs_[index++] = robot_.angle_get () - PI/2.0;
 	}
 	if (go_straight) {
-		dirs_[index] = robot.angle_get ();
+		dirs_[index] = robot_.angle_get ();
 	}
 }
 
-Action* Behavior::random_or_planif (RobotDevice& robot)
+Action* Behavior::random_or_planif ()
 {
 	go_random_ = false;
 	Action * action = 0;
 	// on explore exponentiellement moins au cours des essais
 	// de plus epsilon depend de la position ds le laby :
 	// proche du but -> peu d'explo, loin -> beaucoup
-	//double epsilon = e_greedy () * (robot.distance_goal_factor());
+	//double epsilon = e_greedy () * (robot_.distance_goal_factor());
 	double epsilon = e_greedy ();
 	// pour aider au cas ou le robot planifie mal au sein d'un essai : 
 	// il explore de plus en plus après 5000 steps
@@ -247,11 +247,11 @@ Action* Behavior::random_or_planif (RobotDevice& robot)
 	epsilon_help = epsilon_help > 0 ? epsilon_help : 0;
 //	cout << "epsilons :" << epsilon << " " << epsilon_help << endl;
 	
-	if (nb_goal_reached_ < 3 || drand48() < epsilon + epsilon_help) {
+	if (nb_goal_reached_ < 3 || drand() < epsilon + epsilon_help) {
 		go_random_ = true;		
 	}
 	else {
-		action = neurosolver_.planning ();
+		action = neurosolver_.best_action ();
 		if (action) {
 			string mess = "je planifie vers " + d2str (action->angle_get());
 			write_message (output_mypuck, mess);
@@ -265,7 +265,7 @@ Action* Behavior::random_or_planif (RobotDevice& robot)
 		
 	if (go_random_) {
 		// le robot explore	
-		int r = (int)(drand48() * nb_free_);
+		int r = (int)(drand() * nb_free_);
 		action = new Action (dirs_[r]);
 		string mess = "j'explore vers : " + d2str (action->angle_get());
 		write_message (output_mypuck, mess);
@@ -274,11 +274,14 @@ Action* Behavior::random_or_planif (RobotDevice& robot)
 	return action;
 }
 
-void Behavior::compute_next_action (RobotDevice& robot)
+void Behavior::compute_next_action ()
 {
+	avoid_.update_obstacle_info ();
+	robot_.synch ();
+	
 	cpt_++;
 
-	if (robot.manually_moved ()) {
+	if (robot_.manually_moved ()) {
 		string mess = "goal found " + i2str (1 + nb_goal_reached_);
 		write_message(output_mypuck, mess);
 		nb_goal_reached_++;
@@ -286,7 +289,7 @@ void Behavior::compute_next_action (RobotDevice& robot)
 	}
 
 	string message;
-	bool col_changed = neurosolver_.synch (robot, go_random_, nb_goal_reached_, message);
+	bool col_changed = neurosolver_.synch (nb_goal_reached_, message);
 	if (message != "") {
 		write_message (output_neurosolver, message);
 	}
@@ -303,12 +306,11 @@ void Behavior::compute_next_action (RobotDevice& robot)
 		return;
 	}
 	
-	Action*  action = 0;
-
-	free_ways(robot);
+	free_ways();
 	
+	Action*  action = 0;
 	if (nb_free_ > 1) {
-		action = random_or_planif (robot);
+		action = random_or_planif ();
 	}
 	
     if (action) {
@@ -317,4 +319,10 @@ void Behavior::compute_next_action (RobotDevice& robot)
     	current_ = action;
     	action_done_ = false;
     }
+}
+
+void Behavior::synch () 
+{
+  	compute_next_action ();
+  	do_action (); 	
 }

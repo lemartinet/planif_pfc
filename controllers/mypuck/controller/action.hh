@@ -7,28 +7,17 @@ public:
 	Action (double angle);
 	Action (double angle, int speed);
 
-	inline
-  	Action* clone () { return new Action (angle_, speed_); }
-  
-  	bool equal (Action& action);
-
-  	inline
-  	int speed_get () { return speed_; }
-  
-  	inline
+  	bool equals (const Action& action) const;
+  	int speed_get () const { return speed_; }  
   	void speed_set (int speed) { speed_ = speed; }
-  
-  	inline
-  	double angle_get () { return angle_; }
-  	
-  	inline
-  	void angle_set (double angle) { angle_ = angle; }
+	double angle_get () const { return angle_; }
+	void angle_set (double angle) { angle_ = angle; }
 
 protected:
   	int speed_;
   	double angle_;
 };
 
-bool operator== (Action& a1, Action& a2);
+bool operator== (const Action& a1, const Action& a2);
 
 #endif

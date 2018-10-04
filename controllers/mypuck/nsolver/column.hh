@@ -6,124 +6,67 @@
 #include "coord.hh"
 #include "hippo.hh"
 
-class Colomn
+class ComputeUnit;
+class Columns;
+class Neuralnet;
+
+class Column
 {
 public:
-  Colomn (Neuralnet& net, vector<ComputeUnit*>& pop, int no, int level, bool draw);
+	Column (Neuralnet& net, const Columns& columns, const vector<ComputeUnit*>& pop, int no, int level, bool draw, ComputeUnit* ego_action);
+	~Column ();
+	
+	double inf_activation () const { return inf_.output (); }
+	double state_activation () const { return state_.output (); }
+	double sup_activation () const { return sup_.output (); }
+	bool spiking () const { return state_.spiking (); }
+	bool minicol_spiking () const;
+	Neuron& inf_get () const { return inf_; }
+	Neuron& sup_get () const { return sup_; }
+	Neuron& state_get () const { return state_; }
+	Minicol* minicol_get (int i) const { return minicols_[i]; }
+	Minicol* minicol_get (const Action& action) const;
+	Minicol* minicol_get_nodest (int no) const;
+	int size () const { return minicols_.size (); }
+	int no_get () const { return no_; }
+	Minicol* last_mincol_get () const { return lastmincol_; }
+	const string& path_get () const { return path_; }
+	const Coord& pos_get () const { return pos_; }
+	int level_get () const { return level_; }
+	bool draw_get () const { return draw_; }
+	void winner_set (bool winner) { winner_ = winner; }
 
-  ~Colomn ();
+	bool lateral_learning (Action* action, const Column& dest, bool increase, string & message);
+	void synch ();
+	int nb_spiking_cells (int level) const;
 
-  inline
-  double inf_activation () { return inf_->output (); }
-  
-  inline
-  double state_activation () { return state_->output (); }
+	void draw (ostream& os) const;
+	void draw_links (ostream& os) const;
 
-  inline
-  double sup_activation () { return sup_->output (); }
-
-  inline
-  bool actived () { return state_->spiking (); }
-
-  inline
-  Neuron& inf_get () { return *inf_; }
-
-  inline
-  Neuron& sup_get () { return *sup_; }
-
-  inline
-  Neuron& state_get () { return *state_; }
-
-  inline
-  Neuron& goals_get () { return *goals_; }
-
-  inline
-  enum e_mode mode_get () { return mode_; }
-
-  inline
-  Minicol* minicol_get (int i) { return minicols_[i]; }
-
-  inline
-  int size () { return minicols_.size (); }
-
-  inline
-  int no_get () { return no_; }
-
-  inline
-  Minicol* last_mincol_get () { return lastmincol_; }
-
-  inline
-  string& path_get () { return path_; }
-
-  inline
-  Coord& pos_get () { return pos_; }
-
-  inline
-  bool goal_activity_setted () { return goals_->intra_setted (); }
-
-  inline
-  void goal_activity_set (double val) { goals_->intra_set (val); }
-
-  inline
-  void goal_activity_unset () { goals_->intra_unset (); }
-
-  void mode_set (enum e_mode mode);
- 
-  Minicol* lateral_learning (Action* action, Colomn& dest, bool increase, string & message);
-
-  void del_minicols (Colomn& dest);
-
-  bool spiking ();
-  
-  Minicol* minicol_get (Action& action);
-
-  void synch ();
-
-  void draw (ostream& os);
-
-  void draw_links (ostream& os);
-
-  Minicol* minicol_get_nodest (int no);
-
-  double weights_mean ();
-  
-  Minicol* best_minicol ();
-  Minicol* best_mean_minicol ();
-  
-  inline
-  int level_get () { return level_; }
-  
-  inline
-  bool draw_get () { return draw_; }
-  
-  inline 
-  void winner_set (bool winner) { winner_ = winner; }
+	Minicol* best_minicol () const;
+	Minicol* best_mean_minicol () const;
 
 private:
-	void pos_update ();
-	void lastmincol_update ();
 	void connect_pop_to_neuron ();
-	void update_links_pop_neuron ();
 
-  int                no_;
-  string             path_;
-  enum e_mode        mode_;
-  Neuron*            state_;
-  Neuron*            goals_;
-  Neuron*            sup_;
-  Neuron*            inf_;
-  Neuralnet*         net_;
-  vector<ComputeUnit*>* pop_state_;
-  //Hippo*             hippo_goals_;
-  Minicol*           lastmincol_;
-  Coord              pos_;
-  vector<Minicol *>  minicols_;
-  
-    int level_; // niveau de la colonne dans la carte
-    bool draw_; // dessiner ou pas la colonne
-    bool winner_;
+private:
+	const int no_;
+	string path_;
+	Neuron& state_;
+	Neuron& sup_;
+	Neuron& inf_;
+	Neuralnet& net_;
+	const Columns& columns_;
+	const vector<ComputeUnit*>& pop_state_;
+	const ComputeUnit* ego_action_;
+	Minicol* lastmincol_;
+	Coord pos_;
+	vector<Minicol*> minicols_;
+	const int level_; // niveau de la colonne dans la carte
+	const bool draw_; // dessiner ou pas la colonne
+	bool winner_;
 };
 
-bool operator== (Colomn& c1, Colomn& c2);
+bool operator== (const Column& c1, const Column& c2);
 
 #endif

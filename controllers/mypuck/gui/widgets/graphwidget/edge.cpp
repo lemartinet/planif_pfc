@@ -50,13 +50,6 @@ Edge::Edge(Node *sourceNode, Node *destNode)
 
 Edge::~Edge()
 {
-  mydel ();
-}
-
-void Edge::mydel ()
-{
-  source->delEdge_succ (this);
-  dest->delEdge_pred (this);  
 }
 
 Node *Edge::sourceNode() const

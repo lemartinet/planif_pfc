@@ -21,17 +21,17 @@
 **
 ****************************************************************************/
 
+#include "node.h"
+#include "edge.h"
+#include "graphwidget.h"
+#include "mystr.hh"
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QStyleOption>
 #include <iostream>
 #include <sstream>
-
-#include "edge.h"
-#include "node.h"
-#include "graphwidget.h"
-#include "mystr.hh"
+#include <algorithm>
 
 Node::Node (GraphWidget *graphWidget)
   : graph(graphWidget), activ_(false), lightlevel_(50), nodesize_(20)
@@ -43,16 +43,6 @@ Node::Node (GraphWidget *graphWidget)
 
 Node::~Node ()
 {
-  mydel ();
-}
-
-void Node::mydel ()
-{
-  foreach (Edge *edge, edgeList_succ)
-    graph->del_edge (edge);
-
-  foreach (Edge *edge, edgeList_pred)
-    graph->del_edge (edge);
 }
 
 void Node::addEdge_succ (Edge *edge)
@@ -83,7 +73,7 @@ void Node::delEdge_pred (Edge *edge)
   edgeList_pred.erase (it);
 }
 
-void Node::move (Coord& coord_webots)
+void Node::move (const Coord& coord_webots)
 {
   setPos ((int)graph->conv_get ().convertx (coord_webots), (int)graph->conv_get ().converty (coord_webots));
   update_pos ();

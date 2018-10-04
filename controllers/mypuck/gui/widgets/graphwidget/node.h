@@ -69,9 +69,7 @@ public:
     void delEdge_succ (Edge *edge);
     void delEdge_pred (Edge *edge);
 
-    void mydel ();
-
-    void move (Coord& coord_webots);
+    void move (const Coord& coord_webots);
 
     QList<Edge *> edges_succ () const;
     QList<Edge *> edges_pred () const;

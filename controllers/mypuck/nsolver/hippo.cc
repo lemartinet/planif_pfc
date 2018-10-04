@@ -3,23 +3,25 @@
 #include "params.hh"
 #include "cell.hh"
 #include "computeunit.hh"
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/lambda/construct.hpp>
+#include <boost/lambda/casts.hpp>
+#include <algorithm>
+
+using namespace boost::lambda;
 
 extern Params* params;
 
 Hippo::~Hippo ()
 {
-  int nbcells = cellmap_.size ();
-  int i = 0;
-
-  for (i = 0; i < nbcells; i++)
-    delete cellmap_[i];
+    for_each (cellmap_.begin (), cellmap_.end (), bind (delete_ptr(), _1));
 }
 
 void Hippo::cell_add (Coord pos)
 {
-	Coord noised_pos (pos.x_get () + (drand48 () - 0.5) / 10, pos.y_get () + (drand48 () - 0.5) / 10);
-	Cell* cell = new Cell (noised_pos, cpt_++, this);
-
+	Coord noised_pos (pos.x_get () + (drand () - 0.5) / 10, pos.y_get () + (drand () - 0.5) / 10);
+	Cell* cell = new Cell (noised_pos);
 	cellmap_.push_back (cell);
 	lastadded_ = cell;
 	emit sig_addcell (cell->no_get ());
@@ -29,66 +31,45 @@ bool Hippo::synch (const Coord & signal)
 {
 	// Minimum activation of a cell, under wich a new cell should be created.
 	static const double CELL_FIRE_MIN = params->get_double("CELL_FIRE_MIN");
-	static const double CELL_SIMULT_MIN = params->get_double("CELL_SIMULT_MIN");
-	int size = cellmap_.size ();
-	bool winner = false;
+//	static const double CELL_SIMULT_MIN = params->get_double("CELL_SIMULT_MIN");
 
 	position_.x_set (signal.x_get ());
 	position_.y_set (signal.y_get ());
-
 	lastadded_ = 0;
 	
-	// TODO: tester avec le meme critere d'ajout que Arleo2004
-//	int sum = 0;
-	for (int i = 0; i < size; i++) {
-		Cell* cell = dynamic_cast<Cell *>(cellmap_[i]);
-		cell->compute();
-		if (cell->output () > CELL_FIRE_MIN) {
-			winner = true;
-		}
-//		sum += (cellmap_[i]->compute () >= CELL_FIRE_MIN)?1:0;
-	}
-//	printf ("sum: %d\n", sum);
+	for_each (cellmap_.begin (), cellmap_.end (), bind (&Cell::compute, ll_dynamic_cast<Cell*>(_1), position_));
+	vector<ComputeUnit*>::iterator it = find_if (cellmap_.begin (), cellmap_.end (), 
+		bind (&Cell::output, ll_dynamic_cast<Cell*>(_1)) > CELL_FIRE_MIN);
+	bool winner = (it != cellmap_.end ());
+//	bool winner = (nb_spiking_cells () >= 6);
+//	if (iadd_ && !winner && (cpt_ % 10 == 0)) {
 	if (iadd_ && !winner) {
-//	if (sum < CELL_SIMULT_MIN) {
 		cell_add (signal);
 		Cell* cell = dynamic_cast<Cell *>(cellmap_[cellmap_.size () - 1]);
-		cell->compute ();
-		return true;
+		cell->compute (position_);
 	}
-	return false;
+//	cpt_++;
+//	printf ("nb_spiking_cells: %d\n", nb_spiking_cells ());
+	return !winner;
 }
 
-void Hippo::draw (ostream& os)
+int Hippo::nb_spiking_cells () const
 {
-  int size = cellmap_.size ();
-
-  os << "subgraph cluster_hippo" << " {" << endl;
-  os << "style=filled;" << endl;
-  os << "color=grey;" << endl;
-  os << "node [style=filled,color=white];" << endl;
-  for (int i = 0; i < size; i++) {
-  	double cell_output = cellmap_[i]->output (); 
-    os << "c" << &cell_output << " [label=\"" << i << ":" << cellmap_[i]->output () << "\"]" << endl;
-  } 
-  os << "label = \"hippocampe\";" << endl;
-  os << "}" << endl;
+	return count_if (cellmap_.begin (), cellmap_.end (), bind (&ComputeUnit::spiking, _1)); 
 }
 
-void Hippo::reset ()
+void Hippo::draw (ostream& os) const
 {
-  int nbcells = cellmap_.size ();
-
-  for (int i = 0; i < nbcells; i++)
-    delete cellmap_[i];
-
-  cellmap_.clear ();
-  lastadded_ = 0;
-  cpt_ = 0;
-  emit sig_reset ();
+	os << "subgraph cluster_hippo" << " {" << endl;
+	os << "style=filled;" << endl;
+	os << "color=grey;" << endl;
+	os << "node [style=filled,color=white];" << endl;
+	for_each (cellmap_.begin (), cellmap_.end (), bind (&Cell::draw, ll_dynamic_cast<Cell*>(_1), var (os)));
+	os << "label = \"hippocampe\";" << endl;
+	os << "}" << endl;
 }
 
- Cell* Hippo::cell_get (int cell) 
- {
- 	return dynamic_cast<Cell*>(cellmap_[cell]); 
- }
+const Cell& Hippo::cell_get (int cell) const
+{
+ 	return dynamic_cast<const Cell&>(*cellmap_[cell]); 
+}
