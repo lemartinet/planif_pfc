@@ -3,6 +3,7 @@
 
 #include "neuron.hh"
 #include <vector>
+#include <queue>
 
 class ComputeUnit;
 class Columns;
@@ -27,6 +28,9 @@ public:
 	const Coord* pos_get () const { return pos_; }
 	int level_get () const { return level_; }
 	void winner_set (bool winner) { winner_ = winner; }
+	double maxr_get () { return maxr; }
+	double lastT_recent () const;
+	double lastT_old () const;
 
 	void synch (bool learn, const vector<ComputeUnit*>& pop_state);
 	void synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& pop_state);
@@ -47,6 +51,11 @@ private:
 	bool winner_;
 	Coord* pos_;
 	double maxr;
+	
+	vector<double> lastTrecent_;
+	vector<double> lastTold_;
+	int lastTidx_;
+	int learn_rythm_;
 };
 
 bool operator== (const Column& c1, const Column& c2);

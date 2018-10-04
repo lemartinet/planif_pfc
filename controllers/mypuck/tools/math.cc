@@ -46,12 +46,7 @@ double ecart_angulaire (double reel, double voulu)
 bool angle_equal (double a1, double a2)
 {
 	static const double ANGLE_THRESH = Params::get_double("ANGLE_THRESH");
-	if (fabs (ecart_angulaire (a1, a2)) < ANGLE_THRESH) {
-		return true;
-	}
-	else {
-  		return false;
-	}
+	return fabs (ecart_angulaire (a1, a2)) < ANGLE_THRESH;
 }
 
 double mean_angles (double a1, double a2)
@@ -65,7 +60,7 @@ double mean_value (double old_v, double new_v, double ratio)
 	return (1 - ratio) * old_v + ratio * new_v; 
 }
 
-void color_palette (double activity, int* r, int* g, int* b)
+void color_palette (double activity, int& r, int& g, int& b)
 {
 /*
  * 0 	0 	255 (blue)
@@ -76,7 +71,7 @@ void color_palette (double activity, int* r, int* g, int* b)
  * we have 1024 levels
  * here we compress the green zone so that we have
  * only 768 levels
- */
+
 	int level = static_cast<int>(activity * 767);
 	if (level < 256) {
 		*r = 0;
@@ -92,5 +87,21 @@ void color_palette (double activity, int* r, int* g, int* b)
 		*r = 255;
 		*g = 767 - level;
 		*b = 0;
+	}
+*/
+	if (activity < 0.4) {
+		r = 0; 
+		g = 255 * 2.5*activity; 
+		b = 255;
+	}
+	else if (0.4 <= activity && activity < 0.6) {
+		r = 255 * 5*(activity-0.4); 
+		g = 255; 
+		b = 255 * (1-5*(activity-0.4));
+	}
+	else if (activity >= 0.6) {
+		r = 255; 
+		g = 255 * (1-2.5*(activity-0.6));
+		b = 0;
 	}
 }

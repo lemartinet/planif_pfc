@@ -22,6 +22,7 @@ public:
 	// Getting the number of synapses
 	int size () const { return synapses_.size (); }
 	Synapse* syn_get (const ComputeUnit& from) const;
+	const map<const int, Synapse *>& all_syn_get () const { return synapses_; }
 	double a_get () const { return a_; }
 	double b_get () const { return b_; }
 	double pot_get () const { return pot_; }

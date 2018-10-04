@@ -42,10 +42,12 @@ public:
 
     Node* node_get (NodeType type, int no);
     Edge* edge_get (NodeType type, int from, int to);
-    Node* add_node (NodeType type, int no, int size, QColor col);
+    Node* add_node (NodeType type, int no, int size);
     Edge* add_edge (NodeType type, int from, int to);
     QGraphicsScene* scene_get () { return scene_; }
     QPoint& mouse_pos_get () { return mouse_pos_; }
+    void type_del (NodeType type);
+    void edge_type_del (NodeType type);
     
 	void trigger_sig_node_clicked (NodeType type, int no);
 	void itemMoved();

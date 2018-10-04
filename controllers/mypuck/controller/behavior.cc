@@ -6,7 +6,7 @@
 #include "logger.hh"
 #include <iostream>
 
-#define WAIT_BETWEEN_DECISIONS 10
+#define WAIT_BETWEEN_DECISIONS 20
 
 Behavior::Behavior (): 
 	robot_(), neurosolver_(robot_), avoid_(robot_), action_done_(true),	
@@ -32,7 +32,9 @@ void Behavior::do_action ()
 	}
 	
 	double angle = current_;
+//	cout << "angle " << current_;
 	double diff = ecart_angulaire (robot_.angle_get (), angle);
+//	cout << "diff " << diff;
 	if (!action_done_) {
   		action_done_ = angle_equal (robot_.angle_get (), angle);
 	}
@@ -42,6 +44,7 @@ void Behavior::do_action ()
 	int left_speed, right_speed;
 	bool bloque = avoid_.avoid (diff, robot_.position_get (), left_speed, right_speed);
 	neurosolver_.correct_transition (bloque);
+//	cout << " bloque " << bloque << " left " << left_speed << " right " << right_speed << endl;
 	robot_.setSpeed (left_speed, right_speed);
 }
 
@@ -145,11 +148,17 @@ Action* Behavior::select_action ()
 	vector<double> dirs;
 	avoid_.free_ways (dirs, robot_.angle_get ());
 	int nb_free = dirs.size ();
-	// si on est dans un couloir, on continue
-	// on a enleve la possibilite de revenir en arriere
+	// si on est dans un couloir, on continue (on a enleve la possibilite de revenir en arriere)
 	if (nb_free <= 1) {
 		return 0;
 	}
+        // idem si on est sur la colonne de but
+        Column* gcol = neurosolver_.cols_get().best_state_col (0);
+	if (gcol && neurosolver_.is_goal_position(gcol)) {
+          cout << "going straight at goal" << endl;
+		return 0;
+	}
+
 	// generation des pa (prob de select de l'action)
 	double pa[nb_free];
 	stringstream s;
@@ -205,15 +214,16 @@ void Behavior::compute_next_action ()
 		return;
 	}
 	
-	// mecanisme pour s'arreter au goal et au depart
+	// mecanisme pour s'arreter au goal
   	if (wait_at_goal_ > 0) {
 		wait_at_goal_--;
 	}
-	else {
-		wait_at_goal_ = robot_.goal_reached () ? 10 * WAIT_BETWEEN_DECISIONS : 0;
+	else if (robot_.goal_reached ()) {
+		wait_at_goal_ = 10 * WAIT_BETWEEN_DECISIONS;
+		neurosolver_.goal_learning ();
 	}
 	
-	bool col_changed = neurosolver_.synch ();
+	bool col_changed = neurosolver_.synch (! robot_.manually_moved ());
 	if (col_changed) {
 		// on stoppe l'action en cours quand on passe à une nouvelle colonne
 		// à remplacer à terme par : on planifie à chaque colonne
@@ -228,6 +238,7 @@ void Behavior::compute_next_action ()
 	}
 	Action* action = select_action ();	
     if (action) {
+    	cout << "action :" << action->angle_get ();
     	wait_ = WAIT_BETWEEN_DECISIONS;
     	current_ = action->angle_get ();
     	action_done_ = false;
@@ -239,4 +250,10 @@ void Behavior::synch ()
 {
   	compute_next_action ();
   	do_action (); 
+}
+
+
+double Behavior::lastT_meanaction () const
+{
+	return 0;
 }

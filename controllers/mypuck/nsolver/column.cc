@@ -10,6 +10,11 @@
 #include "logger.hh"
 #include <sstream>
 #include <iostream>
+//#include <numeric>
+#include <algorithm>
+
+#define NB_STEP 4
+#define LEARN_RYTHM 48
 
 bool operator== (const Column& c1, const Column& c2)
 {
@@ -19,7 +24,7 @@ bool operator== (const Column& c1, const Column& c2)
 Column::Column (Columns& columns, int no, const vector<ComputeUnit*>& hippo_pop) :
 	no_(no), state_(columns.add_neuron_max (STATE)), 
 	sup_(columns.add_neuron_max (MAXSUP)), inf_(columns.add_neuron_max (LAT)), 
-	columns_(columns), level_(0), winner_(false), pos_(0), maxr(0) 
+	columns_(columns), level_(0), winner_(false), pos_(0), maxr(0), lastTidx_(0), learn_rythm_(0)
 {
 	stringstream s1, s2, s3;
 	s1 << state_.no_get () << " " << no;
@@ -42,7 +47,18 @@ Column::~Column ()
 
 void Column::synch (bool learn, const vector<ComputeUnit*>& pop_state)
 {
-	if (learn) {
+	// on garde un historique de l'activation sur X time steps
+	if (lastTrecent_.size () < NB_STEP) {
+		lastTrecent_.push_back (state_.output ());
+		lastTold_.push_back (state_.output ());
+	}
+	else {
+		lastTold_[lastTidx_] = lastTrecent_[lastTidx_];
+		lastTrecent_[lastTidx_] = state_.output ();
+		lastTidx_ = ++lastTidx_ % NB_STEP;
+		++learn_rythm_;
+	}
+	if (learn && (learn_rythm_ % LEARN_RYTHM) == (LEARN_RYTHM-1)) {
 		connect_pop_to_neuron (pop_state);
 	}
 }
@@ -64,24 +80,31 @@ void Column::connect_pop_to_neuron (const vector<ComputeUnit*>& pop_state, bool 
 {
 	// TODO: pour lvl0 et lvl1, traiter le cas !winner_ pour dévaluer les poids ?
 //	if (level_ == 0 && winner_ && nb_spiking_cells () >= 6) {
-	if (level_ == 0 && (winner_ || newcol)) {
+//	if (level_ == 0 && (winner_ || newcol)) {
+	if (level_ == 0) {
 		static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
 		int nbunits = pop_state.size ();
 		for (int i = 0; i < nbunits; i++) {
-			ComputeUnit* unit = pop_state.at (i);
-			double rj = unit->output ();
+			Cell* unit = dynamic_cast<Cell*>(pop_state.at (i));
+//			double rj = unit->output ();
 			Synapse* s = state_.syn_get(*unit);
-			if (s == 0) {
-				double init_val = 0.1 * drand ();
-				state_.add_synapse (*unit, init_val, false);
+			if (s == 0 && winner_) {
+                          double init_val = unit->spiking () ? unit->output () : 0;
+                          state_.add_synapse (*unit, init_val, false);
 			}
-			else if (s != 0) {
-				s->w_set (s->w_get () + RATE_PC_COL * (rj - s->w_get ()) * (state_.output ()));
+			else if (s != 0 && winner_) {
+				s->w_set (s->w_get () + RATE_PC_COL * (unit->lastT_recent() - s->w_get ()) * (lastT_recent ()));
+//				s->w_set (s->w_get () + RATE_PC_COL * (unit->lastT_recent_max () - s->w_get ()) * (lastT_recent ()));
+//			else if (s != 0 && winner_) {
+//				s->w_set (s->w_get () + RATE_PC_COL * (rj - s->w_get ()) * (state_.output ()));
 				// code pour la regle BCM (marche pas)
 //				double t = state_.thetaM_get (), y = state_.output ();
 //				s->w_set (s->w_get () + 0.01 * 1 / t * rj * (y - t) * y);
 //				state_.thetaM_set (t + 0.1 * (exp(y) - t));
-			}			
+			}
+//			else if (s != 0 && !winner_ && lastTidx_ == 0) {
+//				s->w_set (s->w_get () + RATE_PC_COL * (unit->lastT_recent() - s->w_get ()) * (lastT_recent () - 0.3));
+//			}
 		}
 	}
 }
@@ -137,4 +160,24 @@ void Column::center_rf (const Coord& pos)
 		maxr = state_.output ();
 		*pos_ = pos;
 	}
+	else if (winner_) {
+		// pr obliger à remettre à jour la position
+		maxr -= 0.001 * maxr;	
+	}
+}
+
+double Column::lastT_recent () const
+{
+//	double total = accumulate (lastTrecent_.begin(), lastTrecent_.end(), 0.0);
+//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
+//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
+	return * max_element (lastTrecent_.begin(), lastTrecent_.end());
+}
+
+double Column::lastT_old () const
+{
+//	double total = accumulate (lastTold_.begin(), lastTold_.end(), 0.0);
+//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
+//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
+	return * max_element (lastTold_.begin(), lastTold_.end());
 }

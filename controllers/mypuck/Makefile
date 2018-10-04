@@ -3,7 +3,7 @@ MY_INC	  = -Icontroller -Igui -Insolver -Itools -I.
 QT_INC 	  = -I$(QTDIR_INC)/QtCore -I$(QTDIR_INC)/QtGui -I$(QTDIR_INC)
 
 CFLAGS    = -W $(QT_INC) $(MY_INC) -g -O2 
-LIBRARIES = -lQtGui -lQtCore -gdb -lCppController
+LIBRARIES = -lQtGui -lQtCore -gdb
 
 CC_SOURCES = \
 	controller/action.cc\
@@ -47,12 +47,10 @@ myclean:
 	find . -name "*.o" | xargs -r rm
 	find . -name "*.d" | xargs -r rm
 
-moc:
-	find . -name "moc*.c*[cp]" | xargs rm
-	moc-qt4 gui/controlrobot.hh -o gui/moc_controlrobot.cc
-	moc-qt4 gui/boardwidget.hh -o gui/moc_boardwidget.cc
-	moc-qt4 gui/graphwidget.h -o gui/moc_graphwidget.cpp
-
 ui:
 	rm gui/boardwindow.hh
 	uic-qt4 gui/boardwindow.ui -o gui/boardwindow.hh
+#	find . -name "moc*.c*[cp]" | xargs rm
+	moc-qt4 gui/controlrobot.hh -o gui/moc_controlrobot.cc
+	moc-qt4 gui/boardwidget.hh -o gui/moc_boardwidget.cc
+	moc-qt4 gui/graphwidget.h -o gui/moc_graphwidget.cpp

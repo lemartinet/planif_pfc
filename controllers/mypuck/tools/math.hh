@@ -31,6 +31,6 @@ double mean_value (double old_v, double new_v, double ratio);
 
 double pi_pi (double angle);
 
-void color_palette (double activity, int* r, int* g, int* b);
+void color_palette (double activity, int& r, int& g, int& b);
 
 #endif

@@ -25,6 +25,7 @@
 #include "edge.h"
 #include "graphwidget.h"
 #include "mystr.hh"
+#include "math.hh"
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
@@ -34,11 +35,10 @@
 #include <algorithm>
 
 Node::Node (GraphWidget *graphWidget)
-  : graph(graphWidget), activ_(false), lightlevel_(50), nodesize_(20)
+  : graph(graphWidget), nodesize_(20), rate_(0)
 {
     setFlag(ItemIsMovable);
     setZValue(1);
-    col_ = Qt::darkYellow;
 }
 
 Node::~Node ()
@@ -117,28 +117,24 @@ QPainterPath Node::shape() const
     return path;
 }
 
+void Node::color_set (double val) 
+{ 
+	rate_ = val; 
+	update (); 
+}
+
 void Node::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    painter->setPen(Qt::NoPen);
-    //painter->setBrush(Qt::darkGray);
-    //painter->drawEllipse(-7, -7, nodesize_, nodesize_);
-
-    QRadialGradient gradient(-3, -3, 10);
-    if (activ_ /*option->state & QStyle::State_Sunken*/)
-      {
-        //gradient.setCenter(3, 3);
-        //gradient.setFocalPoint(3, 3);
-        gradient.setColorAt(1, QColor(col_).light (120));
-        gradient.setColorAt(0, QColor(col_).light (120));
-      }
-    else
-      {
-        gradient.setColorAt(0, QColor(col_).light (lightlevel_));
-		gradient.setColorAt(1, QColor(col_).light (lightlevel_));
-      }
-    painter->setBrush(gradient);
-    painter->setPen(QPen(Qt::black, 0));
-    painter->drawEllipse(-10, -10, nodesize_, nodesize_);
+	painter->setPen(QPen(Qt::black, 0));
+	if (nodetype_ != ROBOT) {
+		int r,g,b;
+		color_palette (rate_, r, g, b);
+		painter->setBrush(QColor (r,g,b));
+	}
+	else {
+		painter->setBrush(QColor (255,255,255));
+	}
+	painter->drawEllipse(-10, -10, nodesize_, nodesize_);
     
     if (nodetype_ != ROBOT) {
 	    char s[128];

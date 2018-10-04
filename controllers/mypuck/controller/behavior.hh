@@ -17,6 +17,7 @@ public:
 	void synch ();
 	Neurosolver& neurosolver_get () { return neurosolver_; }
 	RobotDevice& robot_get () { return robot_; }
+	double lastT_meanaction () const;
   	
 private:
 	void compute_next_action ();
@@ -35,6 +36,9 @@ private:
 	int wait_; // attente entre les décisions
 	int wait_at_goal_;
 	double current_;
+	
+	vector<double> lastT_action_;
+	int lastTidx_;
 };
 
 #endif

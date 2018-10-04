@@ -1,0 +1,35 @@
+MY_INC	  = -Icontroller -Insolver -Itools -I.
+CFLAGS    = -W $(MY_INC) -g -O2 
+LIBRARIES = -gdb -lCppController
+
+CC_SOURCES = \
+	controller/action.cc\
+	controller/behavior.cc\
+	controller/device.cc\
+	controller/obstacleavoidance.cc\
+	nsolver/minicol.cc\
+	nsolver/column.cc\
+	nsolver/columns.cc\
+	nsolver/computeunit.cc\
+	nsolver/synapse.cc\
+	nsolver/hippo.cc\
+	nsolver/cell.cc\
+	nsolver/neuron.cc\
+	nsolver/neurosolver.cc\
+	nsolver/egoactionpop.cc\
+	nsolver/alloactionpop.cc\
+	nsolver/dcell.cc\
+	tools/coord.cc\
+	tools/math.cc\
+	tools/mystr.cc\
+	tools/params.cc\
+	tools/log.cc\
+	tools/logger.cc\
+	mypuck_cluster.cc
+
+include $(WEBOTS_HOME)/projects/default/controllers/Makefile.include
+
+myclean:
+	find . -name "*.o" | xargs -r rm
+	find . -name "*.d" | xargs -r rm
+	

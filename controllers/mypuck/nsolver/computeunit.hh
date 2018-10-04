@@ -24,7 +24,8 @@ public:
 	double output () const { return output_; }
 	bool spiking () const;
 	int no_get () const { return no_; }
-
+	static int nb_computeunits_get () { return nb_computeunits; }
+	 
 protected:
 	double output_;
 	const int no_;

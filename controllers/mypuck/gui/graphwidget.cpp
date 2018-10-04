@@ -44,15 +44,15 @@ GraphWidget::GraphWidget ()
     setResizeAnchor(AnchorViewCenter);
     setWindowTitle(tr("Columns viewer"));
     setMouseTracking (true);
-    scale(0.8, 0.8);
+//    scale(0.8, 0.8);
     //setMinimumSize(400, 400);
     scene_ = scene;
     
     // repere pour le monde de Webots : min (-0.64, -1.5), max (1.13, 0.0)
     double w_xmin = -0.64, w_ymin = -1.7, w_xmax = 1.13, w_ymax = 0.0;
     Coord::webots_coord_set (w_xmin, w_ymin, w_xmax,  w_ymax);
-	// repere pour le gui : min (0, 0), max (600, 600)
-	double g_xmin = 0, g_ymin = 0, g_xmax = 600, g_ymax = 600;
+	// repere pour le gui : min (0, 0), max (500, 500)
+	double g_xmin = 0, g_ymin = 0, g_xmax = 500, g_ymax = 500;
 	Coord::gui_coord_set (g_xmin, g_ymin, g_xmax, g_ymax);
 	// taille du graph
 	scene_->setSceneRect(g_xmin, g_ymin, fabs (g_xmax - g_xmin), fabs (g_ymax - g_ymin));
@@ -81,6 +81,28 @@ Node* GraphWidget::node_get (NodeType type, int no)
   return 0;
 }
 
+void GraphWidget::type_del (NodeType type)
+{
+	foreach (QGraphicsItem *item, scene()->items()) {
+		Node* node = qgraphicsitem_cast<Node*>(item);
+		if (node && node->nodetype_get () == type) {
+			node->hide ();
+			scene()->removeItem (node);
+		}
+    }
+}
+
+void GraphWidget::edge_type_del (NodeType type)
+{
+	foreach (QGraphicsItem *item, scene()->items()) {
+		Edge* edge = qgraphicsitem_cast<Edge*>(item);
+		if (edge && edge->sourceNode ()->nodetype_get () == type && edge->destNode ()->nodetype_get () == type) {
+			edge->hide ();
+			scene()->removeItem (edge);
+		}
+    }
+}
+
 Edge* GraphWidget::edge_get (NodeType type, int from, int to)
 {
   Edge*  edge = 0;
@@ -93,12 +115,11 @@ Edge* GraphWidget::edge_get (NodeType type, int from, int to)
   return 0;
 }
 
-Node* GraphWidget::add_node (NodeType type, int no, int size, QColor col)
+Node* GraphWidget::add_node (NodeType type, int no, int size)
 {
 	Node* node = new Node (this);
 	node->nodetype_set (type);
 	node->no_set (no);
-	node->color_set (col);
 	node->nodesize_set (size);
 	node->setPos (0, 0);
 	scene_->addItem (node);
@@ -172,6 +193,15 @@ void GraphWidget::drawBackground(QPainter *painter, const QRectF &rect)
     painter->drawText(textRect.translated(2, 2), message);
     painter->setPen(Qt::black);
     painter->drawText(textRect, message);
+    
+//    QRectF textRect(sceneRect.left() + 4, sceneRect.top() + 4,
+//                    sceneRect.width() - 4, sceneRect.height() - 4);
+//    QString message(tr("Cortical network"));
+//    QFont font = painter->font();
+//    font.setPointSize(14);
+//    painter->setFont(font);
+//    painter->setPen(Qt::black);
+//    painter->drawText(textRect, message);
 }
 
 void GraphWidget::scaleView(qreal scaleFactor)

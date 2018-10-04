@@ -48,22 +48,10 @@ public:
     enum { Type = UserType + 2 };
     int type() const { return Type; }
 
-  inline
-  void color_set (QColor col) { col_ = col; update (); }
+	void color_set (double val);
 
-  inline
-  void lightlevel_set (double val) { lightlevel_ = (int)(val * 200.0 + 50); update (); }
+	void best_set (bool best) { best_ = best; }
 
-  inline
-  double lightlevel_get () { return lightlevel_; }
-
-//   inline
-//   void activ_set (bool activ) { activ_ = activ; }
-
-  inline
-  void arrow_activ (bool actived) { arrow_actived_ = actived; }
-
-  bool dominant ();
 
 protected:
     QRectF boundingRect() const;
@@ -75,10 +63,8 @@ private:
     QPointF sourcePoint;
     QPointF destPoint;
     qreal arrowSize;
-    QColor col_;
-    int    lightlevel_;
-  //bool   activ_;
-    bool   arrow_actived_;
+    double rate_;
+    bool best_;
 };
 
 #endif

@@ -15,7 +15,7 @@
 
 Neurosolver::Neurosolver (const RobotDevice& robot) : 
 	robot_(robot),  hippo_(), ego_pop_(), allo_pop_(), motivation_ (MOTIV, 1), columns_(hippo_.pop_get ()),  
-	prec_lvl0_(0), prec_lvl1_(0), explo_done_(false), no_learning_timer_(0)
+	prec_lvl0_(0), prec_lvl1_(0), explo_done_(false)
 {
 	Logger::logw ("weight");
 }
@@ -37,13 +37,11 @@ Action* Neurosolver::best_action () const
 
 void Neurosolver::goal_learning ()
 {
-	if (!robot_.goal_reached ()) {
-		return;			
-	}
-	if (!current_lvl0_ || !current_lvl0_->spiking ()) {
+	Column* col = columns_.best_state_col (0);
+	if (!col || col->lastT_recent () < 0.3) {
 		return;
 	}
-	set_goal_weight (current_lvl0_, 1);
+	set_goal_weight (col, 1);
 	// ajouter la détection de l'absence d'un goal attendu
 }
 
@@ -64,23 +62,19 @@ bool Neurosolver::is_goal_position (Column* col)
 	return (s != 0) && (s->w_get() > 0);	
 }
 
-bool Neurosolver::synch ()
+bool Neurosolver::synch (bool learning)
 {
-	if (robot_.manually_moved ()) {
-		// on vient de bouger le robot, on apprend rien 
-		// pendant no_learning_timer_ pas de temps
-		// permet de virer le lien entre fin de P1 et début de P1
-  		prec_lvl0_ = 0;
-  		prec_lvl1_ = 0;
-  		no_learning_timer_ = 1;
-  		// on sauvegarde les poids à chaque début d'essai
-  		Logger::logw ("weight");
+	if (robot_.goal_reached ()) {
+  		// on sauvegarde les poids à chaque fin d'essai
+		Logger::logw ("weight");			
 	}
-	
-  	bool col_changed = false;
-  	if (no_learning_timer_ > 0) {
-//  		cout << "no learning" << endl;
-  		no_learning_timer_--;
+	bool col_changed = false;
+	if (!learning) {
+		// on vient d'arriver au goal, on apprend rien pendant un certain temps
+		// permet de virer le lien entre fin de P1 et début de P1
+// 		cout << "no learning" << endl;
+  		prec_lvl0_ = prec_lvl1_ = 0;
+  		current_lvl0_ = current_lvl1_ = 0;  		
 	  	columns_.synch (false, robot_.position_get (), hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
   		col_changed = true;
   	}
@@ -90,7 +84,6 @@ bool Neurosolver::synch ()
 	  	current_lvl1_ = columns_.best_state_col (1);
 		state_learning ();
   		col_changed = topology_learning ();
-		goal_learning ();
 	}	
 	
 	// on màj les entrées après pour avoir r_cortex(t) = F(r_subcort(t-1))
@@ -141,9 +134,14 @@ bool Neurosolver::topology_learning ()
 {
   	stringstream message;
   	bool col_changed = false;
-
-	if (current_lvl0_ && current_lvl0_->spiking ()) {
-	    if (prec_lvl0_ && prec_lvl0_ != current_lvl0_ && prec_lvl0_->spiking ()) {
+	
+//	cout << columns_.col_get (0)->lastT_old() << " " << columns_.col_get (0)->lastT_recent() << endl;
+//	if (current_lvl0_ && prec_lvl0_) {	
+//		cout << current_lvl0_->no_get () << "/" << current_lvl0_->lastT_recent () << " " 
+//			<< prec_lvl0_->no_get () << "/" << prec_lvl0_->lastT_recent () << endl;
+//	}
+	if (current_lvl0_ && current_lvl0_->lastT_recent () > 0.2) {
+	    if (prec_lvl0_ && prec_lvl0_ != current_lvl0_ && prec_lvl0_->lastT_old () > 0.1) {
 	    	col_changed = true;
 	      	Action action (robot_.angle_get());
 	      	columns_.lateral_learning (*prec_lvl0_, *current_lvl0_, action, true, message);

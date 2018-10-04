@@ -9,10 +9,14 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+//#include <numeric>
+#include <algorithm>
+
+#define NB_STEP 4
 
 Minicol::Minicol (Columns& columns, int no) :
 	no_(no), sup_(columns.add_neuron_max (SUP)), inf_(columns.add_neuron_max (INF)), 
-	action_(0), mean_val_(inf_.output()), recruited_(false)
+	action_(0), recruited_(false), lastTidx_(0)
 {
 	stringstream s1, s2;
 	s1 << inf_.no_get () << " " << no;
@@ -67,9 +71,14 @@ void Minicol::adapt_action (const Action& action)
 
 void Minicol::update_value ()
 {
-	static const double MEAN_PERIOD = Params::get_double ("MEAN_PERIOD");
-	double factor = 1 / MEAN_PERIOD;
-	mean_val_ = mean_value (mean_val_, inf_.output (), factor); 
+	// on garde un historique de l'activation sur X time steps
+	if (lastT_.size () < NB_STEP) {
+		lastT_.push_back (inf_.output ());
+	}
+	else {
+		lastT_[lastTidx_] = inf_.output ();
+		lastTidx_ = ++lastTidx_ % NB_STEP;
+	}
 }
 
 void Minicol::lateral_learning (bool increase)
@@ -90,12 +99,12 @@ void Minicol::lateral_learning (bool increase)
 	// on modifie les synapses forw & back
 	double valf, valb;
 	if (increase) {
-//		valf = MAX_LATERAL_WEIGHT - forw->w_get ();
-//		valb = MAX_LATERAL_WEIGHT - back->w_get ();
+		valf = MAX_LATERAL_WEIGHT - forw->w_get ();
+		valb = MAX_LATERAL_WEIGHT - back->w_get ();
 //		valf = (MAX_LATERAL_WEIGHT - forw->w_get ()) * src_->state_activation() * dest_->state_activation();
 //		valb = (MAX_LATERAL_WEIGHT - back->w_get ()) * src_->state_activation() * dest_->state_activation();
-		valf = (MAX_LATERAL_WEIGHT > forw->w_get () ? 1 : 0) * src_->state_activation() * dest_->state_activation();
-		valb = (MAX_LATERAL_WEIGHT > back->w_get () ? 1 : 0) * src_->state_activation() * dest_->state_activation();
+//		valf = 2* (MAX_LATERAL_WEIGHT - forw->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
+//		valb = 2* (MAX_LATERAL_WEIGHT - back->w_get ()) * src_->lastT_recent () * dest_->lastT_recent ();
 	}
 	else {
 		valf = forw->w_get () * -LATERAL_LEARNING_STEP;
@@ -105,4 +114,12 @@ void Minicol::lateral_learning (bool increase)
 	forw->w_set (forw->w_get () + valf);
 	back->w_set (back->w_get () + valb);
 	cout << "new " << forw->w_get () << " " << back->w_get () << endl;
+}
+
+double Minicol::lastT_recent () const
+{
+//	double total = accumulate (lastT_.begin(), lastT_.end(), 0.0);
+//	// on retire l'activité moyenne pendant le creux, et on moyenne sur les peaks 
+//	return (total - NB_STEP/2 * 0.05) / (NB_STEP/2);
+	return * max_element (lastT_.begin(), lastT_.end());
 }

@@ -47,17 +47,9 @@ public:
     inline
       int no_get () { return no_; }
     
-    inline
-      void activ_set (bool activ) { activ_ = activ; update (); }
-    
-    inline
-      void lightlevel_set (double val) { rate_ = val; lightlevel_ = (int)(val * 200.0 + 50); update (); }
+	void color_set (double val);
 
-    inline
-      void color_set (QColor col) { col_ = col; }
-
-    inline
-      NodeType nodetype_get () { return nodetype_; }
+	NodeType nodetype_get () { return nodetype_; }
 
     inline
       void nodetype_set (NodeType type) { nodetype_ = type; }
@@ -102,12 +94,9 @@ private:
     QPointF       newPos;
     GraphWidget*  graph;
     int           no_;
-    bool          activ_;
-    int           lightlevel_;
-    double rate_;
-    QColor        col_;
     int           nodesize_;
     NodeType      nodetype_;
+    double rate_;
 };
 
 #endif

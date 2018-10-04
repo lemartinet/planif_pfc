@@ -22,6 +22,7 @@ public:
 	void pos_set (const Coord& pos);
 
 	void compute (const Coord& pos, bool peak);
+	double lastT_recent () const;
 
 	void draw (ostream& os) const;
 
@@ -30,6 +31,8 @@ private:
 	std::vector<double> r_; // r_ = [r1, r2, ...]
 	std::vector<Coord> posr_; // posr_ = [(x1,y1), (x2,y2), ...]
 	static int step_;
+	vector<double> lastTrecent_;
+	int lastTidx_;
 };
 
 #endif /*CELL_HH_*/

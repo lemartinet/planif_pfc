@@ -28,6 +28,7 @@ public:
 	bool synch (const Coord& position);
 	bool synch (int numcell);
 	int nb_spiking_cells () const;
+	bool theta_new () const;
 
 	void draw (ostream& os) const;
 

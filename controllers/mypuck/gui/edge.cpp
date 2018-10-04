@@ -28,6 +28,7 @@
 
 #include "edge.h"
 #include "node.h"
+#include "math.hh"
 
 using namespace std;
 
@@ -35,17 +36,15 @@ const double Pi = 3.14159265358979323846264338327950288419717;
 double TwoPi = 2.0 * Pi;
 
 Edge::Edge(Node *sourceNode, Node *destNode)
-    : arrowSize(10)
+    : arrowSize(10),rate_(0)
 {
-  //activ_ = true;
     setAcceptedMouseButtons(0);
     source = sourceNode;
     dest = destNode;
     source->addEdge_succ (this);
     dest->addEdge_pred (this);
     adjust();
-    lightlevel_ = 50;
-    arrow_actived_ = false;
+    best_ = false;
 }
 
 Edge::~Edge()
@@ -102,52 +101,39 @@ QRectF Edge::boundingRect() const
         .adjusted(-extra, -extra, extra, extra);
 }
 
+void Edge::color_set (double val) 
+{ 
+	rate_ = val; 
+	update (); 
+}
+
 void Edge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
     if (!source || !dest)
         return;
+ 
+	int r,g,b;
+	color_palette (rate_, r, g, b);
+	painter->setBrush(QColor (r,g,b));
+	int size = best_?4:1;
+	painter->setPen(QPen(QColor (r,g,b), size, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
     // Draw the line itself
-    //QLineF line(QPointF (sourcePoint + QPointF(10, 10)), QPointF (destPoint + QPointF (10, 10)));
     QLineF line (sourcePoint, destPoint);
-//    painter->setPen(QPen(QColor (col_).light (lightlevel_), 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-	painter->setPen(QPen(QColor (col_).light (0), 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-
-    assert (lightlevel_ >= 50);
-//    if (dominant ())
-      painter->drawLine(line);
-
+	painter->drawLine(line);
+	
     // Draw the arrows if there's enough room
     double angle = ::acos(line.dx() / line.length());
     if (line.dy() >= 0)
         angle = TwoPi - angle;
 
-    QPointF sourceArrowP1 = sourcePoint + QPointF(sin(angle + Pi / 3) * arrowSize,
-                                                  cos(angle + Pi / 3) * arrowSize);
-    QPointF sourceArrowP2 = sourcePoint + QPointF(sin(angle + Pi - Pi / 3) * arrowSize,
-                                                  cos(angle + Pi - Pi / 3) * arrowSize);   
-    QPointF destArrowP1 = destPoint + QPointF(sin(angle - Pi / 3) * arrowSize,
-                                              cos(angle - Pi / 3) * arrowSize);
-    QPointF destArrowP2 = destPoint + QPointF(sin(angle - Pi + Pi / 3) * arrowSize,
-                                              cos(angle - Pi + Pi / 3) * arrowSize);
-
-    if (arrow_actived_)
-      painter->setBrush(QColor (Qt::blue).light (250));
-    else
-      //painter->setBrush(QColor (col_).light (lightlevel_));
-      painter->setBrush(QColor (col_).light (0));
-    //painter->drawPolygon(QPolygonF() << line.p1() << sourceArrowP1 << sourceArrowP2);
+     QPointF sourceArrowP1 = sourcePoint 
+    	+ QPointF(sin(angle + Pi / 3) * arrowSize, cos(angle + Pi / 3) * arrowSize);
+    QPointF sourceArrowP2 = sourcePoint 
+    	+ QPointF(sin(angle + Pi - Pi / 3) * arrowSize, cos(angle + Pi - Pi / 3) * arrowSize);   
+    QPointF destArrowP1 = destPoint 
+    	+ QPointF(sin(angle - Pi / 3) * arrowSize, cos(angle - Pi / 3) * arrowSize);
+    QPointF destArrowP2 = destPoint 
+    	+ QPointF(sin(angle - Pi + Pi / 3) * arrowSize, cos(angle - Pi + Pi / 3) * arrowSize);
     painter->drawPolygon(QPolygonF() << line.p2() << destArrowP1 << destArrowP2);        
-}
-
-bool Edge::dominant ()
-{
-  Edge*   back = dest->edge_get (*source);
-
-  //return false;
-  if (back && back->lightlevel_get () > lightlevel_)
-    {
-      //assert (false);
-      return false;
-    }
-  return true;
 }

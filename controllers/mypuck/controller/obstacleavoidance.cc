@@ -6,6 +6,7 @@
 #include <cmath>
 #include <webots/DifferentialWheels.hpp>
 #include <webots/DistanceSensor.hpp>
+#include <iostream>
 
 // 8 IR proximity sensors
 #define NB_SENSORS 8
@@ -75,8 +76,9 @@ void ObstacleAvoidance::avoid_block (const Coord& position)
 {
   	double x = position.x_get ();
 	double y = position.y_get ();
-  
-  	if (fabs (last_x - x) < 0.002 && fabs (last_y - y) < 0.002) {
+	// Attention ce code est dépendant de TIME_STEP = 30ms
+	// puisqu'il mesure l'avancée depuis le dernier step 
+  	if (fabs (last_x - x) < 0.0005 && fabs (last_y - y) < 0.0005) {
     	blocked++;
   	}
   	else {
@@ -128,6 +130,7 @@ bool ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_sp
   	oam_active = false;
   	bloque = false;
   }
+//	cout << endl << Activation[LEFT] << " " << Activation[RIGHT] << " " << OAM_OBST_THRESHOLD << " " << blocked << endl;
 
   if (oam_active && !bloque) {
   	if (Activation[RIGHT] > OAM_BLOQUE && Activation[LEFT] > OAM_BLOQUE) {
@@ -159,6 +162,7 @@ bool ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_sp
   	}
   
   	avoid_block (position);
+//  	cout << "blocked " << blocked << "bloc " << bloque << " demi_tour " << demi_tour << " angle " << angle << endl;
   	if (!bloque && blocked < 500) {
   		if (fabs(angle) < 0.1 * M_PI) {
   			demi_tour = false;

@@ -123,7 +123,7 @@ void RobotDevice::synch ()
 			goal_reached_ = true;
 		}
 		else if (message == "sleep" && SLEEP) {
-			sleep_ = true;
+//			sleep_ = true;
 			cout << "sleep !!!" << endl; 
 		}
 //		else {

@@ -1,25 +1,17 @@
 #include "boardwidget.hh"
-#include "graphwidget.h"
-#include "controlrobot.hh"
+#include "behavior.hh"
 #include <iostream>
 
-BoardWidget::BoardWidget (GraphWidget& widget, ControlRobot& robotgui) : widget_(widget), robotgui_(robotgui)
+BoardWidget::BoardWidget (Behavior& behavior) : 
+	robotgui_(behavior.robot_get (), behavior.neurosolver_get ().hippo_get (), behavior.neurosolver_get ())
 { 
-	setupUi (this); 
+	setupUi (this);
+
+	robotgui_.widget_get ()->setParent (network);
+	robotgui_.widget_get ()->move (230,10);
 }
 
 void BoardWidget::closeEvent (QCloseEvent *) {}
-
-void BoardWidget::on_execution_behavior_run_clicked () {}
-
-void BoardWidget::on_execution_behavior_pause_clicked () {}
-
-void BoardWidget::on_execution_behavior_reset_clicked () {}
-
-void BoardWidget::on_execution_view_activities_clicked () 
-{
-  	widget_.show ();
-}
 
 void BoardWidget::on_show_state_clicked () 
 {
@@ -36,7 +28,12 @@ void BoardWidget::on_show_sup_clicked ()
 	robotgui_.show_sup ();
 }
 
-//void BoardWidget::on_show_pc_clicked () 
-//{
-//	gui_->cellscontrol_get ()->show_pc ();
-//}
+void BoardWidget::on_show_pc_clicked () 
+{
+	robotgui_.show_pc ();
+}
+
+void BoardWidget::on_show_col_clicked () 
+{
+	robotgui_.show_col ();
+}

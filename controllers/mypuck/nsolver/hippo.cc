@@ -86,7 +86,7 @@ bool Hippo::synch (const Coord & position)
 	// recruitement dynamique
 	vector<ComputeUnit*>::iterator it = find_if (cellmap_.begin (), cellmap_.end (), 
 		bind (&Cell::output, ll_dynamic_cast<Cell*>(_1)) > CELL_FIRE_MIN);
-	cout << "hp: " << (*it)->output () << endl;
+//	cout << "hp: " << (*it)->output () << endl;
 	bool winner = (it != cellmap_.end ());
 //	bool winner = (nb_spiking_cells () >= 6);
 	if (!LOAD_PC && !winner && peak) {
@@ -128,4 +128,10 @@ void Hippo::draw (ostream& os) const
 const Cell& Hippo::cell_get (int cell) const
 {
  	return dynamic_cast<const Cell&>(*cellmap_[cell]); 
+}
+
+bool Hippo::theta_new () const 
+{ 
+	static const double THETA_MOD = Params::get_int ("THETA_MOD");
+	return THETA_MOD && (step_ == 1); 
 }

@@ -51,14 +51,16 @@ void Columns::winner_col (int level)
 		if ((*it)->level_get () != level) {
 			continue;
 		}
-		else if (best_col == 0 || (best_col->state_activation () < (*it)->state_activation ())){
+//		else if (best_col == 0 || (best_col->state_activation () < (*it)->state_activation ())){
+		else if (best_col == 0 || (best_col->lastT_recent () < (*it)->lastT_recent ()
+                                           && ((*it)->state_activation () > 0.2 || (*it)->state_activation () < 0.1))){
 			best_col = *it;
 		}
 		(*it)->winner_set (false);
 	}
 	if (best_col != 0) {
 		best_col->winner_set (true);
-		cout << "winner (" << level << "): " << best_col->no_get () << " " << best_col->state_get ().output() << endl;
+//		cout << "winner (" << level << "): " << best_col->no_get () << " " << best_col->state_get ().output() << endl;
 	}
 	win_col_lvl_[level] = best_col;
 }
@@ -71,8 +73,7 @@ void Columns::winner_minicol (int level)
 		if ((*it)->level_get () != level || !(*it)->recruited_get ()) {
 			continue;
 		}
-		if (!best_minicol || (best_minicol->activation () < (*it)->activation ())) {
-			// on peut utiliser aussi mean_value_get () au lieu de activation ()
+		if (!best_minicol || (best_minicol->lastT_recent () < (*it)->lastT_recent ())) {
 			best_minicol = *it;	
 		}
 	}

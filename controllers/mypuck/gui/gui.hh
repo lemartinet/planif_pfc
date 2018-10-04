@@ -3,9 +3,7 @@
 
 #include <QtGui>
 
-class GraphWidget;
 class BoardWidget;
-class ControlRobot;
 class Behavior;
 class QApplication;
 class QEventLoop;
@@ -20,8 +18,6 @@ public:
 	  
 private:
 	BoardWidget*   boardwidget_;
-	GraphWidget*   colswidget_;
-	ControlRobot*  robotcontrol_;
 	QEventLoop*    eventloop_;
 };
 

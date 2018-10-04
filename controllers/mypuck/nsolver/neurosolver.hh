@@ -22,7 +22,7 @@ public:
 
 	Action* best_action () const;
 	double inf_get (double angle) const;
-	bool synch ();
+	bool synch (bool learning);
 	void sleep ();
 	void correct_transition (bool bloque);
 	void goal_learning ();
@@ -45,7 +45,6 @@ private:
 	Column* current_lvl0_;
 	Column* current_lvl1_;
 	bool explo_done_;
-	int no_learning_timer_;
 };
 
 #endif
