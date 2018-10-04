@@ -1,10 +1,9 @@
 QTDIR_INC = /usr/include/qt4
-MYINC	  = -Icontroller -Igui -Igui/controlors -Igui/widgets/graphwidget -Insolver -Itools -Igui/widgets/boardwidget -I. -Itesty
-INCQT 	  = -I$(QTDIR_INC)/QtCore -I$(QTDIR_INC)/QtGui -I$(QTDIR_INC)
-LINKING   = -lQtGui -lQtCore -gdb -lCppController -lController
+MY_INC	  = -Icontroller -Igui -Igui/controlors -Igui/widgets/graphwidget -Insolver -Itools -Igui/widgets/boardwidget -I.
+QT_INC 	  = -I$(QTDIR_INC)/QtCore -I$(QTDIR_INC)/QtGui -I$(QTDIR_INC)
 
-CFLAGS    = -W $(INCQT) $(MYINC) -g -O2 -I/usr/local/webots/include/controllers/cpp
-LIBRARIES = $(LINKING)
+CFLAGS    = -W $(QT_INC) $(MY_INC) -g -O2 
+LIBRARIES = -lQtGui -lQtCore -gdb -lCppController
 
 CC_SOURCES = \
 	controller/action.cc\
@@ -30,6 +29,7 @@ CC_SOURCES = \
 	tools/math.cc\
 	tools/mystr.cc\
 	tools/params.cc\
+	tools/log.cc\
 	gui/repere_converter.cc\
 	gui/controlors/controlcols.cc\
 	gui/controlors/moc_controlcols.cc\
@@ -39,7 +39,6 @@ CC_SOURCES = \
 	gui/widgets/boardwidget/boardwidget.cc\
 	gui/widgets/boardwidget/moc_boardwidget.cc\
 	gui/gui.cc\
-	testy/testy.cc\
 	mypuck.cc
 
 CPP_SOURCES = \
@@ -48,7 +47,7 @@ CPP_SOURCES = \
 	gui/widgets/graphwidget/moc_graphwidget.cpp\
 	gui/widgets/graphwidget/node.cpp
 
-include /usr/local/webots/projects/default/controllers/Makefile.include
+include $(WEBOTS_HOME)/projects/default/controllers/Makefile.include
 
 myclean:
 	find . -name "*.o" | xargs -r rm

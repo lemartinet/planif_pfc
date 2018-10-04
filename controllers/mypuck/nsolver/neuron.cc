@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -12,8 +13,6 @@
 #include "params.hh"
 #include "cell.hh"
 
-extern Params* params;
-
 using namespace boost::lambda;
 
 Synapse* snd (const pair<const int, Synapse *>& p)
@@ -21,13 +20,13 @@ Synapse* snd (const pair<const int, Synapse *>& p)
 	return p.second;	
 }
 
-Neuron::Neuron (const string& path, int no_col, bool max, double ip_step, double ip_mu, double a, double b, int level) : 
+Neuron::Neuron (int no_col, bool max, double ip_step, double ip_mu, double a, double b, int level) : 
 				ComputeUnit(level), no_col_(no_col), max_(max), a_(a), b_(b), ip_step_(ip_step), ip_mu_(ip_mu)
 {
-	static const double EPSILON_VR = params->get_double("EPSILON_VR"); 
-	static const double EPSILON_VF = params->get_double("EPSILON_VF");
-	static const double VR = params->get_double("VR");
-  	static const double VF = params->get_double("VF");
+	static const double EPSILON_VR = Params::get_double("EPSILON_VR"); 
+	static const double EPSILON_VF = Params::get_double("EPSILON_VF");
+	static const double VR = Params::get_double("VR");
+  	static const double VF = Params::get_double("VF");
 	double Vr = VR + bruit (EPSILON_VR);
 	double Vf = VF + bruit (EPSILON_VF);
   	stringstream ss;
@@ -35,12 +34,11 @@ Neuron::Neuron (const string& path, int no_col, bool max, double ip_step, double
 
 	ss << no_;
 	ss >> val;
-	path_ = path;
-	path_ += "n" + val;
 	thresh_ = Vr - Vf;
 	pot_ = 0.0;
 	output_ = output_next_ = 0.0;
 	syndrive_ = 0.0;
+	thetaM_ = 0.3;
 }
 
 Neuron::~Neuron ()
@@ -62,7 +60,7 @@ void Neuron::add_synapse (const ComputeUnit& from, const ComputeUnit& from_mult,
 void Neuron::add_synapse (const ComputeUnit& from)
 {
 	// Maximum weight init value.
-	static const double NEURON_WEIGHT_INIT  = params->get_double("NEURON_WEIGHT_INIT");
+	static const double NEURON_WEIGHT_INIT  = Params::get_double("NEURON_WEIGHT_INIT");
   	add_synapse (from, drand () * NEURON_WEIGHT_INIT, false);
 }
 
@@ -93,9 +91,9 @@ void Neuron::update_IP ()
 
 void Neuron::compute ()
 {
-	static const double NEURON_TAU = params->get_double("NEURON_TAU");
-	static const double DELTA_T = params->get_double("DELTA_T");
-	static const double NEURON_ACTIVATION_NOISE = params->get_double("NEURON_ACTIVATION_NOISE");
+	static const double NEURON_TAU = Params::get_double("NEURON_TAU");
+	static const double DELTA_T = Params::get_double("DELTA_T");
+	static const double NEURON_ACTIVATION_NOISE = Params::get_double("NEURON_ACTIVATION_NOISE");
 	double br = bruit (2 * NEURON_ACTIVATION_NOISE);
 		
 	if (!synapses_.empty ()) {
@@ -164,11 +162,6 @@ Synapse* Neuron::syn_get (const ComputeUnit& from) const
 	return (iter == synapses_.end ()) ? 0 : iter->second;
 }
 
-void Neuron::draw_links (ostream& os) const
-{
-	for_each (synapses_.begin (), synapses_.end (), bind (&Synapse::draw_links, bind (&snd, _1), var (os)));
-}
-
 void Neuron::draw_graph (ostream& os) const
 {
 	os << "n" << no_get () << " [label=\""<< no_get () << ":" << output () << "\"]" << endl;
@@ -204,21 +197,4 @@ void Neuron::print_weights (ostream& os) const
 		}  
 	}
 	os << endl;
-}
-
-void Neuron::center_rf (Coord& moy) const
-{
-	Coord zero;
-	moy = zero;
-	double norm = 0.0;
-	map<const int, Synapse *>::const_iterator iter;
-	for (iter = synapses_.begin (); iter != synapses_.end (); iter++) {
-		Cell* cell = dynamic_cast<Cell *> (&(iter->second->from_get ()));
-		Coord tmp = cell->pos_get ();
-		double weight = iter->second->w_get ();
-		tmp *= weight;
-		moy += tmp;
-		norm += weight;
-	}
-	moy /= norm;
 }

@@ -16,32 +16,24 @@ public:
 	void synch ();
 	Neurosolver& neurosolver_get () { return neurosolver_; }
 	RobotDevice& robot_get () { return robot_; }
-	int get_nb_goal_reached () {return nb_goal_reached_;}
   	
 private:
 	void compute_next_action ();
 	void do_action ();
-	int analyse_cross_road (bool& left, bool& straight, bool& right);
-	void free_ways ();
-	Action* random_or_planif ();
-	double e_greedy ();
-	void write_message (ofstream* file, string message);
+	Action* select_action ();
+	void e_greedy (const vector<double>& dirs, double* pa);
+	void q_greedy (const vector<double>& dirs, double* pa);
+	void softmax (const vector<double>& dirs, double* pa);
+	double qval (double angle) const;
 
 private:
-	int cpt_;
 	RobotDevice robot_;
 	Neurosolver neurosolver_;
 	ObstacleAvoidance avoid_;
-	bool left_near_;
-	bool right_near_;
-	Action* current_; // TODO : mettre un double plutôt que la classe Action !
 	bool action_done_;
-//	bool bloque_;
 	int wait_; // attente entre les décisions
-	int nb_goal_reached_;
-	int nb_free_;
-	double* dirs_;
-	bool go_random_;
+	int wait_at_goal_;
+	double current_;
 };
 
 #endif

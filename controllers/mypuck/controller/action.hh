@@ -7,7 +7,6 @@ public:
 	Action (double angle);
 	Action (double angle, int speed);
 
-  	bool equals (const Action& action) const;
   	int speed_get () const { return speed_; }  
   	void speed_set (int speed) { speed_ = speed; }
 	double angle_get () const { return angle_; }

@@ -2,20 +2,22 @@
 #include "math.hh"
 #include <cmath>
 #include "params.hh"
+#include <iostream>
 
-extern Params* params;
+using namespace std;
 
 void DCell::compute (double current_angle)
 {
-	static const double ANGLE_THRESH = params->get_double("ANGLE_THRESH");
-	static const double NEURON_SPIKING_THRESH = params->get_double("NEURON_SPIKING_THRESH");
-	static const double HYPERPOL_PERIOD = params->get_double ("HYPERPOL_PERIOD");
+	static const double ANGLE_THRESH = Params::get_double("ANGLE_THRESH");
+	static const double NEURON_SPIKING_THRESH = Params::get_double("NEURON_SPIKING_THRESH");
+	static const int HYPERPOL_PERIOD = Params::get_int ("HYPERPOL_PERIOD");
 	static const double SIGMA1 = - pow2 (ANGLE_THRESH) / log (NEURON_SPIKING_THRESH);
 	static const double SIGMA2 = SIGMA1;
 
 	if (can_rest_) {
 		if (resting_ > 0) {
 			resting_--;
+//			cout << "Resting:" << resting_ << endl;
 		}
 		else {
 			double diff = ecart_angulaire (angle_, current_angle);

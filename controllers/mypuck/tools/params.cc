@@ -4,22 +4,29 @@
 #include "params.hh"
 #include "mystr.hh"
 
-Params::Params (const string & filename)
+map<string, string> Params::params_;
+
+void Params::load (const string & path)
 {
-	ifstream file (filename.c_str ());
-	string key;
-	string value;
-	cout << "Mypuck: loading params from file: " << filename << endl;
-	
+	params_["data_path"] = path;
+	ostringstream filename;
+	filename << path << "/params.txt";
+	ifstream file (filename.str ().c_str ());
 	if (!file) {
-		cout << "Mypuck: impossible to open: " << filename << endl;
+		cout << "Mypuck: impossible to open: " << filename.str () << endl;
 		return;
     }
+    else {
+    	cout << "Mypuck: loading params from file: " << filename.str () << endl;
+    }
+	string key;
+	string value;
 	while (!file.eof ()) {
       file >> key >> value;
       params_[key] = value;
     }
     file.close ();
+//    params->show ();
 }
 
 void Params::show ()
@@ -51,4 +58,19 @@ double Params::get_double (string name)
 int Params::get_int (string name) 
 { 
 	return str2i (get (name)); 
+}
+
+string Params::get_path ()
+{
+	static const int simu_id = Params::get_int ("SIMULATION_ID");
+	ostringstream path;
+	path << get ("data_path") << "/data_raw/" << simu_id << "/";
+	return path.str ();
+}
+
+string Params::get_path_pc ()
+{
+	ostringstream path;
+	path << get ("data_path") << "/tolman_files/";
+	return path.str ();
 }

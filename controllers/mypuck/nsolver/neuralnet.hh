@@ -6,8 +6,12 @@
 #ifndef NEURALNET_HH_
 # define NEURALNET_HH_
 
+#include <string>
 #include <vector>
-#include "neuron.hh"
+
+using namespace std;
+
+class Neuron;
 
 /**
  * Spiking rates neural network model.
@@ -32,11 +36,10 @@ public:
 	 */
 	void synch ();
 
-	Neuron& add_neuron (const string& path, int no_col, double ip_step, double ip_mu, double a, double b, int level);
-	Neuron& add_neuron_max (const string& path, int no_col, int level);
+	Neuron& add_neuron (int no_col, double ip_step, double ip_mu, double a, double b, int level);
+	Neuron& add_neuron_max (int no_col, int level);
 	
 	void draw_graph (ostream& os) const;
-	void draw_links (ostream& os) const;
 
 private:
 	vector<Neuron *> neurons_;

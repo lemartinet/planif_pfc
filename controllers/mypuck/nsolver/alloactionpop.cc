@@ -3,11 +3,9 @@
 #include "math.hh"
 #include "params.hh"
 
-extern Params* params;
-
 AlloActionPop::AlloActionPop ()
 {
-	static const int NB_HD = params->get_int("NB_HD");
+	const int NB_HD = Params::get_int("NB_HD");
 	for (int i = 0; i < NB_HD; i++) {
 		double angle = -PI + i * 2 * PI / NB_HD;
 		DCell* cell = new DCell (angle);

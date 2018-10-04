@@ -2,6 +2,7 @@
 #include "hippo.hh"
 #include "cell.hh"
 #include "params.hh"
+#include "neuron.hh"
 #include <iostream>
 #include <assert.h>
 #include <algorithm>
@@ -11,8 +12,6 @@
 
 using namespace boost::lambda;
 
-extern Params* params;
-
 Neuralnet::~Neuralnet ()
 {
 	for_each (neurons_.begin (), neurons_.end (), bind (delete_ptr(), _1));
@@ -20,8 +19,8 @@ Neuralnet::~Neuralnet ()
 
 double Neuralnet::lateral_learning (Neuron& from, Neuron& to, bool increase)
 {
-	static const double LATERAL_LEARNING_STEP = params->get_double("LATERAL_LEARNING_STEP");
-	static const double MAX_LATERAL_WEIGHT = params->get_double("MAX_LATERAL_WEIGHT");
+	static const double LATERAL_LEARNING_STEP = Params::get_double("LATERAL_LEARNING_STEP");
+	static const double MAX_LATERAL_WEIGHT = Params::get_double("MAX_LATERAL_WEIGHT");
 	
 	// on apprend le lien en un coup (valeur à MAX_LATERAL_WEIGHT) 
 	// mais on desapprend 4 fois moins vite
@@ -57,7 +56,7 @@ void Neuralnet::synch ()
 
 void Neuralnet::synch_learn ()
 {
-	static const int TETA_RYTHM = params->get_int("TETA_RYTHM");
+	static const int TETA_RYTHM = Params::get_int("TETA_RYTHM");
 	
 	synch ();
 	if (!(freq_ % TETA_RYTHM)) {
@@ -66,17 +65,17 @@ void Neuralnet::synch_learn ()
 	freq_++;
 }
 
-Neuron& Neuralnet::add_neuron (const string& path, int no_col, double ip_step, 
+Neuron& Neuralnet::add_neuron (int no_col, double ip_step, 
 								double ip_mu, double a, double b, int level)
 {
-  Neuron* res = new Neuron (path, no_col, false, ip_step, ip_mu, a, b, level);
+  Neuron* res = new Neuron (no_col, false, ip_step, ip_mu, a, b, level);
   neurons_.push_back (res);
   return *res;
 }
 
-Neuron& Neuralnet::add_neuron_max (const string& path, int no_col, int level)
+Neuron& Neuralnet::add_neuron_max (int no_col, int level)
 {
-  Neuron* res = new Neuron (path, no_col, true, 0.0, 0.0, 0.0, 0.0, level);
+  Neuron* res = new Neuron (no_col, true, 0.0, 0.0, 0.0, 0.0, level);
   neurons_.push_back (res);
   return *res;
 }
@@ -86,9 +85,4 @@ void Neuralnet::draw_graph (ostream& os) const
 	os << "digraph G {" << endl;
 	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::draw_graph, _1, var (os)));
 	os << "}" << endl;
-}
-
-void Neuralnet::draw_links (ostream& os) const
-{
-	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::draw_links, _1, var (os)));
 }

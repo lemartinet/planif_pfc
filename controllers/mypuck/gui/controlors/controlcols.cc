@@ -6,8 +6,6 @@
 #include "params.hh"
 #include <iostream>
 
-extern Params* params;
-
 ControlCols::ControlCols (Neurosolver& neuro, GraphWidget& widget)
 {
 	neuro_ = &neuro;
@@ -115,10 +113,9 @@ void ControlCols::slot_setgoalcol (NodeType type, int no)
 
 	Column* col = neuro_->cols_get ().nocol_get (no);
 	if (neuro_->is_goal_position (col)) {
-		neuro_->unlearn_goal_position (col);
+		neuro_->set_goal_weight (col, 0.0);
 	}
 	else {
-		neuro_->learn_goal_position (col);
+		neuro_->set_goal_weight (col, 1.0);
 	}
 }
-

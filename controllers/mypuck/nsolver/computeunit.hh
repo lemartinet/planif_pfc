@@ -1,8 +1,6 @@
 #ifndef COMPUTEUNIT_H
 # define COMPUTEUNIT_H
 
-#include <stdio.h>
-
 class ComputeUnit
 {
 public:

@@ -1,13 +1,13 @@
 #ifndef NEURON_HH_
 # define NEURON_HH_
 
-#include <string>
 #include <map>
 #include "computeunit.hh"
 #include "synapse.hh"
 
-using namespace std;
 class Coord;
+
+using namespace std;
 
 /**
  * Firing rate's neuron model class.
@@ -16,21 +16,19 @@ class Coord;
 class Neuron : public ComputeUnit
 {
 public:
-	Neuron (const string& path, int no_col, bool max, double ip_step, double ip_mu, double a, double b, int level);
+	Neuron (int no_col, bool max, double ip_step, double ip_mu, double a, double b, int level);
 	virtual ~Neuron ();
   
-	/// Getting the number of synapses.
+	// Getting the number of synapses
 	int size () const { return synapses_.size (); }
-
-	/// Synapse getter.
 	Synapse* syn_get (const ComputeUnit& from) const;
-
 	int no_col_get () const { return no_col_; }
-	const string& path_get () const { return path_; }
 	double a_get () const { return a_; }
 	double b_get () const { return b_; }
 	double pot_get () const { return pot_; }
 	double syndrive_get () const { return syndrive_; }
+	double thetaM_get () const { return thetaM_; }
+	void thetaM_set (double thetaM) { thetaM_ = thetaM; }
 
 	/**
 	 * Add & del a synapse from another neurons, with synaptic weight w.
@@ -56,20 +54,16 @@ public:
 	 */
 	void learn ();
 
-	void draw_links (ostream& os) const;
 	void draw_graph (ostream& os) const;
 	void print_weights (ostream& os) const;
-	void center_rf (Coord& moy) const;
 	
 private:
 	void update_IP ();
   
 private:
 	const int no_col_;
-	string path_;
 	double thresh_; ///< Global spiking threshold value.
 	double pot_; ///< Membrane's current potential.
-//	double tetaV_; ///< current BCM parameter value.
 	const bool max_;
 	double a_;
 	double b_;
@@ -78,6 +72,7 @@ private:
 	const double ip_mu_;
 	map<const int, Synapse *>   synapses_; ///< Collection of synapses connected to neuron.
 	double output_next_;
+	double thetaM_; // BCM threshold
 };
 
 #endif

@@ -1,16 +1,17 @@
 #include "device.hh"
 #include "params.hh"
 #include "math.hh"
+#include "mystr.hh"
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
-#include <webots/Camera.hpp>
-#include <webots/GPS.hpp>
-
-extern Params* params;
+//#include <webots/Camera.hpp>
+//#include <webots/GPS.hpp>
+//#include <webots/Compass.hpp>
 
 // position du but
-#define GOAL_X 0
-#define GOAL_Y -1.68
+//#define GOAL_X 0
+//#define GOAL_Y -1.68
 
 // indique si on a parcouru au moins une fois chaque bras
 bool way1_visited = 0;
@@ -26,14 +27,19 @@ int image_width = 0, image_height = 0;
 float field_of_view = 0.0;
 
 RobotDevice::RobotDevice () :
-	synch_(true), is_moving_(false), goal_reached_prec_(false), 
-	position_(0.0, -0.05), orientation_(0.0), num_pixels_goal_(0)
+	position_(0.0, -0.05), orientation_(0.0), num_pixels_goal_(0), 
+	nb_trial_(0), goal_reached_(false),
+	cpt_trial_(0), cpt_total_(0)
 {
-	static const int TIME_STEP = params->get_int("TIME_STEP");
+	const int TIME_STEP = Params::get_int ("TIME_STEP");
 	gps_ = getGPS ("gps");
 	gps_->enable (TIME_STEP);
-  	//receiver_ = robot_get_device("receiver");
-  	//receiver_enable(receiver_, TIME_STEP);
+	compass_ = getCompass ("compass");
+	compass_->enable (TIME_STEP);
+//	ls_ = getLightSensor ("ls0");
+//	ls_->enable (TIME_STEP);
+  	receiver_ = getReceiver ("receiver");
+  	receiver_->enable (TIME_STEP);
   	if (camera_enabled) {
 		camera_ = getCamera ("camera");
 		camera_->enable (TIME_STEP);
@@ -42,8 +48,31 @@ RobotDevice::RobotDevice () :
 	  	image_height = camera_->getHeight();
 	  	field_of_view = camera_->getFov();
   	}
-  	step (TIME_STEP);
+  	step (TIME_STEP); // pr la màj des capteurs
+
+  	const double* pos = gps_->getValues ();
+  	position_.x_set (pos[0]);
+  	position_.y_set (pos[2]);
+  	const double* orient = compass_->getValues ();
+  	orientation_ = -atan2 (orient[0], orient[2]) + M_PI/2;
+  	orientation_ = orientation_ > M_PI ? orientation_ - 2*M_PI : orientation_;
+  	orientation_ = orientation_ < -M_PI ? orientation_ + 2*M_PI : orientation_;
+
+  	string filename = Params::get_path ();
+	filename += "output_mypuck.txt";
+  	output_mypuck_ = new ofstream (filename.c_str ());
+	filename = Params::get_path ();
+	filename += "output_neurosolver.txt";
+  	output_neuro_ = new ofstream (filename.c_str ());
 }
+
+RobotDevice::~RobotDevice () 
+{
+	output_mypuck ("Mypuck: die ok");
+	delete output_mypuck_;
+	output_neuro ("Neurosolver: die ok");
+	delete output_neuro_;
+} 
 
 int rgb_diff(const unsigned char a[3], const int b[3]) {
   return abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2]);
@@ -81,22 +110,21 @@ float process_camera_image(const unsigned char *image, const int ref_color[3], i
 
 void RobotDevice::synch ()
 {
-  	if (!synch_)
-    	return;
-	
-	goal_reached_prec_ = goal_reached ();
+    cpt_trial_++;
+    cpt_total_++;
   	
   	// save old position
   	double old_x = position_.x_get ();
   	double old_y = position_.y_get ();
   	
   	// read the gps
-  	const float * gps_matrix = gps_->getMatrix ();
-  	position_.x_set (gps_->positionX (gps_matrix));
-  	position_.y_set (gps_->positionZ (gps_matrix));
-  	float euler_angles[3];
-  	gps_->euler (gps_matrix, euler_angles);
-  	orientation_ = euler_angles[1];
+  	const double* pos = gps_->getValues ();
+  	position_.x_set (pos[0]);
+  	position_.y_set (pos[2]);
+  	const double* orient = compass_->getValues ();
+  	orientation_ = -atan2 (orient[0], orient[2]) + M_PI/2;
+  	orientation_ = orientation_ > M_PI ? orientation_ - 2*M_PI : orientation_;
+  	orientation_ = orientation_ < -M_PI ? orientation_ + 2*M_PI : orientation_;
 //  	cout << position_.x_get() << " " << position_.y_get() << " " << orientation_ << endl;
   	
     // read and process camera images
@@ -112,26 +140,33 @@ void RobotDevice::synch ()
 	// le robot a-t-il ete bouge par le manipulateur
 	if ((old_x - x) * (old_x - x) + (old_y - y) * (old_y - y) > 0.5) {
 		manually_moved_ = true;
-		cout << "bougé" << endl;
+		cpt_trial_ = 0;
+		output_mypuck ("bougé");
+		nb_trial_++;
 	}
 	else {
 		manually_moved_ = false;
 	} 
 	
-	// les diffs sont pour obliger à circuler dans un sens du way
-	double diff1 = fabs(ecart_angulaire (orientation_, 0));
-	double diff2 = fabs(ecart_angulaire (orientation_, PI/2.0));
-  	if (fabs(x) < 0.05 && y < -0.5 && y > -0.7 && diff1 < 0.2) {
-  		//cout << "way1 OK" << endl;
-		way1_visited++;
-	}
-	else if (x < -0.05 && y < -0.8) {
-		//cout << "way2 OK" << endl;
-		way2_visited++;
-	}
-	else if (x > 0.05 && y < -1.3 && diff2 < 0.2) {
-		//cout << "way3 OK" << endl;
-		way3_visited++;
+	goal_reached_ = false;
+	while (receiver_->getQueueLength () > 0) {
+		const string message = static_cast<const char*>(receiver_->getData ());
+//		cout << message << endl;
+		receiver_->nextPacket ();
+		
+		if (message == "way1") {
+			way1_visited++;
+		}
+		else if (message == "way2") {
+			way2_visited++;
+		}
+		else if (message == "way3") {
+			way3_visited++;
+		}
+		else if (message == "goal") {
+			goal_reached_ = true;
+			output_mypuck ("goal found");
+		}
 	}
 }
 
@@ -139,37 +174,53 @@ bool RobotDevice::goal_reached () const {
 //	int retina_size = image_width * image_height;
 //	// si l'image du but prend plus de 85% de la retine
 //	// alors on est arrive !
-//	if (num_pixels_goal_ > 0.85 * retina_size) {
+//	cout << num_pixels_goal_ << " " << retina_size << endl;
+//	if (num_pixels_goal_ > 0.25 * retina_size) {
+//		cout << "trouve!!!" << endl;
 //		return true;
 //	}
 //	return false;
-	if (distance_goal_factor () < 0.07) {
-		return true;
-	}
-	else {
-		return false;	
-	}
+
+//	if (distance_goal_factor () < 0.07) {
+//		return true;
+//	}
+//	else {
+//		return false;	
+//	}
+	return goal_reached_;
 }
 
-double RobotDevice::distance_goal_factor () const {
-	// renvoie un facteur de distance qui pourrait par exemple
-	// etre mesuree par l'odorat (facteur lineaire)
-	double x = position_.x_get() - GOAL_X;
-	double y = position_.y_get() - GOAL_Y;
-	double dist = sqrt(x*x + y*y);
-	return (dist > 1)?1:dist;
-}
+//double RobotDevice::distance_goal_factor () const {
+//	// renvoie un facteur de distance qui pourrait par exemple
+//	// etre mesuree par l'odorat (facteur lineaire)
+//	double x = position_.x_get() - GOAL_X;
+//	double y = position_.y_get() - GOAL_Y;
+//	double dist = sqrt(x*x + y*y);
+//	return (dist > 1)?1:dist;
+//}
 
-bool RobotDevice::all_ways_visited (bool reinit) {
-	// indique si on a parcouru au moins une fois chaque bras
-	if (reinit) {
-		way1_visited = way2_visited = way3_visited = 0;
-	}
-	return (way1_visited == 2) && (way2_visited == 2) && (way3_visited == 2);
-}
+//bool RobotDevice::all_ways_visited (bool reinit) {
+//	// indique si on a parcouru au moins une fois chaque bras
+//	if (reinit) {
+//		way1_visited = way2_visited = way3_visited = 0;
+//	}
+//	return (way1_visited == 2) && (way2_visited == 2) && (way3_visited == 2);
+//}
 
-void RobotDevice::speed_set (float v1, float v2) 
+void RobotDevice::write_message (ofstream& file, const string& message) const
 {
-	setSpeed ((int)v1, (int)v2);
-	is_moving_ = (v1 > 0 || v2 > 0)?true:false; 
+	file << time_get (false) << ": " << message << endl;
 }
+
+string RobotDevice::time_get (bool total) const
+{
+	static const int TIME_STEP = Params::get_int ("TIME_STEP");
+	ostringstream time;
+	if (total) {
+		time << "Step " << cpt_total_ << " ";
+	}
+	time << "Day " << day_get () << " Trial " << trial_get () 
+		 << " Time " << cpt_trial_ * TIME_STEP / 1000.0 << "s";
+	return time.str ();
+}
+

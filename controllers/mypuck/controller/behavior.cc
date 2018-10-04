@@ -1,298 +1,221 @@
 #include "behavior.hh"
-#include <iostream>
-#include <fstream>
 #include "params.hh"
 #include "math.hh"
 #include "mystr.hh"
 #include "action.hh"
+#include <iostream>
+#include <sstream>
 
 #define WAIT_BETWEEN_DECISIONS 10
 
-extern Params* params;
-ofstream * output_mypuck;
-ofstream * output_neurosolver;
-
-
-Behavior::Behavior () : cpt_(0), robot_(), neurosolver_(robot_), left_near_(false), 
-		right_near_(false), action_done_(true), wait_(0), nb_goal_reached_(0), nb_free_(0), dirs_(0), 
-		go_random_(false)
+Behavior::Behavior (): 
+	robot_(), neurosolver_(robot_), avoid_(robot_), action_done_(true),	
+	wait_(0), wait_at_goal_ (0), current_(0.0)
 {
-	const int SIMULATION_ID = params->get_int ("SIMULATION_ID");
-	 
-	current_ = new Action(0.0);
-  	
-  	string filename ("../../data/data_raw/");
-	filename += i2str (SIMULATION_ID);
-	filename += "/output_mypuck.txt";
-  	output_mypuck = new ofstream (filename.c_str ());
-  	
-  	  
-  	filename = "../../data/data_raw/";
-	filename += i2str (SIMULATION_ID);
-	filename += "/output_neurosolver.txt";
-  	output_neurosolver = new ofstream (filename.c_str ());
 }
 
 Behavior::~Behavior () 
 {
-	if (current_) {
-		delete current_;
-	}
-}
-
-void Behavior::write_message (ofstream* file, string message)
-{
-	const int TIME_STEP = params->get_int ("TIME_STEP");
-	
-	// il y a 12 essais par jour
-	int day = 1 + nb_goal_reached_ / 12;
-	int trial = 1 + nb_goal_reached_ % 12;
-	*file << "Day " << day << " Trial " << trial 
-			<< " Time " << cpt_ * TIME_STEP / 1000.0 
-			<< "s : " << message << endl;
-}
-
-double Behavior::e_greedy () {
-	return 0.9 * exp (-0.1 * (nb_goal_reached_ - 3)) + 0.1;
 }
 
 void Behavior::do_action ()
 {
-	static const int RANDOM_MOVE = params->get_int("RANDOM_MOVE");
-  	if (RANDOM_MOVE && nb_goal_reached_ > 5) {
-  		robot_.speed_set(10,10);
+	// revoir cette fonction (peut-être deplacee dans obstacleavoid ?)
+	static const int RANDOM_MOVE = Params::get_int("RANDOM_MOVE");
+  	if (RANDOM_MOVE && robot_.nb_trial_get () > 5) {
+  		robot_.setSpeed (10, 10);
   		return;
   	} 
-  	
-	double angle = current_->angle_get();
+  	if (wait_at_goal_ > 0) {
+		robot_.setSpeed (0, 0);
+		return;
+	}
+	
+	double angle = current_;
 	double diff = ecart_angulaire (robot_.angle_get (), angle);
-	static const double ANGLE_THRESH = params->get_double ("ANGLE_THRESH");
 	if (!action_done_) {
-  		action_done_ = (fabs (diff) < ANGLE_THRESH)?true:false;
+  		action_done_ = angle_equal (robot_.angle_get (), angle);
 	}
 	if (action_done_) {
 		diff = 0;
 	}
-	bool bloque = avoid_.obstacle_avoidance_module(diff, robot_.position_get ());
-	string message = neurosolver_.correct_transition (bloque);
-	if (message != "") {
-		write_message (output_neurosolver, message);
-	}
+	int left_speed, right_speed;
+	bool bloque = avoid_.avoid (diff, robot_.position_get (), left_speed, right_speed);
+	neurosolver_.correct_transition (bloque);
+	robot_.setSpeed (left_speed, right_speed);
 }
 
-int Behavior::analyse_cross_road (bool& left, bool& straight, bool& right)
+void Behavior::e_greedy (const vector<double>& dirs, double* pa)
 {
-	// fonction adaptée au laby de tolman. 
-	
-	// on analyse les alentours du robot
-	// le test > 0 est pour supprimer l'artefact de debut de simulation
-	if (avoid_.obstacle_left_mid_get () > 0 && avoid_.obstacle_left_mid_get () < 500) {
-		left_near_ = true;
-	} 
-	else if (avoid_.obstacle_left_mid_get () > 2000) {
-		left_near_ = false;
-	}		
-	if (avoid_.obstacle_right_mid_get () > 0 && avoid_.obstacle_right_mid_get () < 500) {
-		right_near_ = true;
-	}
-	else if (avoid_.obstacle_right_mid_get () > 2000) {
-		right_near_ = false;
-	}
-	bool left_reached = false;
-	if (avoid_.obstacle_left_get () > 0 && avoid_.obstacle_left_get ()  < 500) {
-		left_reached = true;
-	}
-	bool right_reached = false;
-	if (avoid_.obstacle_right_get () > 0 && avoid_.obstacle_right_get ()  < 500) {
-		right_reached = true;
-	}
-	bool front_reached = false;
-	//if (robot_.obstacle_left_front_get() > 2000 && robot_.obstacle_right_front_get()) {
-	if (avoid_.obstacle_left_front_get() > 1500 && avoid_.obstacle_right_front_get()) {
-		front_reached = true;
-	}
-	//cout << robot_.obstacle_left_front_get() << endl;
-
-	left = straight = right = false;
-	// Quel type d'intersection ?
-	if (left_near_ && left_reached) {
-		if (right_near_) {
-			if (right_reached) {
-				if (!front_reached) {
-					// on a 3 chemins (g,d,td)
-					//cout << "on a 3 chemins (g,d,td)" << endl;
-					left = straight = right = true;
-					return 3;
-				}
-				else {
-					// on a 2 chemins (g,d)
-					//cout << "on a 2 chemins (g,d)" << endl;
-					left = right = true;
-					return 2;
-				}
-			}
-			else {
-				// il faut attendre encore le chemin d
-				//cout << "il faut attendre encore le chemin d" << endl;
-				return 1;
-			}
-		}
-		else if (!front_reached) {
-			// on a 2 chemins (g,td)
-			//cout << "on a 2 chemins (g,td)" << endl;
-			left = straight = true;
-			return 2;
-		}
-		else {
-			// on a 1 seul chemin, pas de décision
-			//cout << "on a 1 seul chemin (g)" << endl;
-			// on reinitialise la detection d'intersection
-			left_near_ = false;
-			return 1;	
-		}
-	}
-	else if (right_near_ && right_reached) {
-		if (left_near_ && !left_reached) {
-			// il faut attendre encore le chemin g
-			//cout << "il faut attendre encore le chemin g" << endl;
-			return 1;
-		}
-		else if (!front_reached) {
-			// on a 2 chemins (d,td)
-			//cout << "on a 2 chemins (d,td)" << endl;
-			right = straight = true;
-			return 2;
-		}
-		else {
-			// on a 1 seul chemin, pas de décision
-			//cout << "on a 1 seul chemin (d)" << endl;
-			// on reinitialise la detection d'intersection
-			right_near_ = false;
-			return 1;
-		}
-	}
-	else if (!front_reached) {
-			// on a 1 chemin (td)
-			//cout << "on a 1 chemin (td)" << endl;
-			straight = true;
-			return 1;
-	}
-	return 0;	
-} 
-
-//int analyse_cross_road_bis ()
-//{
-//	// fonction adaptée au laby de tolman. 
-//	
-//	// on analyse les alentours du robot
-//	// le test > 0 est pour supprimer l'artefact de debut de simulation
-//	bool left_reached = false;
-//	if (robot_.obstacle_left_get () > 0 && robot_.obstacle_left_get ()  < 500) {
-//		left_reached = true;
-//	}
-//	bool right_reached = false;
-//	if (robot_.obstacle_right_get () > 0 && robot_.obstacle_right_get ()  < 500) {
-//		right_reached = true;
-//	}
-//	bool front_reached = false;
-//	if (robot_.obstacle_left_front_get() > 1500 && robot_.obstacle_right_front_get()) {
-//		front_reached = true;
-//	}
-//	
-//	int count = 0;
-//	count = left_reached ? count + 1: count;
-//	count = right_reached ? count + 1: count;
-//	count = !front_reached ? count + 1: count;
-//	cout << "count :" << count << endl;
-//	return count;	
-//} 
-
-
-void Behavior::free_ways ()
-{
-	// à modifier pour que plus généralement, elle serve à découvrir
-	// les directions empruntables par le robot selon un échantillonnage
-	// ici on regarde tous les 90° (gauche, tout droit et droite)
-	// ajouter le demi-tour ???
-	bool go_left = false, go_straight = false, go_right = false;
-	nb_free_ = analyse_cross_road(go_left, go_straight, go_right);
-	delete dirs_;
-	dirs_ = new double[nb_free_];
-	int index = 0;
-	if (go_left) {
-		dirs_[index++] = robot_.angle_get () + PI/2.0;
-	}
-	if (go_right) {
-		dirs_[index++] = robot_.angle_get () - PI/2.0;
-	}
-	if (go_straight) {
-		dirs_[index] = robot_.angle_get ();
-	}
-}
-
-Action* Behavior::random_or_planif ()
-{
-	go_random_ = false;
-	Action * action = 0;
+	// Mecanisme epsilon-greedy	
 	// on explore exponentiellement moins au cours des essais
-	// de plus epsilon depend de la position ds le laby :
-	// proche du but -> peu d'explo, loin -> beaucoup
-	//double epsilon = e_greedy () * (robot_.distance_goal_factor());
-	double epsilon = e_greedy ();
-	// pour aider au cas ou le robot planifie mal au sein d'un essai : 
-	// il explore de plus en plus après 5000 steps
-	// espilon_help augmente exponetiellement de 5000->0 à 7000->1
-	// ne depend pas de la position dans le laby comme epsilon
-	double epsilon_help = (exp (0.001 * (cpt_ - 5000))-1)/6.4;
-	epsilon_help = epsilon_help > 0 ? epsilon_help : 0;
+	double epsilon = 0.9 * exp (-0.1 * (robot_.nb_trial_get () - 3)) + 0.1;
+	// epsilon peut dependre de la position ds laby (proche but = peu d'explo)
+//	epsilon *= robot_.distance_goal_factor();
+	// aide au cas d'une plannif mauvaise: explo augmente après 5000 steps
+//	double epsilon_help = (exp (0.001 * (robot_.cpt_trial_get () - 5000))-1)/6.4;
+//	epsilon_help = epsilon_help > 0 ? epsilon_help : 0;
+	double epsilon_help = 0;
 //	cout << "epsilons :" << epsilon << " " << epsilon_help << endl;
 	
-	if (nb_goal_reached_ < 3 || drand() < epsilon + epsilon_help) {
-		go_random_ = true;		
-	}
-	else {
-		action = neurosolver_.best_action ();
+	Action* action = neurosolver_.best_action ();
+	bool found = false;
+	int nb_free = dirs.size ();
+	for (int i = 0; i < nb_free; i++) {
+		// on evalue la meilleur action: non-nulle et correspond a une dir
 		if (action) {
-			string mess = "je planifie vers " + d2str (action->angle_get());
-			write_message (output_mypuck, mess);
+			cout << dirs[i] << "/" << action->angle_get() << " ";
+		}
+		if (action && angle_equal (dirs[i], action->angle_get())) {
+			found = true;
+			pa[i] = 1;
 		}
 		else {
-			go_random_ = true;
-			string mess = "pas d'action à planifier";
-			write_message (output_mypuck, mess);
+			pa[i] = 0;
 		}
 	}
-		
-	if (go_random_) {
-		// le robot explore	
-		int r = (int)(drand() * nb_free_);
-		action = new Action (dirs_[r]);
-		string mess = "j'explore vers : " + d2str (action->angle_get());
-		write_message (output_mypuck, mess);
+	cout << endl;
+	// selon epsilon, on explore ou exploite cette meilleure action
+	if (drand() < epsilon + epsilon_help || !found) {
+		if (!found) {
+			robot_.output_mypuck ("NoAction");				
+		}
+		// le robot explore (dirs equiprobable)
+		for (int i = 0; i < nb_free; i++) {
+			pa[i] = 1.0 / nb_free;
+			cout << pa[i] << " ";
+		}
+		cout << endl;
+	}	
+}
+
+void Behavior::softmax (const vector<double>& dirs, double* pa)
+{
+	// Mecanisme softmax 
+	int nb_free = dirs.size ();
+	int explo_var = 20;
+	double sum_norm = 0;
+	for (int i = 0; i < nb_free; i++) {
+		pa[i] = qval (dirs[i]);
+		sum_norm += exp (explo_var * pa[i]);
 	}
-	
+	for (int i = 0; i < nb_free; i++) {
+		pa[i] = exp (explo_var * pa[i]) / sum_norm;
+	}	
+}
+
+void Behavior::q_greedy (const vector<double>& dirs, double* pa)
+{
+	// Mecanisme "q-greedy"
+	int nb_free = dirs.size ();
+	int explo_var = 10;
+	int max_dir = 0;
+	for (int i = 0; i < nb_free; i++) {
+		pa[i] = qval (dirs[i]);
+		if (pa[i] > pa[max_dir]) {
+			max_dir = i;
+		}
+//		cout << pa[i] << "," << dirs[i] << " ";
+	}
+//	cout << endl;
+	pa[max_dir] = 1 - exp (-explo_var * pa[max_dir]);
+	for (int i = 0; i < nb_free; i++) {
+		if (i != max_dir) {
+			pa[i] = (1 - pa[max_dir]) / (nb_free - 1);
+		}
+	}
+}
+
+double Behavior::qval (double angle) const
+{
+	double qval = neurosolver_.inf_get (angle);
+	if (qval >= 0) {
+		return qval;
+	}
+	else {
+		// cf algo Rmax, on renvoit une val proche de la récompense max
+		// pr forcer l'exploration (0.95 +- 0.05)
+		cout << "angle " << angle << " unvisited" << endl;
+		return 0.95 + bruit (0.1);
+	}
+}
+
+Action* Behavior::select_action ()
+{
+	vector<double> dirs;
+	avoid_.free_ways (dirs, robot_.angle_get ());
+	int nb_free = dirs.size ();
+	// si on est dans un couloir, on continue
+	// on a enleve la possibilite de revenir en arriere
+	if (nb_free <= 1) {
+		return 0;
+	}
+	// generation des pa (prob de select de l'action)
+	double pa[nb_free];
+	static const string EXPLO = Params::get ("EXPLO");
+	if (EXPLO == "egreedy") {
+		e_greedy (dirs, pa);
+	}
+	else if (EXPLO == "qgreedy") {
+		cout << EXPLO << endl;
+		q_greedy (dirs, pa);
+	}
+	else if (EXPLO == "soft") {
+		softmax (dirs, pa);
+	}
+//	for (int i = 0; i < nb_free; i++) {
+//		cout << dirs[i] << "/" << pa[i] << " ";
+//	}
+//	cout << endl;
+	// Lotterie pour la selection
+	double rand_action = drand ();
+	double sum_pa = 0;
+	int i;
+	for (i = 0; i < nb_free; i++) {
+		sum_pa += pa[i];
+		if (rand_action < sum_pa) {
+			break;
+		}	
+	}
+	Action* action = new Action (dirs[i]);
+	// TODO: a verifier
+	bool explore = (neurosolver_.inf_get (dirs[i]) == -1);
+	for (int j = 0; j < nb_free && !explore; j++) {
+		if (pa[i] <= pa[j] && i != j) {
+			explore = true;
+		}	
+	}
+	stringstream s;
+	if (explore) {
+		s << "Exploration: ";	
+	}
+	else {
+		s << "Planning: ";
+	}
+	s << dirs[i] << " pa_select: " << pa[i];
+	robot_.output_mypuck (s.str ());		
 	return action;
 }
 
 void Behavior::compute_next_action ()
 {
-	avoid_.update_obstacle_info ();
 	robot_.synch ();
 	
-	cpt_++;
-
-	if (robot_.manually_moved ()) {
-		string mess = "goal found " + i2str (1 + nb_goal_reached_);
-		write_message(output_mypuck, mess);
-		nb_goal_reached_++;
-		cpt_ = 0;
+	// mecanisme pour s'arreter au goal et au depart
+  	if (wait_at_goal_ > 0) {
+		wait_at_goal_--;
 	}
-
-	string message;
-	bool col_changed = neurosolver_.synch (nb_goal_reached_, message);
-	if (message != "") {
-		write_message (output_neurosolver, message);
+	else {
+		wait_at_goal_ = robot_.goal_reached () ? 20 * WAIT_BETWEEN_DECISIONS : 0;
 	}
+	
+	// mise en marche de l'appr après 3 essais guidés
+	// a remplacer par une mesure de stabilité de la representation
+	if (robot_.nb_trial_get() == 3 && robot_.manually_moved ()) {
+    	neurosolver_.learn_set (true);
+	}
+	
+	bool col_changed = neurosolver_.synch ();
 	if (col_changed) {
 		// on stoppe l'action en cours quand on passe à une nouvelle colonne
 		// à remplacer à terme par : on planifie à chaque colonne
@@ -305,18 +228,10 @@ void Behavior::compute_next_action ()
 		wait_--;
 		return;
 	}
-	
-	free_ways();
-	
-	Action*  action = 0;
-	if (nb_free_ > 1) {
-		action = random_or_planif ();
-	}
-	
+	Action* action = select_action ();	
     if (action) {
     	wait_ = WAIT_BETWEEN_DECISIONS;
-    	delete current_; 
-    	current_ = action;
+    	current_ = action->angle_get ();
     	action_done_ = false;
     }
 }

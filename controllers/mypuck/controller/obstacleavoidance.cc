@@ -1,11 +1,11 @@
 #include "obstacleavoidance.hh"
+#include "device.hh"
 #include "params.hh"
 #include "coord.hh"
+#include "math.hh"
 #include <cmath>
 #include <webots/DifferentialWheels.hpp>
 #include <webots/DistanceSensor.hpp>
-
-extern Params* params;
 
 // 8 IR proximity sensors
 #define NB_SENSORS 8
@@ -53,19 +53,20 @@ int blocked = 0;
 double last_x = 0, last_y = 0;
 
 
-ObstacleAvoidance::ObstacleAvoidance() : robot_ (*(DifferentialWheels::getInstance  ()))
+ObstacleAvoidance::ObstacleAvoidance (RobotDevice& robot):
+	left_near_(false), right_near_(false)
 {
-	static const int TIME_STEP = params->get_int("TIME_STEP");
+	static const int TIME_STEP = Params::get_int("TIME_STEP");
 	ps_ = new DistanceSensor*[NB_SENSORS];
 	char name[4]="ps0";
 	for (int i = 0; i < NB_SENSORS; i++) {
-		ps_[i] = robot_.getDistanceSensor (name);
+		ps_[i] = robot.getDistanceSensor (name);
 		ps_[i]->enable (TIME_STEP);
 		name[2]++;
     }
 }
 
-ObstacleAvoidance::~ObstacleAvoidance()
+ObstacleAvoidance::~ObstacleAvoidance ()
 {
 	delete ps_;
 }
@@ -85,7 +86,7 @@ void ObstacleAvoidance::avoid_block (const Coord& position)
   	last_y = y;
 }
 
-void ObstacleAvoidance::update_obstacle_info ()
+void ObstacleAvoidance::update_info ()
 {
 	obstacle_left_front = ps_[7]->getValue ();
   	obstacle_right_front = ps_[0]->getValue ();
@@ -96,13 +97,15 @@ void ObstacleAvoidance::update_obstacle_info ()
   	obstacle_left_back = ps_[4]->getValue ();
   	obstacle_right_back = ps_[3]->getValue ();
 	for (int i=0; i < NB_DIST_SENS; i++) {
-		int val = ps_[i]->getValue ();
+		int val = (int)ps_[i]->getValue ();
 	  	ps_value[i] = ((val - PS_OFFSET_SIMULATION[i]) < 0)?0:(val - PS_OFFSET_SIMULATION[i]);
 	}
 }
 
-bool ObstacleAvoidance::obstacle_avoidance_module (double angle, const Coord& position)
+bool ObstacleAvoidance::avoid (double angle, const Coord& position, int& left_speed, int& right_speed)
 {
+	update_info ();
+	
   int max_ds_value, DeltaS=0, i;
   int Activation[]={0,0};
 
@@ -180,11 +183,159 @@ bool ObstacleAvoidance::obstacle_avoidance_module (double angle, const Coord& po
     oam_speed[LEFT] -= DeltaS;
     oam_speed[RIGHT] += DeltaS;
 	//cout << "speed: " << oam_speed[LEFT] << " " << oam_speed[RIGHT] << endl; 
-  	robot_.setSpeed (oam_speed[LEFT], oam_speed[RIGHT]);
+  	left_speed = oam_speed[LEFT];
+  	right_speed = oam_speed[RIGHT];
   	return bloque;
 }
 
 int ObstacleAvoidance::dist_sensor_get () const 
 { 
-	return ps_[2]->getValue (); 
+	return (int)ps_[2]->getValue (); 
+}
+
+int ObstacleAvoidance::analyse_cross_road (bool& left, bool& straight, bool& right)
+{
+	// fonction adaptée au laby de tolman. 
+	
+	// on analyse les alentours du robot (dvt, gauche, droite)
+	// le test > 0 est pour supprimer l'artefact de debut de simulation
+	if (obstacle_left_mid_get () > 0 && obstacle_left_mid_get () < 500) {
+		left_near_ = true;
+	} 
+	else if (obstacle_left_mid_get () > 2000) {
+		left_near_ = false;
+	}		
+	if (obstacle_right_mid_get () > 0 && obstacle_right_mid_get () < 500) {
+		right_near_ = true;
+	}
+	else if (obstacle_right_mid_get () > 2000) {
+		right_near_ = false;
+	}
+	bool left_reached = false;
+	if (obstacle_left_get () > 0 && obstacle_left_get ()  < 500) {
+		left_reached = true;
+	}
+	bool right_reached = false;
+	if (obstacle_right_get () > 0 && obstacle_right_get ()  < 500) {
+		right_reached = true;
+	}
+	bool front_reached = false;
+	//if (robot_.obstacle_left_front_get() > 2000 && robot_.obstacle_right_front_get()) {
+	if (obstacle_left_front_get() > 1500 && obstacle_right_front_get()) {
+		front_reached = true;
+	}
+	//cout << obstacle_left_front_get() << endl;
+
+	left = straight = right = false;
+	// Quel type d'intersection ?
+	if (left_near_ && left_reached) {
+		if (right_near_) {
+			if (right_reached) {
+				if (!front_reached) {
+					// on a 3 chemins (g,d,td)
+					//cout << "on a 3 chemins (g,d,td)" << endl;
+					left = straight = right = true;
+					return 3;
+				}
+				else {
+					// on a 2 chemins (g,d)
+					//cout << "on a 2 chemins (g,d)" << endl;
+					left = right = true;
+					return 2;
+				}
+			}
+			else {
+				// il faut attendre encore le chemin d
+				//cout << "il faut attendre encore le chemin d" << endl;
+				return 1;
+			}
+		}
+		else if (!front_reached) {
+			// on a 2 chemins (g,td)
+			//cout << "on a 2 chemins (g,td)" << endl;
+			left = straight = true;
+			return 2;
+		}
+		else {
+			// on a 1 seul chemin, pas de décision
+			//cout << "on a 1 seul chemin (g)" << endl;
+			// on reinitialise la detection d'intersection
+			left_near_ = false;
+			return 1;	
+		}
+	}
+	else if (right_near_ && right_reached) {
+		if (left_near_ && !left_reached) {
+			// il faut attendre encore le chemin g
+			//cout << "il faut attendre encore le chemin g" << endl;
+			return 1;
+		}
+		else if (!front_reached) {
+			// on a 2 chemins (d,td)
+			//cout << "on a 2 chemins (d,td)" << endl;
+			right = straight = true;
+			return 2;
+		}
+		else {
+			// on a 1 seul chemin, pas de décision
+			//cout << "on a 1 seul chemin (d)" << endl;
+			// on reinitialise la detection d'intersection
+			right_near_ = false;
+			return 1;
+		}
+	}
+	else if (!front_reached) {
+			// on a 1 chemin (td)
+			//cout << "on a 1 chemin (td)" << endl;
+			straight = true;
+			return 1;
+	}
+	return 0;	
+} 
+
+//int ObstacleAvoidance::analyse_cross_road_bis ()
+//{
+//	// fonction adaptée au laby de tolman. 
+//	
+//	// on analyse les alentours du robot
+//	// le test > 0 est pour supprimer l'artefact de debut de simulation
+//	bool left_reached = false;
+//	if (obstacle_left_get () > 0 && obstacle_left_get ()  < 500) {
+//		left_reached = true;
+//	}
+//	bool right_reached = false;
+//	if (obstacle_right_get () > 0 && obstacle_right_get ()  < 500) {
+//		right_reached = true;
+//	}
+//	bool front_reached = false;
+//	if (obstacle_left_front_get() > 1500 && obstacle_right_front_get()) {
+//		front_reached = true;
+//	}
+//	
+//	int count = 0;
+//	count = left_reached ? count + 1: count;
+//	count = right_reached ? count + 1: count;
+//	count = !front_reached ? count + 1: count;
+//	cout << "count :" << count << endl;
+//	return count;	
+//} 
+
+void ObstacleAvoidance::free_ways (vector<double>& dirs, double robot_angle)
+{
+	// à modifier pour que plus généralement, elle serve à découvrir
+	// les directions empruntables par le robot selon un échantillonnage
+	// ici on regarde tous les 90° (gauche, tout droit, droite et arrière)
+	// On tient compte du demi-tour
+	bool go_left = false, go_straight = false, go_right = false;
+	analyse_cross_road (go_left, go_straight, go_right);
+//	dirs.push_back (pi_pi (robot_angle - M_PI));
+	if (go_left) {
+		dirs.push_back (pi_pi (robot_angle + M_PI/2.0));
+	}
+	if (go_right) {
+		dirs.push_back (pi_pi (robot_angle - M_PI/2.0));
+	}
+	if (go_straight) {
+		dirs.push_back (pi_pi (robot_angle));
+	}
 }

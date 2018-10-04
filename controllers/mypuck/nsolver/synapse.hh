@@ -1,8 +1,8 @@
 #ifndef SYNAPSE_H
 # define SYNAPSE_H
 
-#include <ostream>
 #include "computeunit.hh"
+#include <ostream>
 
 using namespace std;
 
@@ -44,8 +44,6 @@ public:
 	 * @note Update only one synapse, using current neurons potential values.
 	 */
 	void hlearn ();
-
-	void draw_links (ostream& os) const;
 
 private:
 	/**

@@ -5,16 +5,15 @@
 #include "math.hh"
 #include <sstream>
 #include <iostream>
-
-extern Params* params;
+#include <fstream>
+#include <string>
 
 Minicol::Minicol (Neuralnet& net, Action* action, const Column& src, const Column& dest, 
-					const string& path, int no_col, int no, int level) :
-	no_(no), sup_(net.add_neuron_max (path, no_col, level)),
-	inf_(net.add_neuron_max (path, no_col, level)), 
-	action_(action?new Action (*action):action),					
-	net_(net), src_(src), dest_(dest),
-	mean_val_(inf_.output()), level_(level)
+					int no_col, int no, int level) :
+	no_(no), sup_(net.add_neuron_max ( no_col, level)),
+	inf_(net.add_neuron_max (no_col, level)), 
+	action_(action), net_(net), src_(src), dest_(dest),
+	mean_val_(inf_.output()), level_(level), log_("minicols", src.no_get (), dest.no_get ())
 {
 	// intra-colomn connections
 	inf_.add_synapse (src_.state_get (), sup_, 1.0, 0, 1);
@@ -28,7 +27,9 @@ Minicol::Minicol (Neuralnet& net, Action* action, const Column& src, const Colum
 
 Minicol::~Minicol ()
 {
-  delete action_;
+	if (action_) {
+		delete action_;
+	}
 }
 
 void Minicol::draw (ostream& os) const
@@ -36,18 +37,10 @@ void Minicol::draw (ostream& os) const
   os << "{<n" << sup_.no_get () << "> s" << no_ << " | <n" << inf_.no_get () << "> i" << no_ << "}";
 }
 
-void Minicol::draw_links (ostream& os) const
-{
-  stringstream ss;
-  string       val;
-
-  ss << dest_.no_get ();
-  ss >> val;
-  os << inf_.path_get () << " -> " << "c" << val << "[color=red]" << ";" << endl;
-}
-
 void Minicol::adapt_action (Action* action)
 {
+	return;
+	
 	double new_angle = mean_angles (action_->angle_get(), action->angle_get());
 //	cout << "update action ";
 //	cout << src_.no_get() << "->" << dest_.no_get() << " : " << action_->angle_get() << " + ";
@@ -57,9 +50,16 @@ void Minicol::adapt_action (Action* action)
 
 void Minicol::update_value ()
 {
-	static const double MEAN_PERIOD = params->get_double ("MEAN_PERIOD");
+	static const double MEAN_PERIOD = Params::get_double ("MEAN_PERIOD");
 	double factor = 1 / MEAN_PERIOD;
 	mean_val_ = mean_value (mean_val_, inf_.output (), factor); 
 }
 
-  
+void Minicol::log (const string& time_string, const Coord& position, double angle, int day, int trial)
+{
+	ostringstream msg;
+	msg << "# " << time_string << endl;
+	msg << position.x_get () << " " << position.y_get () << " " << angle << " "
+  				<< inf_.output () << " " << sup_.output () << endl << endl;
+  	log_.log (day, trial, msg.str ());
+}

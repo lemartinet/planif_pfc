@@ -9,16 +9,18 @@ using namespace std;
 class Params
 {
 public:
-	Params (const string & file);
+	static void load (const string & path);
 
-  	string get (string name);
-	double get_double (string name);
-	int get_int (string name);
-  
-  	void show ();
+  	static string get (string name);
+	static double get_double (string name);
+	static int get_int (string name);
+	static string get_path ();
+	static string get_path_pc ();
+	  
+  	static void show ();
 
 private:
-  	map<string, string> params_;
+  	static map<string, string> params_;
 };
 
 #endif

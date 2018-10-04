@@ -3,6 +3,8 @@
 
 #include "action.hh"
 #include "neuron.hh"
+#include "log.hh"
+#include <string>
 
 class Column;
 class Neuralnet;
@@ -10,7 +12,7 @@ class Neuralnet;
 class Minicol
 {
 public:
-	Minicol (Neuralnet& net, Action* action, const Column& src, const Column& dest, const string& path, 
+	Minicol (Neuralnet& net, Action* action, const Column& src, const Column& dest,
 				int no_col, int no, int level);
 	~Minicol ();
 	
@@ -26,8 +28,8 @@ public:
 	double goal_activation () const { return sup_.output (); }
 	bool spiking () const { return inf_.spiking (); }
 	
-	void draw_links (ostream& os) const;
 	void draw (ostream& os) const;
+	void log (const string& time_string, const Coord& position, double angle, int day, int trial);
 	
 	void update_value ();
 	void adapt_action (Action* action);
@@ -42,6 +44,7 @@ private:
 	const Column& dest_;
 	double mean_val_; // utiliser pour moyenner l'activite basse
 	const int level_; // niveau de la minicolonne dans la carte
+	Log log_;
 };
 
 #endif

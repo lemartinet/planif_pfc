@@ -8,10 +8,40 @@
 #include <boost/lambda/construct.hpp>
 #include <boost/lambda/casts.hpp>
 #include <algorithm>
+#include <sstream>
+#include <fstream>
+#include <iostream>
 
 using namespace boost::lambda;
 
-extern Params* params;
+Hippo::Hippo () 
+{
+	static const int LOAD_PC = Params::get_int("LOAD_PC");
+	if (LOAD_PC) {
+		ostringstream pc_centers;
+		pc_centers <<  Params::get_path_pc () << "pref_pos.dat";
+		ifstream file (pc_centers.str ().c_str ());
+		vector<Coord> centers;
+		double x,y;
+		while (!file.eof ()) {
+			file >> x >> y;
+			centers.push_back (Coord (x,y));
+		}
+		file.close ();
+		for (int i = 0; i < (int)centers.size (); i++) {
+			ostringstream filename;
+			filename << Params::get_path_pc () << "cells/" << i << ".txt";
+			Cell* cell = new Cell (filename.str (), centers[i]);
+			cellmap_.push_back (cell);
+		}
+		iadd_ = false;
+		lastadded_ = dynamic_cast<Cell*> (cellmap_[cellmap_.size () - 1]);
+	}
+	else {
+		iadd_ = true;
+		lastadded_ = 0;
+	}
+}
 
 Hippo::~Hippo ()
 {
@@ -30,8 +60,8 @@ void Hippo::cell_add (Coord pos)
 bool Hippo::synch (const Coord & signal)
 {
 	// Minimum activation of a cell, under wich a new cell should be created.
-	static const double CELL_FIRE_MIN = params->get_double("CELL_FIRE_MIN");
-//	static const double CELL_SIMULT_MIN = params->get_double("CELL_SIMULT_MIN");
+	static const double CELL_FIRE_MIN = Params::get_double("CELL_FIRE_MIN");
+//	static const double CELL_SIMULT_MIN = Params::get_double("CELL_SIMULT_MIN");
 
 	position_.x_set (signal.x_get ());
 	position_.y_set (signal.y_get ());
@@ -49,7 +79,17 @@ bool Hippo::synch (const Coord & signal)
 		cell->compute (position_);
 	}
 //	cpt_++;
-//	printf ("nb_spiking_cells: %d\n", nb_spiking_cells ());
+//	cout << "nb_spiking_cells: " << nb_spiking_cells () << endl;
+
+	static bool first_synch = true;
+	static const int LOAD_PC = Params::get_int("LOAD_PC");
+	if (LOAD_PC && first_synch) {
+		first_synch = false;
+		for (int i = 0; i < (int)cellmap_.size (); i++) {
+			Cell* cell = dynamic_cast<Cell*>(cellmap_[i]);
+			emit sig_addcell (cell->no_get ());
+		}
+	}
 	return !winner;
 }
 

@@ -4,11 +4,10 @@
 #include <QObject>
 #include <vector>
 #include "coord.hh"
+#include <ostream>
 
 class Cell;
 class ComputeUnit;
-
-using namespace std;
 
 /**
  * Hippocampus simulation model, containing its cells.
@@ -19,7 +18,7 @@ class Hippo : public QObject
 	Q_OBJECT
 
 public:
-	Hippo () : iadd_(true), lastadded_(0) {};
+	Hippo ();
 	~Hippo ();
 	
 	const Cell& cell_get (int cell) const;
@@ -42,11 +41,11 @@ public:
 	void draw (ostream& os) const;
 
 private:
-	vector<ComputeUnit*> cellmap_;   ///< Collection of cells.
+	std::vector<ComputeUnit*> cellmap_;   ///< Collection of cells.
 	bool iadd_;      ///< incremental adding mode.
 	Cell* lastadded_;
 	Coord position_;
-	int cpt_;
+	int cpt_; 
 
 signals:
 	void sig_addcell (int no);

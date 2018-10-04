@@ -49,11 +49,8 @@ private:
 	float y_;  ///< y value (ordinate).
 };
 
-/**
- * Print a coordinate in the style : "x y"
- */
+// print a coordinate in the style : "x y"
 ostream& operator<< (ostream& os, const Coord& coord);
-
 bool operator== (const Coord& c1, const Coord& c2);
 
 #endif
