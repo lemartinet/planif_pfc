@@ -55,6 +55,10 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
       int write_step = atoi(value);
       write_step_set (write_step);
     }
+    else if (strcmp (key, "SLEEP_STEP") == 0) {
+      int sleep_step = atoi(value);
+      sleep_step_set (sleep_step);
+    }
     else if (strcmp (key, "TIME_STEP") == 0) {
       *time_step = atoi(value);
     }

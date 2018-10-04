@@ -46,6 +46,10 @@ const char* start_name = "START";
 double* start_position;
 double* start_rotation;
 
+// Sleep parameter
+int SLEEP_STEP;
+int sleep = -1;
+
 /////////////////////////////////////
 // Functions to control the servos
 /////////////////////////////////////
@@ -119,7 +123,7 @@ void move_doors () {
   if (sensor_value == 0) {
     // suppress artefacts at the beginning of the simulation
   }
-  else if (wait < 0 && sensor_value < 900) {
+  else if (sleep < 0 && wait < 0 && sensor_value < 900) {
     wait = 100;
     emit_goal_found ();
     message ("goal", total_step, day, trial, trial_time);
@@ -234,7 +238,7 @@ void run_protocol (int* day_, int* trial_, double* trial_time_, int* total_step_
 
   // printing the simulation stats
   char score[128];
-  sprintf(score, "Day %d, Trial %d : %s", day, trial, day >= 15 ? "Test" : "Training");
+  sprintf(score, "Day %d, Trial %d : %s", day, trial, day >= 15 ? "Test" : (sleep > 0 ? "Sleep" : "Training"));
   wb_supervisor_set_label (0, score, 0.01, 0.01, 0.05, 0x0000ff, 0);
   sprintf(score, "Time %d s", (int)trial_time);
   wb_supervisor_set_label (1, score, 0.01, 0.05, 0.05, 0x0000ff, 0);
@@ -242,17 +246,24 @@ void run_protocol (int* day_, int* trial_, double* trial_time_, int* total_step_
   // change the doors according to the trial number
   move_doors();
   
-  if (wait == 0 || trial_time > 1000) {
-     if (wait == 0 && ((*day_ - 1) * 12 + *trial_) % 3 == 0) {
-      emit_sleep ();
-    }
-    
-    // Reset the maze & robot
-    wb_supervisor_field_set_sf_vec3f (t_field, start_position);
-    wb_supervisor_field_set_sf_rotation (r_field, start_rotation);
+  if (sleep == -1 && wait == 0) {
+//    if (sleep == 0 && wait == 0 && ((*day_ - 1) * 12 + *trial_) % 3 == 0) {
+      if (SLEEP_STEP > 0) {
+        sleep = SLEEP_STEP;
+        message ("sleep", total_step, day, trial, trial_time);
+        emit_sleep ();
+      }
+      else {
+        sleep = 1;
+      }
+  }
+  else if ((sleep == 0 && wait == -1) || (sleep == -1 && trial_time > 1000)) {
     if (trial_time > 1000) {
       message ("exceeded", total_step, day, trial, trial_time);
     }
+    // Reset the maze & robot
+    wb_supervisor_field_set_sf_vec3f (t_field, start_position);
+    wb_supervisor_field_set_sf_rotation (r_field, start_rotation);
     trial++;
     new_trial = 1;
     open_mid = 0;
@@ -260,9 +271,11 @@ void run_protocol (int* day_, int* trial_, double* trial_time_, int* total_step_
     trial_time = 0;
     current_way_init ();
   }
-  
   if (wait >= 0) {
     wait--;
+  }
+  if (sleep >= 0) {
+    sleep--;
   }
   
   // Let's change the day if necessary
@@ -305,4 +318,8 @@ void open_all () {
 void die_protocol (int* day_, int* trial_) {
   *day_ = day;
   *trial_ = trial;
+}
+
+void sleep_step_set (int step) {
+  SLEEP_STEP = step;
 }
