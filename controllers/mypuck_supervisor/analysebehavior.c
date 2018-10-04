@@ -59,7 +59,13 @@ void analyse_behavior (int day, int trial, double trial_time, int total_step)
   int i;
   for (i = 0; i < 8; i++) {
     if (current_way != i && dway[i] < 500 && diff[i] < 0.2) {
+<<<<<<< HEAD
       sprintf (way, "%sway%d", i<4?"":"-", i<4?i:i-4);
+=======
+      int the_path = i<4?i:i-4;
+      the_path = the_path == 0 ? 4 : the_path;
+      sprintf (way, "%s%d", i<4?"":"-", the_path);
+>>>>>>> 16cde28... First commit to git. Includes:
       current_way = i;
       nb_way[i][day-1]++;
       wb_emitter_send (emitter, way, strlen(way) + 1);
@@ -84,7 +90,11 @@ void init_behavior (int simu_id) {
   sprintf (output_path, "../../data/data_raw/%d/events.txt", simu_id);
   output_file = fopen (output_path, "w");
   fprintf(output_file, "%s format : total_step day trial time(s) event\n", "%");
+<<<<<<< HEAD
   fprintf(output_file, "%s event = [-]wayX (current direction), goal (reached), exceeded (time), pX (forced path), free (path), bloca/b\n", "%");
+=======
+  fprintf(output_file, "%s event = [-]1/2/3/4=[-]wayX (current direction), 5=goal reached, 6=exceeded time, 7=sleep\n", "%");
+>>>>>>> 16cde28... First commit to git. Includes:
 
   current_way = -1;  
   dsensor_way1 = wb_robot_get_device ("sensor_mid");
@@ -99,7 +109,11 @@ void init_behavior (int simu_id) {
   wb_distance_sensor_enable (dsensor_way0, TIME_STEP);
 }
 
+<<<<<<< HEAD
 void die_behavior (int day, int trial) {
+=======
+void die_behavior () {
+>>>>>>> 16cde28... First commit to git. Includes:
   //~ fprintf(output_file, "===========================================\n");
   //~ fprintf(output_file, "%d days %d trials\n", day, (day-1) * 12 + trial);
   //~ char way[8];

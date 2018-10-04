@@ -32,7 +32,11 @@ int simu_id = 1;
 // Type of simulation (normal or random move)
 int random_move = 0;
 
+<<<<<<< HEAD
 bool read_simulation_params (char* param_file_path, int* time_step, int* id, int* random_move) 
+=======
+bool read_simulation_params (char* param_file_path, int* time_step, int* id, int* random_move, int* final_forced) 
+>>>>>>> 16cde28... First commit to git. Includes:
 {
 	FILE * param_file = fopen (param_file_path, "r");
 	char key[128];
@@ -51,6 +55,12 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
     else if (strcmp (key, "RANDOM_MOVE") == 0) {
       *random_move = atoi(value);
     }
+<<<<<<< HEAD
+=======
+    else if (strcmp (key, "FINAL_FORCED") == 0) {
+      *final_forced = atoi(value);
+    }
+>>>>>>> 16cde28... First commit to git. Includes:
     else if (strcmp (key, "STEP_LOG") == 0) {
       int write_step = atoi(value);
       write_step_set (write_step);
@@ -74,7 +84,12 @@ bool read_simulation_params (char* param_file_path, int* time_step, int* id, int
 
 void init ()
 {
+<<<<<<< HEAD
   if (!read_simulation_params ("../../data/params.txt", &TIME_STEP, &simu_id, &random_move)) {
+=======
+  int final_forced = 0;
+  if (!read_simulation_params ("../../data/params.txt", &TIME_STEP, &simu_id, &random_move, &final_forced)) {
+>>>>>>> 16cde28... First commit to git. Includes:
 		printf ("Supervisor: erreur d'init. Exit !\n");
 		exit (-1);	
 	}
@@ -84,7 +99,11 @@ void init ()
   if (random_move) {
     init_random ("../../data/index_visited");
   }
+<<<<<<< HEAD
   init_protocol ();
+=======
+  init_protocol (simu_id, final_forced);
+>>>>>>> 16cde28... First commit to git. Includes:
   //emitter = robot_get_device("emitter");
   
   // We get a handler to the robot & the start position

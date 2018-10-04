@@ -2,7 +2,11 @@
 #define ANALYSEBEHAVIOR_H_
 
 void analyse_behavior (int day, int trial, double trial_time, int total_step);
+<<<<<<< HEAD
 void die_behavior (int day, int trial);
+=======
+void die_behavior ();
+>>>>>>> 16cde28... First commit to git. Includes:
 void init_behavior (int simu_id);
 void message (const char* s, int total_step, int day, int trial, double trial_time);
 void new_trial_message (int trial);
