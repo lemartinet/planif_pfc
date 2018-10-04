@@ -35,3 +35,8 @@ void BoardWidget::on_show_sup_clicked ()
 {
 	robotgui_.show_sup ();
 }
+
+//void BoardWidget::on_show_pc_clicked () 
+//{
+//	gui_->cellscontrol_get ()->show_pc ();
+//}

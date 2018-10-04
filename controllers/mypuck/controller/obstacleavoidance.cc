@@ -68,7 +68,7 @@ ObstacleAvoidance::ObstacleAvoidance (RobotDevice& robot):
 
 ObstacleAvoidance::~ObstacleAvoidance ()
 {
-	delete ps_;
+	delete[] ps_;
 }
 
 void ObstacleAvoidance::avoid_block (const Coord& position) 

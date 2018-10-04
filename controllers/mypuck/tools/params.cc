@@ -6,7 +6,7 @@
 
 map<string, string> Params::params_;
 
-void Params::load (const string & path)
+bool Params::load (const string & path)
 {
 	params_["data_path"] = path;
 	ostringstream filename;
@@ -14,7 +14,7 @@ void Params::load (const string & path)
 	ifstream file (filename.str ().c_str ());
 	if (!file) {
 		cout << "Mypuck: impossible to open: " << filename.str () << endl;
-		return;
+		return false;
     }
     else {
     	cout << "Mypuck: loading params from file: " << filename.str () << endl;
@@ -26,7 +26,8 @@ void Params::load (const string & path)
       params_[key] = value;
     }
     file.close ();
-//    params->show ();
+//	params->show ();
+	return true;
 }
 
 void Params::show ()

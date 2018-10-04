@@ -13,13 +13,10 @@ CC_SOURCES = \
 	nsolver/minicol.cc\
 	nsolver/column.cc\
 	nsolver/columns.cc\
-	nsolver/moc_columns.cc\
 	nsolver/computeunit.cc\
 	nsolver/synapse.cc\
 	nsolver/hippo.cc\
-	nsolver/moc_hippo.cc\
 	nsolver/cell.cc\
-	nsolver/neuralnet.cc\
 	nsolver/neuron.cc\
 	nsolver/neurosolver.cc\
 	nsolver/egoactionpop.cc\
@@ -52,12 +49,10 @@ myclean:
 
 moc:
 	find . -name "moc*.c*[cp]" | xargs rm
-	moc-qt4 nsolver/columns.hh -o nsolver/moc_columns.cc
-	moc-qt4 nsolver/hippo.hh -o nsolver/moc_hippo.cc
 	moc-qt4 gui/controlrobot.hh -o gui/moc_controlrobot.cc
 	moc-qt4 gui/boardwidget.hh -o gui/moc_boardwidget.cc
 	moc-qt4 gui/graphwidget.h -o gui/moc_graphwidget.cpp
-	
+
 ui:
 	rm gui/boardwindow.hh
 	uic-qt4 gui/boardwindow.ui -o gui/boardwindow.hh

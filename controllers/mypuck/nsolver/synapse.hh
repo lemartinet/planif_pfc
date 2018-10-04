@@ -39,18 +39,6 @@ public:
 	
 	double drive () const;
 
-	/**
-	 * Synapse hebbian learning.
-	 * @note Update only one synapse, using current neurons potential values.
-	 */
-	void hlearn ();
-
-private:
-	/**
-	 * Learning using a BCM rule.
-	 */
-	void BCM ();
-
 private:
 	const ComputeUnit& from_;
 	const ComputeUnit* from_mult_;

@@ -200,22 +200,20 @@ Action* Behavior::select_action ()
 void Behavior::compute_next_action ()
 {
 	robot_.synch ();
+	if (robot_.sleep_get ()) {
+		neurosolver_.sleep ();
+		return;
+	}
 	
 	// mecanisme pour s'arreter au goal et au depart
   	if (wait_at_goal_ > 0) {
 		wait_at_goal_--;
 	}
 	else {
-		wait_at_goal_ = robot_.goal_reached () ? 20 * WAIT_BETWEEN_DECISIONS : 0;
+		wait_at_goal_ = robot_.goal_reached () ? 10 * WAIT_BETWEEN_DECISIONS : 0;
 	}
 	
-	// mise en marche de l'appr après 3 essais guidés
-	// a remplacer par une mesure de stabilité de la representation
-	if (robot_.nb_trial_get() == 3 && robot_.manually_moved ()) {
-    	neurosolver_.learn_set (true);
-	}
-	
-	bool col_changed = neurosolver_.synch (wait_at_goal_ > 0);
+	bool col_changed = neurosolver_.synch ();
 	if (col_changed) {
 		// on stoppe l'action en cours quand on passe à une nouvelle colonne
 		// à remplacer à terme par : on planifie à chaque colonne
@@ -233,6 +231,7 @@ void Behavior::compute_next_action ()
     	wait_ = WAIT_BETWEEN_DECISIONS;
     	current_ = action->angle_get ();
     	action_done_ = false;
+    	delete action;
     }
 }
 

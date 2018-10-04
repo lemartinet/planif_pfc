@@ -6,7 +6,6 @@
 
 class ComputeUnit;
 class Columns;
-class Neuralnet;
 class Coord;
 
 using namespace std; 
@@ -14,11 +13,9 @@ using namespace std;
 class Column
 {
 public:
-	Column (Neuralnet& net, Columns& columns, int no, const vector<ComputeUnit*>& hippo_pop);
+	Column (Columns& columns, int no, const vector<ComputeUnit*>& hippo_pop);
 	~Column ();
 	
-	void new_set (int level, const vector<ComputeUnit*>& hippo_pop, const Coord& pos);
-	void new_set (int level, const vector<ComputeUnit*>& pop, const ComputeUnit& ego_action);
 	double inf_activation () const { return inf_.output (); }
 	double state_activation () const { return state_.output (); }
 	double sup_activation () const { return sup_.output (); }
@@ -31,6 +28,7 @@ public:
 	int level_get () const { return level_; }
 	void winner_set (bool winner) { winner_ = winner; }
 
+	void synch (bool learn, const vector<ComputeUnit*>& pop_state);
 	void synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& pop_state);
 	void synch (bool learn, const vector<ComputeUnit*>& pop_state, const ComputeUnit& ego_action);
 
@@ -44,7 +42,6 @@ private:
 	Neuron& state_;
 	Neuron& sup_;
 	Neuron& inf_;
-	Neuralnet& net_;
 	Columns& columns_;
 	int level_; // niveau de la colonne dans la carte
 	bool winner_;

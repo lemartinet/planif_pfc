@@ -1,49 +1,40 @@
 #ifndef HIPPO_HH_
 #define HIPPO_HH_
 
-#include <QObject>
 #include <vector>
-#include "coord.hh"
 #include <ostream>
 
 class Cell;
 class ComputeUnit;
+class Coord;
+
+using namespace std;
 
 /**
  * Hippocampus simulation model, containing its cells.
  * Cells are added incrementally, whenever no cell respond correctly to animat's stimulies.
  */
-class Hippo : public QObject
+class Hippo
 {
-	Q_OBJECT
-
 public:
 	Hippo ();
 	~Hippo ();
 	
 	const Cell& cell_get (int cell) const;
 	int size () const { return cellmap_.size (); }
-	void iadd_set (bool iadd) { iadd_ = iadd; }
-	bool iadd_get () const { return iadd_; }
-	Cell* lastadded_get () const { return lastadded_; }
-	const Coord& position_get () const { return position_; }
 	const vector<ComputeUnit*>& pop_get () const { return cellmap_; }
 
-	void cell_add (Coord pos);
-	bool synch (const Coord & signal);
+	void cell_add (const Coord& pos);
+	bool synch (const Coord& position);
+	bool synch (int numcell);
 	int nb_spiking_cells () const;
 
 	void draw (ostream& os) const;
 
 private:
-	std::vector<ComputeUnit*> cellmap_;   ///< Collection of cells.
-	bool iadd_;      ///< incremental adding mode.
-	Cell* lastadded_;
-	Coord position_;
+	vector<ComputeUnit*> cellmap_;
 	int nb_used_pc_; 
-
-signals:
-	void sig_addcell (int no);
+	int step_;
 };
 
 #endif

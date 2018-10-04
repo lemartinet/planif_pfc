@@ -9,9 +9,12 @@
 int main (int argc, char** argv)
 {
 	srand (time (0));
-	Params::load ("../../data/");
-	Logger::open_logs ();
-	
+	// les cout suivants n'apparaissent pas ds les logs, car le robot n'est pas encore créé
+	// on pourrait déplacer ca dans la classe du robot
+	if (!Params::load ("../../data/") || !Logger::open_logs ()) {
+		cout << "Mypuck: erreur d'init. Exit !" << endl;
+		exit (-1);	
+	}
 	Behavior* behavior = new Behavior;
 	const int GUI = Params::get_int ("GUI");
 	Gui* gui = GUI ? new Gui (argc, argv, *behavior) : 0;
@@ -25,7 +28,9 @@ int main (int argc, char** argv)
 		}
 	} while (behavior->robot_get ().step (TIME_STEP) != -1);
 
-	delete gui;
+	if (gui) {
+		delete gui;
+	}
 	delete behavior;
 	Logger::close_logs ();
 	return 0;

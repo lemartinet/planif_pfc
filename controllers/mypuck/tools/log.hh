@@ -12,18 +12,18 @@ using namespace std;
 class Log
 {
 public:
-	Log (const string& type, bool wlog = false);
+	Log (const string& type, bool wlog = false) throw (string);
 	virtual ~Log();
 	
 	void log (int step) const;
+	void logw () const;
 	void log (int step, const string& msg) const;
+	void log (const string& msg) const;
 	void add (const ComputeUnit* unit);
 	
 private:
-	const string type_;
 	bool wlog_;
 	ofstream* file_;
-	vector<ofstream*> wfile_;
 	vector<const ComputeUnit*> units_;
 };
 

@@ -28,6 +28,7 @@ private slots:
   void on_show_state_clicked ();
   void on_show_inf_clicked ();
   void on_show_sup_clicked ();
+//  void on_show_pc_clicked ();
 };
 
 #endif

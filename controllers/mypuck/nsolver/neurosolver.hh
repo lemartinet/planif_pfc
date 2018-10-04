@@ -19,11 +19,11 @@ public:
 	
 	const Columns& cols_get () const { return columns_; }
 	const Hippo& hippo_get () const { return hippo_; }
-	void learn_set (bool learn);
 
 	Action* best_action () const;
 	double inf_get (double angle) const;
-	bool synch (bool sleep);
+	bool synch ();
+	void sleep ();
 	void correct_transition (bool bloque);
 	void goal_learning ();
 	void set_goal_weight (Column* col, double val);
@@ -44,9 +44,7 @@ private:
 	Column* prec_lvl1_;
 	Column* current_lvl0_;
 	Column* current_lvl1_;
-	bool learn_;
 	bool explo_done_;
-	bool correction_done_;
 	int no_learning_timer_;
 };
 

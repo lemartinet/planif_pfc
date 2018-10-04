@@ -1,21 +1,23 @@
 #ifndef MINICOL_HH_
 # define MINICOL_HH_
 
-#include "action.hh"
-#include "neuron.hh"
 #include <string>
+#include <sstream>
+#include "neuron.hh"
 
 class Column;
-class Neuralnet;
+class Columns;
+class Action;
+
+using namespace std;
 
 class Minicol
 {
 public:
-	Minicol (Neuralnet& net, Action* action, Column& src, Column& dest,	int no, int level);
-	Minicol (Neuralnet& net, int no);
+	Minicol (Columns& columns, int no);
 	~Minicol ();
 	
-	void new_set (Action* action, Column& src, Column& dest, int level);
+	void new_set (const Action& action, Column& src, Column& dest, int level);
 	Neuron& sup_get () const { return sup_; }
 	Neuron& inf_get () const { return inf_; }
 	Action& action_get () const { return *action_; }
@@ -33,14 +35,14 @@ public:
 	void draw (ostream& os) const;
 	
 	void update_value ();
-	void adapt_action (Action* action);
+	void adapt_action (const Action& action);
+	void lateral_learning (bool increase);
 
 private:
 	const int no_;
 	Neuron& sup_;
 	Neuron& inf_;
 	Action* action_;
-	Neuralnet& net_;
 	Column* src_;
 	Column* dest_;
 	double mean_val_; // utiliser pour moyenner l'activite basse

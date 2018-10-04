@@ -16,15 +16,15 @@
 
 using namespace boost::lambda;
 
-Columns::Columns (const vector<ComputeUnit*>& hippo_pop) : nb_used_col_(0), newcol_(0), learning_(false) 
+Columns::Columns (const vector<ComputeUnit*>& hippo_pop)
 {
 	static const unsigned int SIZE_POP = Params::get_int("SIZE_POP");
 	while (columns_.size() < SIZE_POP) {
 		// TODO: a adapter à lvl1
-		Column* col = new Column (net_, *this, columns_.size(), hippo_pop);
+		Column* col = new Column (*this, columns_.size(), hippo_pop);
 		columns_.push_back (col);
 		pop_.push_back (&col->state_get());
-		Minicol* mc = new Minicol (net_, minicols_.size());
+		Minicol* mc = new Minicol (*this, minicols_.size());
 		minicols_.push_back(mc);
 	}
 	win_col_lvl_[0] = win_col_lvl_ [1] = 0;
@@ -39,6 +39,8 @@ Columns::~Columns ()
 	for_each (minicols_.begin (), minicols_.end (), bind (delete_ptr(), _1));
 	columns_.clear ();
 	minicols_.clear ();
+	for_each (neurons_.begin (), neurons_.end (), bind (delete_ptr(), _1));
+	neurons_.clear();
 }
 
 void Columns::winner_col (int level)
@@ -56,9 +58,9 @@ void Columns::winner_col (int level)
 	}
 	if (best_col != 0) {
 		best_col->winner_set (true);
+		cout << "winner (" << level << "): " << best_col->no_get () << " " << best_col->state_get ().output() << endl;
 	}
 	win_col_lvl_[level] = best_col;
-//	cout << "winner level " << level << " is " << best_col->no_get () << endl;
 }
 
 void Columns::winner_minicol (int level)
@@ -77,41 +79,17 @@ void Columns::winner_minicol (int level)
 	win_minicol_lvl_[level] = best_minicol;
 }
 
-Column& Columns::add_colomn (int level, const vector<ComputeUnit*>& hippo_pop, const Coord& pos)
-{
-	static const int SIZE_POP = Params::get_int("SIZE_POP");
-	if (nb_used_col_ >= SIZE_POP) {
-		cout << "[Mypuck] Too much columns" << endl;	
-	}
-	newcol_ = columns_[nb_used_col_];
-	newcol_->new_set (level, hippo_pop, pos);
-	emit sig_addcol (newcol_->no_get ());
-	nb_used_col_++;
-	return *newcol_;
-}
-
-Column& Columns::add_colomn (int level, const ComputeUnit& ego_action)
-{
-	static const int SIZE_POP = Params::get_int("SIZE_POP");
-	if (nb_used_col_ >= SIZE_POP) {
-		cout << "[Mypuck] Too much columns" << endl;	
-	}
-	newcol_ = columns_[nb_used_col_];
-	newcol_->new_set (level, pop_, ego_action);
-	nb_used_col_++;
-	return *newcol_;
-}
-
-Minicol& Columns::add_minicol (Action* action, Column& src, Column& dest, int level)
+Minicol* Columns::add_minicol (const Action& action, Column& src, Column& dest, int level)
 {
 	static const int SIZE_POP = Params::get_int("SIZE_POP");
 	if (nb_used_minicol_ >= SIZE_POP) {
-		cout << "[Mypuck] Too much minicolumns" << endl;	
+		cout << "[Mypuck] Too much minicolumns" << endl;
+		return 0;	
 	}
 	Minicol* mc = minicols_[nb_used_minicol_];
 	mc->new_set (action, src, dest, level);
 	nb_used_minicol_++;
-	return *mc;	
+	return mc;	
 }
 
 double Columns::nb_spiking_cells (int level) const
@@ -126,14 +104,36 @@ double Columns::nb_spiking_cells (int level) const
 	return sum;
 }
 
+void Columns::synch (bool learn, const vector<ComputeUnit*>& hippo_pop, const ComputeUnit& ego)
+{
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::compute, _1));
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::update, _1));
+	
+	vector<Column*>::iterator it;
+	for (it = columns_.begin (); it != columns_.end (); it++) {
+		if ((*it)->level_get () == 0) {
+			(*it)->synch (learn, hippo_pop);	
+		}
+		else if ((*it)->level_get () == 1) {
+			(*it)->synch (learn, pop_, ego);	
+		} 
+	}
+  	for_each (minicols_.begin (), minicols_.end (), bind (&Minicol::update_value, _1));
+  	
+  	winner_col (0);
+  	winner_col (1);
+  	winner_minicol (0);
+  	winner_minicol (1);
+//  	cout << "nb_spiking_cells: " << nb_spiking_cells (0) << endl;
+//	columns_.show_activities (0);
+//	columns_.show_activities (1);
+}
+
 void Columns::synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& hippo_pop, const ComputeUnit& ego)
 {
-	if (learning_) {
-    	net_.synch_learn ();
-  	}
-  	else {
-    	net_.synch ();
-  	}
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::compute, _1));
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::update, _1));
+	
 	vector<Column*>::iterator it;
 	for (it = columns_.begin (); it != columns_.end (); it++) {
 		if ((*it)->level_get () == 0) {
@@ -144,13 +144,14 @@ void Columns::synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& h
 		} 
 	}
   	for_each (minicols_.begin (), minicols_.end (), bind (&Minicol::update_value, _1));
-  	newcol_ = 0;
   	
   	winner_col (0);
   	winner_col (1);
   	winner_minicol (0);
   	winner_minicol (1);
 //  	cout << "nb_spiking_cells: " << nb_spiking_cells (0) << endl;
+//	columns_.show_activities (0);
+//	columns_.show_activities (1);
 }
 
 void Columns::draw (ostream& os) const
@@ -176,15 +177,12 @@ Column* Columns::nocol_get (int no) const
 	return (it == columns_.end ()) ? 0 : *it;
 }
 
-void Columns::lateral_learning (Column& from, Column& to, Action* action, bool increase, stringstream& message)
+void Columns::lateral_learning (Column& from, Column& to, const Action& action, bool increase, stringstream& message)
 {
-	bool new_minicol = false;	
 	Minicol* minicol = minicol_get (from.no_get (), to.no_get ());
   	if (minicol) {
   		// la minicolonne existe déjà : on modifie les poids
-  		net_.lateral_learning (minicol->inf_get (), to.inf_get (), increase);
-      	net_.lateral_learning (to.sup_get (), minicol->sup_get (), increase);
-      	
+  		minicol->lateral_learning (increase);      	
       	if (from.level_get () == 0) {
 	      	// on moyenne l'orientation
 	      	message << "update_minicol " << from.no_get () << "->" << to.no_get () << " : " 
@@ -195,18 +193,12 @@ void Columns::lateral_learning (Column& from, Column& to, Action* action, bool i
   	}
   	else {
   		// on recrute une nouvelle minicolonne
-      	add_minicol(action, from, to, from.level_get ());
+      	add_minicol (action, from, to, from.level_get ());
       	message << "new_minicol " << from.no_get () << "->" << to.no_get ();
       	if (from.level_get () == 0) {
-      		message << " : " << action->angle_get ();
+      		message << " : " << action.angle_get ();
       	}
-      	new_minicol = true;
     }	
-	
-	if (new_minicol) {
-		emit sig_addlink (from.no_get (), to.no_get ());
-		//cout << "from " << from.no_get () << " to " << to.no_get () << " " << action->angle_get() << endl;
-	}
 }
 
 void Columns::show_activities (int level) const
@@ -271,4 +263,25 @@ Minicol* Columns::minicol_get (int from, const Action& action) const
 		}
 	}
 	return 0;	
+}
+
+Neuron& Columns::add_neuron (nType type, double ip_step, double ip_mu, double a, double b)
+{
+  Neuron* res = new Neuron (type, false, ip_step, ip_mu, a, b);
+  neurons_.push_back (res);
+  return *res;
+}
+
+Neuron& Columns::add_neuron_max (nType type)
+{
+  Neuron* res = new Neuron (type);
+  neurons_.push_back (res);
+  return *res;
+}
+
+void Columns::net_draw (ostream& os) const
+{
+	os << "digraph G {" << endl;
+	for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::draw_graph, _1, var (os)));
+	os << "}" << endl;
 }

@@ -14,9 +14,10 @@
 #include <algorithm>
 
 Neurosolver::Neurosolver (const RobotDevice& robot) : 
-	robot_(robot),  hippo_(), ego_pop_(), allo_pop_(), motivation_ (1), columns_(hippo_.pop_get ()),  
-	prec_lvl0_(0), prec_lvl1_(0), learn_(false), explo_done_(false), no_learning_timer_(0)
+	robot_(robot),  hippo_(), ego_pop_(), allo_pop_(), motivation_ (MOTIV, 1), columns_(hippo_.pop_get ()),  
+	prec_lvl0_(0), prec_lvl1_(0), explo_done_(false), no_learning_timer_(0)
 {
+	Logger::logw ("weight");
 }
 
 Neurosolver::~Neurosolver () 
@@ -63,7 +64,7 @@ bool Neurosolver::is_goal_position (Column* col)
 	return (s != 0) && (s->w_get() > 0);	
 }
 
-bool Neurosolver::synch (bool sleep)
+bool Neurosolver::synch ()
 {
 	if (robot_.manually_moved ()) {
 		// on vient de bouger le robot, on apprend rien 
@@ -72,11 +73,9 @@ bool Neurosolver::synch (bool sleep)
   		prec_lvl0_ = 0;
   		prec_lvl1_ = 0;
   		no_learning_timer_ = 1;
+  		// on sauvegarde les poids à chaque début d'essai
+  		Logger::logw ("weight");
 	}
-	
-	hippo_.synch (robot_.position_get ());
-	ego_pop_.synch (robot_.angle_get()); 
-	allo_pop_.synch (robot_.angle_get()); 
 	
   	bool col_changed = false;
   	if (no_learning_timer_ > 0) {
@@ -86,61 +85,56 @@ bool Neurosolver::synch (bool sleep)
   		col_changed = true;
   	}
   	else {
-		// TODO: faut-il mettre learn_ ou true ???
 	  	columns_.synch (true, robot_.position_get (), hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
-	  	if (robot_.cpt_total_get () % 1 == 0) {
-			state_learning ();
-	  		col_changed = topology_learning ();
-			goal_learning ();
-	  	}
-  	}	
+	  	current_lvl0_ = columns_.best_state_col (0);
+	  	current_lvl1_ = columns_.best_state_col (1);
+		state_learning ();
+  		col_changed = topology_learning ();
+		goal_learning ();
+	}	
+	
+	// on màj les entrées après pour avoir r_cortex(t) = F(r_subcort(t-1))
+	hippo_.synch (robot_.position_get ());
+	ego_pop_.synch (robot_.angle_get()); 
+	allo_pop_.synch (robot_.angle_get()); 
+	
 	Logger::log (robot_.cpt_total_get ());
   	return col_changed;
+  	
+// Recup depuis l'ancienne neuralnet::synch_learn (). TETA_RYTHM n'existe plus
+//  	static const int TETA_RYTHM = Params::get_int("TETA_RYTHM");
+//	if (!(freq_ % TETA_RYTHM)) {
+//		for_each (neurons_.begin (), neurons_.end (), bind (&Neuron::learn, _1));
+//	}
+//	freq_++;
+}
+
+void Neurosolver::sleep ()
+{
+	for (int i = 0; i < hippo_.size (); i++) {
+		hippo_.synch (i);
+		columns_.synch (true, hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
+	}	
 }
 
 void Neurosolver::state_learning ()
 {
-	current_lvl0_ = columns_.best_state_col (0);
-  	current_lvl1_ = columns_.best_state_col (1);
-//  	if (hippo_.nb_spiking_cells () >= 6) {
-  	if (learn_) {
-//  		cout << "learning" << endl;
-  		
-      	// apprentissage d'une nouvelle colonne lvl0 si besoin
-      	if (!current_lvl0_ || !current_lvl0_->spiking ()) {
-			current_lvl0_ = &(columns_.add_colomn (0, hippo_.pop_get (), robot_.position_get ()));
-			ostringstream message;
-			message << "new_column_lvl0: " << current_lvl0_->no_get();
-			Logger::log ("network", robot_.cpt_total_get (), message.str ());
-			//cout << message.str ();
-      	}
-  	
-	  	// apprentissage d'une nouvelle colonne lvl1 si besoin	  	
-//		cout << "nb_col0 " << columns_.nb_spiking_cells (0) << endl;
-		// ca marche pas mal avec 1.3 = .7 + .3 + .3 par ex
-		static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
-		if (columns_.nb_spiking_cells (0) > THRESH_ADD_LVL1) {
-	  		if (!current_lvl1_ || !current_lvl1_->state_get ().spiking ()) {
-	  			ComputeUnit* unit = ego_pop_.pop_get ().at (1);
-	      		if (unit->spiking ()) { 
-					current_lvl1_ = &(columns_.add_colomn (1, *unit));
-					ostringstream message;
-					message << "new_column_lvl1: " << current_lvl1_->no_get();
-					Logger::log ("network", robot_.cpt_total_get (), message.str ());
-					//cout << message.str ();
-	      		}
-	      	}
-	  	}
-  	}
-  	
-//  	if (current_lvl0_ && current_lvl1_) {	
-//  		cout << "best: (0) " << current_lvl0_->no_get() 
-//  			 << " " << current_lvl0_->state_get ().output() 
-//  			 << " (1) " << current_lvl1_->no_get() 
-//  			 << " " << current_lvl1_->state_get ().output() << endl;
+	// apprentissage d'une nouvelle colonne lvl1 si besoin	  	
+//	cout << "nb_col0 " << columns_.nb_spiking_cells (0) << endl;
+	// ca marche pas mal avec 1.3 = .7 + .3 + .3 par ex
+//	static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
+//	if (columns_.nb_spiking_cells (0) > THRESH_ADD_LVL1) {
+//		if (!current_lvl1_ || !current_lvl1_->state_get ().spiking ()) {
+//			ComputeUnit* unit = ego_pop_.pop_get ().at (1);
+//	   		if (unit->spiking ()) { 
+//				current_lvl1_ = &(columns_.add_colomn (1, *unit));
+//				ostringstream message;
+//				message << "new_column_lvl1: " << current_lvl1_->no_get();
+//				Logger::log ("network", robot_.cpt_total_get (), message.str ());
+//				//cout << message.str ();
+//	   		}
+//	   	}
 //	}
-//	columns_.show_activities (0);
-//	columns_.show_activities (1);
 }
 
 bool Neurosolver::topology_learning ()
@@ -148,25 +142,21 @@ bool Neurosolver::topology_learning ()
   	stringstream message;
   	bool col_changed = false;
 
-	if (!learn_) {
-		return col_changed;
-	}
-	
-	if (current_lvl0_) {
-	    if (prec_lvl0_ && prec_lvl0_ != current_lvl0_) {
+	if (current_lvl0_ && current_lvl0_->spiking ()) {
+	    if (prec_lvl0_ && prec_lvl0_ != current_lvl0_ && prec_lvl0_->spiking ()) {
 	    	col_changed = true;
-	      	Action*  action = new Action(robot_.angle_get());
+	      	Action action (robot_.angle_get());
 	      	columns_.lateral_learning (*prec_lvl0_, *current_lvl0_, action, true, message);
 	  	}
   	}
 	prec_lvl0_ = current_lvl0_;
 	  	
-  	if (current_lvl1_) {
-  		if (prec_lvl1_ && prec_lvl1_ != current_lvl1_) {
-  			columns_.lateral_learning (*prec_lvl1_, *current_lvl1_, 0, true, message);
-  		}
-	}
-	prec_lvl1_ = current_lvl1_;
+//  	if (current_lvl1_) {
+//  		if (prec_lvl1_ && prec_lvl1_ != current_lvl1_) {
+//  			columns_.lateral_learning (*prec_lvl1_, *current_lvl1_, 0, true, message);
+//  		}
+//	}
+//	prec_lvl1_ = current_lvl1_;
   	
   	if (message.str () != "") {
 		Logger::log ("network", robot_.cpt_total_get (), message.str ());
@@ -177,11 +167,7 @@ bool Neurosolver::topology_learning ()
 void Neurosolver::correct_transition (bool bloque)
 {
 	stringstream message;
-	if (!bloque) {
-		// cette variable est utilisee pour devaluer les poids une seule fois
-		correction_done_ = false;
-	}
-	else if (!correction_done_) {
+	if (bloque) {
 		if (!current_lvl0_) {
 			return;	
 		}
@@ -194,11 +180,8 @@ void Neurosolver::correct_transition (bool bloque)
 	  		stringstream m;
 	  		columns_.lateral_learning (const_cast<Column&>(real_minicol->from_get()), 
 	  									const_cast<Column&>(real_minicol->to_get()), 
-	  									&(real_minicol->action_get()), false, m);
-	  		correction_done_ = true;
-		}
-		else {
-			//cout << "pas de minicol associée" << endl;	
+	  									real_minicol->action_get(), false, m);
+	  		message << endl << m.str ();
 		}
 	}
 	if (message.str () != "") {
@@ -245,12 +228,3 @@ double Neurosolver::inf_get (double angle) const
 //	}
 }
 
-void Neurosolver::learn_set (bool learn) 
-{
-	learn_ = learn; 
-	if (learn == true) { 
-    	Logger::log ("network", robot_.cpt_total_get (), "apprentissage lieux-colonnes actif");
-    	// on stoppe l'ajout de cellules de lieux
-    	hippo_.iadd_set (false);
-	} 
-}

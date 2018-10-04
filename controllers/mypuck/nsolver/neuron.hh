@@ -16,7 +16,7 @@ using namespace std;
 class Neuron : public ComputeUnit
 {
 public:
-	Neuron (bool max = true, double ip_step = 0, double ip_mu = 0, double a = 0, double b = 0);
+	Neuron (nType type, bool max = true, double ip_step = 0, double ip_mu = 0, double a = 0, double b = 0);
 	virtual ~Neuron ();
   
 	// Getting the number of synapses
@@ -32,9 +32,9 @@ public:
 	/**
 	 * Add & del a synapse from another neurons, with synaptic weight w.
 	 */
-	void add_synapse (const ComputeUnit& from, double w, bool constw);
-	void add_synapse (const ComputeUnit& from, const ComputeUnit& from_mult, double w,  double a, double b);
-	void add_synapse (const ComputeUnit& from);
+	Synapse* add_synapse (const ComputeUnit& from, double w, bool constw);
+	Synapse* add_synapse (const ComputeUnit& from, const ComputeUnit& from_mult, double w,  double a, double b);
+	Synapse* add_synapse (const ComputeUnit& from);
 	void add_synapse_modulation (const ComputeUnit& from, double modulation);
 
 	/**
@@ -47,11 +47,6 @@ public:
 	double syndrive_max () const;
 	double syndrive_wta () const;
 	double compute_sum_wi () const;
-
-	/**
-	 * Neuron's learning step 
-	 */
-	void learn ();
 
 	void draw_graph (ostream& os) const;
 	void print_weights (ostream& os) const;

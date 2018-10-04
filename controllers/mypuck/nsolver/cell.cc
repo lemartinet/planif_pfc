@@ -4,13 +4,11 @@
 #include <fstream>
 #include <iostream>
 
-
-Cell::Cell () : pos_(Coord(100,100))
+Cell::Cell () : ComputeUnit(PC), pos_(0)
 {
-	// on a pris un centre de champ recepteur en dehors du maze
 }
 
-Cell::Cell (const Coord& pos) : pos_(pos)
+Cell::Cell (const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos))
 {
 }
 
@@ -19,7 +17,7 @@ bool sort_function (double* v1, double* v2)
 	return v1[0] < v2[0] || (v1[0] == v2[0] && v1[1] < v2[1]); 	
 }
 
-Cell::Cell (const string& filename, const Coord& pos) : pos_(pos)
+Cell::Cell (const string& filename, const Coord& pos) : ComputeUnit(PC), pos_(new Coord (pos))
 {
 	ifstream file (filename.c_str ());
 	double x, y, r;
@@ -33,17 +31,33 @@ Cell::Cell (const string& filename, const Coord& pos) : pos_(pos)
 
 Cell::~Cell () 
 {
+	if (pos_ != 0) {
+		delete pos_;	
+	}
 }
 
-void Cell::compute (const Coord& pos)
+void Cell::pos_set (const Coord& pos)
 {
-	if (r_.size () == 0) {
+	if (pos_ == 0) {
+		pos_ = new Coord(pos);
+	}
+	else {
+		*pos_ = pos;	
+	}
+}
+
+void Cell::compute (const Coord& pos, bool peak)
+{
+	if (pos_ == 0 || !peak) {
+		output_ = 0;
+	}
+	else if (r_.size () == 0) {
 		// Noise applied to hippocampus cells activity.
 		static const double CELLS_NOISE_SIGMA = Params::get_double("CELLS_NOISE_SIGMA");
 		// Ecart-type of hippocampus cells activation.
 		static const double CELLS_SIGMA = Params::get_double("CELLS_SIGMA");
 		static const double CELL_THRESH = Params::get_double("CELL_THRESH");
-	  	double dist = (pos_ - pos).norm ();
+	  	double dist = (*pos_ - pos).norm ();
 	
 		//output_ = exp (-pow2 (dist) / (2 * CELLS_SIGMA * CELLS_SIGMA)) + bruit (2 * CELLS_NOISE_SIGMA);
 		output_ = exp (-pow2 (dist) / (2 * CELLS_SIGMA * CELLS_SIGMA)) * (1 + bruit (2 * CELLS_NOISE_SIGMA));

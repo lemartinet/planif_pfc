@@ -22,6 +22,7 @@
 ****************************************************************************/
 
 #include "graphwidget.h"
+#include "hippo.hh"
 #include "edge.h"
 #include "node.h"
 
@@ -32,7 +33,7 @@
 #include <iostream>
 #include <math.h>
 
-GraphWidget::GraphWidget ()
+GraphWidget::GraphWidget (Hippo* hippo)
 {
     QGraphicsScene *scene = new QGraphicsScene(this);
     scene->setItemIndexMethod(QGraphicsScene::NoIndex);
@@ -48,21 +49,39 @@ GraphWidget::GraphWidget ()
     //setMinimumSize(400, 400);
     scene_ = scene;
     
-    // repere pour le monde de Webots : min (-0.64, -1.5), max (1.13, 0.0)
-    double w_xmin = -0.64, w_ymin = -1.7, w_xmax = 1.13, w_ymax = 0.0;
-    Coord::webots_coord_set (w_xmin, w_ymin, w_xmax,  w_ymax);
+    // repere pour le monde de Webots : min (-0.64, -1.5), max (1.13, 0.0))
 	// repere pour le gui : min (0, 0), max (600, 600)
-	double g_xmin = 0, g_ymin = 0, g_xmax = 600, g_ymax = 600;
-	Coord::gui_coord_set (g_xmin, g_ymin, g_xmax, g_ymax);
-	// taille du graph
-	scene_->setSceneRect(g_xmin, g_ymin, fabs (g_xmax - g_xmin), fabs (g_ymax - g_ymin));
+ 	conv_ = new RepereConverter (-0.64, -1.70, 1.13,  0.0, 0, 0, 600, 600);
+	scene_->setSceneRect(conv_->x2min_get (), conv_->y2min_get (), fabs (conv_->x2max_get () - conv_->x2min_get ()), fabs (conv_->y2max_get () - conv_->y2min_get ()));
+	
+	hippo_ = hippo;
+	QObject::connect (hippo, SIGNAL (sig_addcell (int)), this, SLOT (slot_addcell (int)));
+	QObject::connect (hippo, SIGNAL (sig_reset (void)), this, SLOT (slot_reset (void)));
 }
 
 GraphWidget::~GraphWidget ()
 {
-	// supprime automatiquement tous les items de la scene
-	// (Edge, Node, ...) -> ne pas les supprimer ailleurs
-	delete scene_;
+  Node* node = 0;
+
+  foreach (QGraphicsItem *item, scene()->items())
+    {
+      if ((node = qgraphicsitem_cast< Node *>(item)))
+	del_node (node);
+    }
+  //Remove de la scene?
+  delete scene_;
+  delete conv_;
+}
+
+void GraphWidget::reset (NodeType type)
+{
+  Node* node = 0;
+
+  foreach (QGraphicsItem *item, scene()->items())
+    {
+      if ((node = qgraphicsitem_cast< Node *>(item)) && node->nodetype_get () == type)
+	del_node (node);
+    }
 }
 
 void GraphWidget::itemMoved ()
@@ -93,16 +112,17 @@ Edge* GraphWidget::edge_get (NodeType type, int from, int to)
   return 0;
 }
 
-Node* GraphWidget::add_node (NodeType type, int no, int size, QColor col)
+Node* GraphWidget::add_node (NodeType type, int no, Coord& coord_webots, int size)
 {
-	Node* node = new Node (this);
-	node->nodetype_set (type);
-	node->no_set (no);
-	node->color_set (col);
-	node->nodesize_set (size);
-	node->setPos (0, 0);
-	scene_->addItem (node);
-	return node;
+  Node*   node = new Node (this);
+
+  node->nodetype_set (type);
+  node->no_set (no);
+  node->nodesize_set (size);
+  node->setPos ((int) conv_->convertx (coord_webots), (int)conv_->converty (coord_webots));
+  scene_->addItem (node);
+
+  return node;
 }
 
 Edge* GraphWidget::add_edge (NodeType type, int from, int to)
@@ -116,6 +136,40 @@ Edge* GraphWidget::add_edge (NodeType type, int from, int to)
   edge = new Edge (node1, node2);
   scene_->addItem (edge);
   return edge;
+}
+
+void GraphWidget::del_node (Node* node)
+{
+  if (!node)
+    return;
+  scene()->removeItem (node);
+  delete node;
+}
+
+void GraphWidget::del_edge (Edge* edge)
+{
+  if (!edge)
+    return;
+  scene()->removeItem (edge);
+  delete edge;
+}
+
+void GraphWidget::del_node (NodeType type, int no)
+{
+  Node*   node = node_get (type, no);
+
+  if (!node)
+    return;
+  del_node (node);
+}
+
+void GraphWidget::del_edge (NodeType type, int from, int to)
+{
+  Edge* edge = edge_get (type, from, to);
+
+  if (!edge)
+    return;
+  del_edge (edge);
 }
 
 void GraphWidget::keyPressEvent(QKeyEvent *event)
@@ -142,14 +196,7 @@ void GraphWidget::drawBackground(QPainter *painter, const QRectF &rect)
 {
     Q_UNUSED(rect);
 
-    // Shadow
     QRectF sceneRect = this->sceneRect();
-//    QRectF rightShadow(sceneRect.right(), sceneRect.top() + 5, 5, sceneRect.height());
-//    QRectF bottomShadow(sceneRect.left() + 5, sceneRect.bottom(), sceneRect.width(), 5);
-//    if (rightShadow.intersects(rect) || rightShadow.contains(rect))
-//	painter->fillRect(rightShadow, Qt::darkGray);
-//    if (bottomShadow.intersects(rect) || bottomShadow.contains(rect))
-//	painter->fillRect(bottomShadow, Qt::darkGray);
 
     // Fill
     QLinearGradient gradient(sceneRect.topLeft(), sceneRect.bottomRight());
@@ -160,18 +207,14 @@ void GraphWidget::drawBackground(QPainter *painter, const QRectF &rect)
     painter->drawRect(sceneRect);
 
     // Text
-    QRectF textRect(sceneRect.left() + 4, sceneRect.top() + 4,
-                    sceneRect.width() - 4, sceneRect.height() - 4);
-    QString message(tr(""));
-    
-    QFont font = painter->font();
-    font.setBold(true);
-    font.setPointSize(14);
-    painter->setFont(font);
-    painter->setPen(Qt::lightGray);
-    painter->drawText(textRect.translated(2, 2), message);
-    painter->setPen(Qt::black);
-    painter->drawText(textRect, message);
+//    QRectF textRect(sceneRect.left() + 4, sceneRect.top() + 4,
+//                    sceneRect.width() - 4, sceneRect.height() - 4);
+//    QString message(tr("Cortical network"));
+//    QFont font = painter->font();
+//    font.setPointSize(14);
+//    painter->setFont(font);
+//    painter->setPen(Qt::black);
+//    painter->drawText(textRect, message);
 }
 
 void GraphWidget::scaleView(qreal scaleFactor)
@@ -188,9 +231,14 @@ void GraphWidget::mouseMoveEvent (QMouseEvent* event)
   mouse_pos_ = event->pos ();
 }
 
-void GraphWidget::trigger_sig_node_clicked (NodeType type, int no) 
+void GraphWidget::slot_addcell (int no)
 {
-	if (type == COL) { 
-		emit sig_node_clicked (no);
-	} 
+	Coord center = hippo_->cell_get_with_no (no)->pos_get ();
+	add_node (CELL, no, center, 15);
 }
+
+void GraphWidget::slot_reset ()
+{
+	reset (CELL);
+}
+

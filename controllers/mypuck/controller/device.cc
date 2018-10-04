@@ -12,7 +12,7 @@ int camera_enabled = 0; // mettre à 1 pour activer la camera
 RobotDevice::RobotDevice () :
 	position_(0.0, -0.05), orientation_(0.0), num_pixels_goal_(0), 
 	nb_trial_(0), goal_reached_(false),
-	cpt_trial_(0), cpt_total_(0)
+	cpt_trial_(0), cpt_total_(0), sleep_(false)
 {
 	const int TIME_STEP = Params::get_int ("TIME_STEP");
 	gps_ = getGPS ("gps");
@@ -94,7 +94,7 @@ void RobotDevice::synch ()
   	
     // read and process camera images
   	if (camera_enabled) {
-    	unsigned char *image = camera_->getImage ();
+    	const unsigned char *image = camera_->getImage ();
     	process_camera_image(image, &num_pixels_goal_);
   	}
   	//cout << num_pixels_goal<< endl;
@@ -113,16 +113,18 @@ void RobotDevice::synch ()
 	} 
 	
 	goal_reached_ = false;
+	sleep_ = false;
+	static const int SLEEP = Params::get_int ("SLEEP");
 	while (receiver_->getQueueLength () > 0) {
 		const string message = static_cast<const char*>(receiver_->getData ());
 //		cout << message << endl;
 		receiver_->nextPacket ();
-		
 		if (message == "goal") {
 			goal_reached_ = true;
 		}
-		else if (message == "sleep") {
-			
+		else if (message == "sleep" && SLEEP) {
+			sleep_ = true;
+			cout << "sleep !!!" << endl; 
 		}
 //		else {
 //			dist_goal_ = atoi(message.c_str());	

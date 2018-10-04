@@ -13,12 +13,6 @@ class Column;
 class Minicol;
 class Columns;
 
-// pour afficher les cellules de lieux dans QT
-#define SHOW_CELLS    false
-#define COLOR_STATE          Qt::darkYellow
-#define COLOR_GOAL           Qt::darkRed
-#define COLOR_SPIKING        Qt::darkBlue
-
 class ControlRobot : private QObject
 {
 	Q_OBJECT
@@ -35,10 +29,12 @@ public:
 private:
 	void update_col_appearance (Node& node, Column& col);
 	void update_mincol_appearance (Edge& edge, Minicol& mincol);
-	void update_mincols_appearance ();
+	void update_mincols ();
 	void highlight_current_mincol ();
 	void update_cols ();	
 	void update_cells ();
+	
+//	void show_pc () { show_pc_ = !show_pc_; } 
 
 private:
 	const RobotDevice& robot_device_;
@@ -47,11 +43,9 @@ private:
 	GraphWidget& widget_;
 	Node* robot_;
 	int show_inf_sup_or_state_;
+//	bool show_pc_;
   
 private slots:
-	void slot_addcell (int no);
-	void slot_addcol (int no);
-	void slot_addlink (int from, int to);
 	void slot_setgoalcol (int no);
 };
 

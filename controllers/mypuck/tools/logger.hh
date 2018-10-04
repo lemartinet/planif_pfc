@@ -12,12 +12,13 @@ using namespace std;
 class Logger
 {
 public:
-	static void open_logs ();
+	static bool open_logs ();
 	static void close_logs ();
-//	static void new_log (const string& type);
 	static void add (const string& type, const ComputeUnit* unit);
 	static void log (int step);
 	static void log (const string& type, int step, const string& msg);
+	static void log (const string& type, const string& msg);
+	static void logw (const string& type);
 	
 private:
 	static map<string, Log*> logs_;

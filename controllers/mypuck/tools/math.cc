@@ -64,3 +64,33 @@ double mean_value (double old_v, double new_v, double ratio)
 {
 	return (1 - ratio) * old_v + ratio * new_v; 
 }
+
+void color_palette (double activity, int* r, int* g, int* b)
+{
+/*
+ * 0 	0 	255 (blue)
+ * 0 	255 255
+ * 0 	255 0 (green)
+ * 255 	255 0
+ * 255 	0 	0 (red)
+ * we have 1024 levels
+ * here we compress the green zone so that we have
+ * only 768 levels
+ */
+	int level = static_cast<int>(activity * 767);
+	if (level < 256) {
+		*r = 0;
+		*g = level;
+		*b = 255;
+	}
+	else if (256 <= level && level < 512) {
+		*r = level - 256;
+		*g = 255;
+		*b = 511 - level;
+	}
+	else if (512 <= level && level < 768) {
+		*r = 255;
+		*g = 767 - level;
+		*b = 0;
+	}
+}

@@ -20,8 +20,8 @@ Synapse* snd (const pair<const int, Synapse *>& p)
 	return p.second;	
 }
 
-Neuron::Neuron (bool max, double ip_step, double ip_mu, double a, double b) : 
-	max_(max), a_(a), b_(b), ip_step_(ip_step), ip_mu_(ip_mu)
+Neuron::Neuron (nType type, bool max, double ip_step, double ip_mu, double a, double b) : 
+	ComputeUnit(type), max_(max), a_(a), b_(b), ip_step_(ip_step), ip_mu_(ip_mu)
 {
 	static const double EPSILON_VR = Params::get_double("EPSILON_VR"); 
 	static const double EPSILON_VF = Params::get_double("EPSILON_VF");
@@ -47,21 +47,23 @@ Neuron::~Neuron ()
 		bind (delete_ptr(), bind (&snd, _1)));
 }
 
-void Neuron::add_synapse (const ComputeUnit& from, double w, bool constw)
+Synapse* Neuron::add_synapse (const ComputeUnit& from, double w, bool constw)
 {
 	synapses_[from.no_get ()] = new Synapse (from, *this, w, constw);
+	return synapses_[from.no_get ()];
 }
 
-void Neuron::add_synapse (const ComputeUnit& from, const ComputeUnit& from_mult, double w, double a, double b)
+Synapse* Neuron::add_synapse (const ComputeUnit& from, const ComputeUnit& from_mult, double w, double a, double b)
 {
 	synapses_[from.no_get ()] = new Synapse (from, from_mult, *this, w, a, b);
+	return synapses_[from.no_get ()];
 }
 
-void Neuron::add_synapse (const ComputeUnit& from)
+Synapse* Neuron::add_synapse (const ComputeUnit& from)
 {
 	// Maximum weight init value.
 	static const double NEURON_WEIGHT_INIT  = Params::get_double("NEURON_WEIGHT_INIT");
-  	add_synapse (from, drand () * NEURON_WEIGHT_INIT, false);
+  	return add_synapse (from, drand () * NEURON_WEIGHT_INIT, false);
 }
 
 void Neuron::add_synapse_modulation (const ComputeUnit& from, double modulation)
@@ -117,9 +119,9 @@ void Neuron::compute ()
 	output_next_ *= 1 + br;
 	output_next_ = output_next_ < 0.0 ? 0.0 : output_next_;
   	output_next_ = output_next_ > 1.0 ? 1.0 : output_next_;
-//  	if (output_next_ < 0.05) {
-//		output_next_ = 0.05 + bruit(2 * 0.05);	
-//	}
+	if (output_next_ < 0.05) {
+		output_next_ = 0.05 + bruit(2 * 0.05);	
+	}
 }
 
 double Neuron::syndrive_sum () const
@@ -151,11 +153,6 @@ double Neuron::syndrive_wta () const
 	  	val += (wij - rj) * (wij - rj);
 	}
 	return exp(-val/5) ;	
-}
-
-void Neuron::learn ()
-{
-	for_each (synapses_.begin (), synapses_.end (), bind (&Synapse::hlearn, bind (&snd, _1)));
 }
 
 Synapse* Neuron::syn_get (const ComputeUnit& from) const

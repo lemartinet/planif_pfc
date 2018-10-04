@@ -20,6 +20,7 @@ public:
 	int cpt_trial_get () const { return cpt_trial_; }
 	int cpt_total_get () const { return cpt_total_; } 
 	double distance_goal_factor () const { return (dist_goal_ > 1)?1:dist_goal_; }
+	bool sleep_get () const { return sleep_; }
 
 	void synch ();
 	float process_camera_image(const unsigned char *image, int *npixels);
@@ -40,6 +41,7 @@ private:
 	int cpt_trial_;
 	int cpt_total_;
 	double dist_goal_;
+	bool sleep_;
 };
 
 #endif

@@ -1,6 +1,5 @@
 #include "column.hh"
 #include "coord.hh"
-#include "neuralnet.hh"
 #include "hippo.hh"
 #include "cell.hh"
 #include "params.hh"
@@ -17,14 +16,19 @@ bool operator== (const Column& c1, const Column& c2)
   return c1.no_get() == c2.no_get();
 }
 
-Column::Column (Neuralnet& net, Columns& columns, int no, const vector<ComputeUnit*>& hippo_pop) :
-	no_(no), state_(net.add_neuron_max ()), sup_(net.add_neuron_max ()), inf_(net.add_neuron_max ()), 
-	net_(net), columns_(columns), level_(0), winner_(false), pos_(0), maxr(0) 
+Column::Column (Columns& columns, int no, const vector<ComputeUnit*>& hippo_pop) :
+	no_(no), state_(columns.add_neuron_max (STATE)), 
+	sup_(columns.add_neuron_max (MAXSUP)), inf_(columns.add_neuron_max (LAT)), 
+	columns_(columns), level_(0), winner_(false), pos_(0), maxr(0) 
 {
-	Logger::add ("state", &state_);
-	Logger::add ("lat", &inf_);
-	Logger::add ("maxsup", &sup_);
-	Logger::add ("weights", &state_);
+	stringstream s1, s2, s3;
+	s1 << state_.no_get () << " " << no;
+	Logger::log("col", s1.str());
+	s2 << sup_.no_get () << " " << no;
+	Logger::log("col", s2.str());
+	s3 << inf_.no_get () << " " << no;
+	Logger::log("col", s3.str());
+
 	// ajoute une connexion aléatoire avec hippo
 	connect_pop_to_neuron (hippo_pop, true);
 }
@@ -36,26 +40,16 @@ Column::~Column ()
 	}
 }
 
-void Column::new_set (int level, const vector<ComputeUnit*>& hippo_pop, const Coord& pos)
-{
-	level_ = level;
-	pos_ = new Coord(pos);
-	winner_ = true;
-	connect_pop_to_neuron (hippo_pop);
-}
-
-void Column::new_set (int level, const vector<ComputeUnit*>& pop, const ComputeUnit& ego_action)
-{
-	level_ = level;
-	winner_ = true;
-	connect_pop_to_neuron (pop, ego_action);
-}
-
-void Column::synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& pop_state)
+void Column::synch (bool learn, const vector<ComputeUnit*>& pop_state)
 {
 	if (learn) {
 		connect_pop_to_neuron (pop_state);
 	}
+}
+
+void Column::synch (bool learn, const Coord& pos, const vector<ComputeUnit*>& pop_state)
+{
+	synch (learn, pop_state);
 	center_rf (pos);
 }
 
@@ -71,35 +65,24 @@ void Column::connect_pop_to_neuron (const vector<ComputeUnit*>& pop_state, bool 
 	// TODO: pour lvl0 et lvl1, traiter le cas !winner_ pour dévaluer les poids ?
 //	if (level_ == 0 && winner_ && nb_spiking_cells () >= 6) {
 	if (level_ == 0 && (winner_ || newcol)) {
-		cout << "col " << no_ << " is learning" << endl;
-		static const int LEARN_PC_COL = Params::get_int ("LEARN_PC_COL");	
+		static const double RATE_PC_COL = Params::get_double ("RATE_PC_COL");	
 		int nbunits = pop_state.size ();
 		for (int i = 0; i < nbunits; i++) {
 			ComputeUnit* unit = pop_state.at (i);
 			double rj = unit->output ();
 			Synapse* s = state_.syn_get(*unit);
 			if (s == 0) {
-				double init_val;
-				if (newcol) {
-					init_val = 0.1 * drand ();
-				}
-				else {
-//					init_val = unit->spiking() ? (state_.output () > 0 ? state_.output () : rj) : 0;
-					init_val = unit->spiking() ? rj : 0;
-					cout << "one shot" << endl;
-				}
+				double init_val = 0.1 * drand ();
 				state_.add_synapse (*unit, init_val, false);
 			}
-			else if (s != 0 && LEARN_PC_COL == 1) {
-				s->w_set (s->w_get () + 0.01 * (rj - s->w_get ()) * (state_.output ()));
+			else if (s != 0) {
+				s->w_set (s->w_get () + RATE_PC_COL * (rj - s->w_get ()) * (state_.output ()));
 				// code pour la regle BCM (marche pas)
 //				double t = state_.thetaM_get (), y = state_.output ();
 //				s->w_set (s->w_get () + 0.01 * 1 / t * rj * (y - t) * y);
 //				state_.thetaM_set (t + 0.1 * (exp(y) - t));
 			}			
 		}
-		// TODO: traiter le cas de nouvelles cellules de lieux fraichement ajoutees ?
-		// en utilisant ri à la place de rj pour les inits ? ou ri * rj ?
 	}
 }
 
@@ -147,7 +130,10 @@ void Column::connect_pop_to_neuron (const vector<ComputeUnit*>& pop_state, const
 
 void Column::center_rf (const Coord& pos)
 {
-	if (pos_ != 0 && state_.output () > maxr) {
+	if (pos_ == 0) {
+		pos_ = new Coord(pos);
+	}
+	else if (state_.output () > maxr) {
 		maxr = state_.output ();
 		*pos_ = pos;
 	}

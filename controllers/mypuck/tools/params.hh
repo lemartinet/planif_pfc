@@ -9,7 +9,7 @@ using namespace std;
 class Params
 {
 public:
-	static void load (const string & path);
+	static bool load (const string & path);
 
   	static string get (string name);
 	static double get_double (string name);

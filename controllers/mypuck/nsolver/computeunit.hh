@@ -1,11 +1,23 @@
 #ifndef COMPUTEUNIT_H
 # define COMPUTEUNIT_H
 
+enum nType { 
+	STATE = 0, 
+	INF = 1, 
+	LAT = 2,
+	SUP = 3, 
+	MAXSUP = 4,
+	PC = 10,
+	DC = 11, 
+	MOTIV = 12
+};
+
+
 class ComputeUnit
 {
 public:
-	ComputeUnit () : output_(0), no_(nb_computeunits) { nb_computeunits++; };
-	ComputeUnit (double output) : output_(output), no_(nb_computeunits) { nb_computeunits++; };
+	ComputeUnit (nType type);
+	ComputeUnit (nType type, double output);
 	   
 	virtual ~ComputeUnit () { --nb_computeunits; };
 	
