@@ -27,11 +27,13 @@
 #include <QGraphicsItem>
 #include <QList>
 #include "coord.hh"
-#include "nodetype.hh"
 
 class Edge;
 class GraphWidget;
 class QGraphicsSceneMouseEvent;
+
+enum e_NodeType { CELL, COL, ROBOT };
+typedef enum e_NodeType NodeType;
 
 class Node : public QGraphicsItem
 {

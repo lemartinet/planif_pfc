@@ -1,37 +1,27 @@
 #ifndef GUI_H
 # define GUI_H
 
-#include "graphwidget.h"
-#include "controlcols.hh"
+#include <QtGui>
 
+class GraphWidget;
 class BoardWidget;
 class ControlRobot;
-class ControlCells;
+class Behavior;
 class QApplication;
 class QEventLoop;
 
-class Behavior;
-class RobotDevice;
-
-class Gui
+class Gui : public QApplication
 {
 public:
 	Gui (int& argc, char**& argv, Behavior& behavior);
-	virtual ~Gui ();
+	~Gui ();
 	
 	void synch ();
-	
-	GraphWidget* colswidget_get () { return colswidget_; }
 	  
-	ControlCols* colscontrol_get () { return colscontrol_; }
-
 private:
 	BoardWidget*   boardwidget_;
 	GraphWidget*   colswidget_;
-	ControlCols*   colscontrol_;
 	ControlRobot*  robotcontrol_;
-	ControlCells*  cellscontrol_;
-	QApplication*  app_;
 	QEventLoop*    eventloop_;
 };
 

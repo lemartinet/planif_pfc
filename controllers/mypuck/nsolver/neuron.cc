@@ -20,8 +20,8 @@ Synapse* snd (const pair<const int, Synapse *>& p)
 	return p.second;	
 }
 
-Neuron::Neuron (int no_col, bool max, double ip_step, double ip_mu, double a, double b, int level) : 
-				ComputeUnit(level), no_col_(no_col), max_(max), a_(a), b_(b), ip_step_(ip_step), ip_mu_(ip_mu)
+Neuron::Neuron (bool max, double ip_step, double ip_mu, double a, double b) : 
+	max_(max), a_(a), b_(b), ip_step_(ip_step), ip_mu_(ip_mu)
 {
 	static const double EPSILON_VR = Params::get_double("EPSILON_VR"); 
 	static const double EPSILON_VF = Params::get_double("EPSILON_VF");
@@ -117,6 +117,9 @@ void Neuron::compute ()
 	output_next_ *= 1 + br;
 	output_next_ = output_next_ < 0.0 ? 0.0 : output_next_;
   	output_next_ = output_next_ > 1.0 ? 1.0 : output_next_;
+//  	if (output_next_ < 0.05) {
+//		output_next_ = 0.05 + bruit(2 * 0.05);	
+//	}
 }
 
 double Neuron::syndrive_sum () const
@@ -186,15 +189,6 @@ void Neuron::print_weights (ostream& os) const
 {
   	map<const int, Synapse *>::const_iterator iter;
 	for (iter = synapses_.begin (); iter != synapses_.end (); iter++) {
-		Cell* cell = dynamic_cast <Cell *>(&(iter->second->from_get ()));
-		if (cell) {
-			os << cell->pos_get () << " ";
-			os << iter->second->w_get () << " " << iter->second->from_get ().no_get () << endl;
-		}
-		else {
-			Neuron* neuron = dynamic_cast <Neuron *>(&(iter->second->from_get ()));
-			os << iter->second->w_get () << " " << neuron->no_col_get () << endl;
-		}  
+		os << iter->second->w_get () << " ";
 	}
-	os << endl;
 }

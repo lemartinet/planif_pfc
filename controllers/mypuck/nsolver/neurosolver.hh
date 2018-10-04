@@ -7,10 +7,6 @@
 #include "alloactionpop.hh"
 #include "computeunit.hh"
 
-#define TIMESTEP_WEIGHTS 50
-#define TIMESTEP_OUTPUTS 10
-#define TIMESTEP_CELLS 10
-
 class Behavior;
 class RobotDevice;
 class Column;
@@ -27,7 +23,7 @@ public:
 
 	Action* best_action () const;
 	double inf_get (double angle) const;
-	bool synch ();
+	bool synch (bool sleep);
 	void correct_transition (bool bloque);
 	void goal_learning ();
 	void set_goal_weight (Column* col, double val);
@@ -36,15 +32,14 @@ public:
 	bool topology_learning ();  
   
 	void draw (ostream& os) const;
-	void log () const;
 
 private:
 	const RobotDevice& robot_;
-	Columns columns_;
 	Hippo hippo_;
 	EgoActionPop ego_pop_;
 	AlloActionPop allo_pop_;
 	ComputeUnit motivation_;
+	Columns columns_;
 	Column* prec_lvl0_;
 	Column* prec_lvl1_;
 	Column* current_lvl0_;

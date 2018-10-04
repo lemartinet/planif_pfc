@@ -24,7 +24,10 @@
 #ifndef EDGE_H
 #define EDGE_H
 
+#include <iostream>
 #include <QGraphicsItem>
+
+using namespace std;
 
 class Node;
 

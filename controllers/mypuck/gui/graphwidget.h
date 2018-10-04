@@ -29,8 +29,6 @@
 #include "node.h"
 #include "edge.h"
 #include "coord.hh"
-#include "repere_converter.hh"
-#include "nodetype.hh"
 
 using namespace std;
 
@@ -42,23 +40,15 @@ public:
     GraphWidget ();
     ~GraphWidget ();
 
-    void itemMoved();
-
     Node* node_get (NodeType type, int no);
     Edge* edge_get (NodeType type, int from, int to);
     Node* add_node (NodeType type, int no, const Coord& coord_webots, int size, QColor col);
     Edge* add_edge (NodeType type, int from, int to);
-
-    inline
     QGraphicsScene* scene_get () { return scene_; }
-    inline
-    RepereConverter& conv_get () { return *conv_; }
-
-    inline
-    void trigger_sig_node_clicked (NodeType type, int no) { emit sig_node_clicked (type, no); }
-
-    inline
     QPoint& mouse_pos_get () { return mouse_pos_; }
+    
+	void trigger_sig_node_clicked (NodeType type, int no);
+	void itemMoved();
 
 protected:
     void keyPressEvent(QKeyEvent *event);
@@ -66,18 +56,15 @@ protected:
     void wheelEvent(QWheelEvent *event);
     void closeEvent(QCloseEvent *);
     void mouseMoveEvent (QMouseEvent* event);
-
     void drawBackground(QPainter *painter, const QRectF &rect);
-
     void scaleView(qreal scaleFactor);
 
 private:
     QGraphicsScene*   scene_;
-    RepereConverter*  conv_;
     QPoint            mouse_pos_;
 
 signals:
-    void sig_node_clicked (NodeType type, int no);
+    void sig_node_clicked (int no);
 };
 
 #endif

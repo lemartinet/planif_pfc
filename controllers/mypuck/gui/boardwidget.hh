@@ -3,21 +3,22 @@
 
 #include "boardwindow.hh"
 
-class Gui;
+class GraphWidget;
+class ControlRobot;
 
 class BoardWidget : public QMainWindow, public Ui::BoardWindow
 {
   Q_OBJECT
 
 public:
-  BoardWidget (Gui& gui) : gui_(&gui)
-  	{ setupUi (this); }
+  BoardWidget (GraphWidget& widget, ControlRobot& robotgui);
 
 protected:
   void closeEvent(QCloseEvent *);
 
 private:
-  Gui* gui_;
+  GraphWidget& widget_;
+  ControlRobot& robotgui_;
 
 private slots:
   void on_execution_behavior_run_clicked ();

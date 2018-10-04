@@ -3,8 +3,8 @@
 #include "math.hh"
 #include "mystr.hh"
 #include "action.hh"
+#include "logger.hh"
 #include <iostream>
-#include <sstream>
 
 #define WAIT_BETWEEN_DECISIONS 10
 
@@ -45,7 +45,7 @@ void Behavior::do_action ()
 	robot_.setSpeed (left_speed, right_speed);
 }
 
-void Behavior::e_greedy (const vector<double>& dirs, double* pa)
+void Behavior::e_greedy (const vector<double>& dirs, double* pa, stringstream& s)
 {
 	// Mecanisme epsilon-greedy	
 	// on explore exponentiellement moins au cours des essais
@@ -63,9 +63,9 @@ void Behavior::e_greedy (const vector<double>& dirs, double* pa)
 	int nb_free = dirs.size ();
 	for (int i = 0; i < nb_free; i++) {
 		// on evalue la meilleur action: non-nulle et correspond a une dir
-		if (action) {
-			cout << dirs[i] << "/" << action->angle_get() << " ";
-		}
+//		if (action) {
+//			cout << dirs[i] << "/" << action->angle_get() << " ";
+//		}
 		if (action && angle_equal (dirs[i], action->angle_get())) {
 			found = true;
 			pa[i] = 1;
@@ -74,18 +74,18 @@ void Behavior::e_greedy (const vector<double>& dirs, double* pa)
 			pa[i] = 0;
 		}
 	}
-	cout << endl;
+//	cout << endl;
 	// selon epsilon, on explore ou exploite cette meilleure action
 	if (drand() < epsilon + epsilon_help || !found) {
 		if (!found) {
-			robot_.output_mypuck ("NoAction");				
+			s << "no_action_";				
 		}
 		// le robot explore (dirs equiprobable)
 		for (int i = 0; i < nb_free; i++) {
 			pa[i] = 1.0 / nb_free;
-			cout << pa[i] << " ";
+//			cout << pa[i] << " ";
 		}
-		cout << endl;
+//		cout << endl;
 	}	
 }
 
@@ -152,9 +152,10 @@ Action* Behavior::select_action ()
 	}
 	// generation des pa (prob de select de l'action)
 	double pa[nb_free];
+	stringstream s;
 	static const string EXPLO = Params::get ("EXPLO");
 	if (EXPLO == "egreedy") {
-		e_greedy (dirs, pa);
+		e_greedy (dirs, pa, s);
 	}
 	else if (EXPLO == "qgreedy") {
 		cout << EXPLO << endl;
@@ -185,15 +186,14 @@ Action* Behavior::select_action ()
 			explore = true;
 		}	
 	}
-	stringstream s;
 	if (explore) {
-		s << "Exploration: ";	
+		s << "exploration ";	
 	}
 	else {
-		s << "Planning: ";
+		s << "planning ";
 	}
-	s << dirs[i] << " pa_select: " << pa[i];
-	robot_.output_mypuck (s.str ());		
+	s << dirs[i] << " " << pa[i];
+	Logger::log ("decision", robot_.cpt_total_get (), s.str ());		
 	return action;
 }
 
@@ -215,7 +215,7 @@ void Behavior::compute_next_action ()
     	neurosolver_.learn_set (true);
 	}
 	
-	bool col_changed = neurosolver_.synch ();
+	bool col_changed = neurosolver_.synch (wait_at_goal_ > 0);
 	if (col_changed) {
 		// on stoppe l'action en cours quand on passe à une nouvelle colonne
 		// à remplacer à terme par : on planifie à chaque colonne
@@ -239,5 +239,5 @@ void Behavior::compute_next_action ()
 void Behavior::synch () 
 {
   	compute_next_action ();
-  	do_action (); 	
+  	do_action (); 
 }

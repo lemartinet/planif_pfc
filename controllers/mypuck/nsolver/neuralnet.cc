@@ -65,17 +65,16 @@ void Neuralnet::synch_learn ()
 	freq_++;
 }
 
-Neuron& Neuralnet::add_neuron (int no_col, double ip_step, 
-								double ip_mu, double a, double b, int level)
+Neuron& Neuralnet::add_neuron (double ip_step, double ip_mu, double a, double b)
 {
-  Neuron* res = new Neuron (no_col, false, ip_step, ip_mu, a, b, level);
+  Neuron* res = new Neuron (false, ip_step, ip_mu, a, b);
   neurons_.push_back (res);
   return *res;
 }
 
-Neuron& Neuralnet::add_neuron_max (int no_col, int level)
+Neuron& Neuralnet::add_neuron_max ()
 {
-  Neuron* res = new Neuron (no_col, true, 0.0, 0.0, 0.0, 0.0, level);
+  Neuron* res = new Neuron ();
   neurons_.push_back (res);
   return *res;
 }

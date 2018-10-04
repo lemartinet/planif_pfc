@@ -7,12 +7,14 @@
 #include "mystr.hh"
 #include "column.hh"
 #include "cell.hh"
+#include "logger.hh"
+#include "minicol.hh"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 
 Neurosolver::Neurosolver (const RobotDevice& robot) : 
-	robot_(robot), columns_(), hippo_(), ego_pop_(), allo_pop_(), motivation_ (1, 0), 
+	robot_(robot),  hippo_(), ego_pop_(), allo_pop_(), motivation_ (1), columns_(hippo_.pop_get ()),  
 	prec_lvl0_(0), prec_lvl1_(0), learn_(false), explo_done_(false), no_learning_timer_(0)
 {
 }
@@ -61,7 +63,7 @@ bool Neurosolver::is_goal_position (Column* col)
 	return (s != 0) && (s->w_get() > 0);	
 }
 
-bool Neurosolver::synch ()
+bool Neurosolver::synch (bool sleep)
 {
 	if (robot_.manually_moved ()) {
 		// on vient de bouger le robot, on apprend rien 
@@ -76,22 +78,23 @@ bool Neurosolver::synch ()
 	ego_pop_.synch (robot_.angle_get()); 
 	allo_pop_.synch (robot_.angle_get()); 
 	
+  	bool col_changed = false;
   	if (no_learning_timer_ > 0) {
 //  		cout << "no learning" << endl;
   		no_learning_timer_--;
-	  	columns_.synch (false, robot_.position_get ());
-  		return true;
+	  	columns_.synch (false, robot_.position_get (), hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
+  		col_changed = true;
   	}
-  	columns_.synch (true, robot_.position_get ());
-  	bool col_changed = false;
-  	if (robot_.cpt_total_get () % 1 == 0) {
-		state_learning ();
-  		col_changed = topology_learning ();
-		goal_learning ();
-  	}
-	
-	log ();
-	
+  	else {
+		// TODO: faut-il mettre learn_ ou true ???
+	  	columns_.synch (true, robot_.position_get (), hippo_.pop_get (), *ego_pop_.pop_get ().at (1));
+	  	if (robot_.cpt_total_get () % 1 == 0) {
+			state_learning ();
+	  		col_changed = topology_learning ();
+			goal_learning ();
+	  	}
+  	}	
+	Logger::log (robot_.cpt_total_get ());
   	return col_changed;
 }
 
@@ -105,30 +108,25 @@ void Neurosolver::state_learning ()
   		
       	// apprentissage d'une nouvelle colonne lvl0 si besoin
       	if (!current_lvl0_ || !current_lvl0_->spiking ()) {
-			current_lvl0_ = &(columns_.add_colomn (0, hippo_.pop_get (), true, 0, robot_.position_get ()));
-			current_lvl0_->log_state_weights ("Init", robot_.day_get(), robot_.trial_get ());
+			current_lvl0_ = &(columns_.add_colomn (0, hippo_.pop_get (), robot_.position_get ()));
 			ostringstream message;
-			message << "new column lvl0: " << current_lvl0_->no_get();
-			robot_.output_neuro (message.str ());
+			message << "new_column_lvl0: " << current_lvl0_->no_get();
+			Logger::log ("network", robot_.cpt_total_get (), message.str ());
 			//cout << message.str ();
       	}
   	
-	  	// apprentissage d'une nouvelle colonne lvl1 si besoin
-	  	vector<ComputeUnit*> pop = ego_pop_.pop_get ();
-	  	ComputeUnit* unit = 0;
-	  	unit = pop.at (1);
-	  	
+	  	// apprentissage d'une nouvelle colonne lvl1 si besoin	  	
 //		cout << "nb_col0 " << columns_.nb_spiking_cells (0) << endl;
 		// ca marche pas mal avec 1.3 = .7 + .3 + .3 par ex
 		static const double THRESH_ADD_LVL1 = Params::get_double("THRESH_ADD_LVL1");
 		if (columns_.nb_spiking_cells (0) > THRESH_ADD_LVL1) {
 	  		if (!current_lvl1_ || !current_lvl1_->state_get ().spiking ()) {
+	  			ComputeUnit* unit = ego_pop_.pop_get ().at (1);
 	      		if (unit->spiking ()) { 
-					current_lvl1_ = &(columns_.add_colomn (1, columns_.pop_get (), false, unit, robot_.position_get ()));
-					current_lvl1_->log_state_weights ("Init", robot_.day_get(), robot_.trial_get ());
+					current_lvl1_ = &(columns_.add_colomn (1, *unit));
 					ostringstream message;
-					message << "new column lvl1: " << current_lvl1_->no_get() << endl;
-					robot_.output_neuro (message.str ());
+					message << "new_column_lvl1: " << current_lvl1_->no_get();
+					Logger::log ("network", robot_.cpt_total_get (), message.str ());
 					//cout << message.str ();
 	      		}
 	      	}
@@ -136,9 +134,9 @@ void Neurosolver::state_learning ()
   	}
   	
 //  	if (current_lvl0_ && current_lvl1_) {	
-//  		cout << "best: (0) " << current_lvl0_->state_get ().no_col_get() 
+//  		cout << "best: (0) " << current_lvl0_->no_get() 
 //  			 << " " << current_lvl0_->state_get ().output() 
-//  			 << " (1) " << current_lvl1_->state_get ().no_col_get() 
+//  			 << " (1) " << current_lvl1_->no_get() 
 //  			 << " " << current_lvl1_->state_get ().output() << endl;
 //	}
 //	columns_.show_activities (0);
@@ -147,9 +145,13 @@ void Neurosolver::state_learning ()
 
 bool Neurosolver::topology_learning ()
 {
-  	string message = "";
+  	stringstream message;
   	bool col_changed = false;
 
+	if (!learn_) {
+		return col_changed;
+	}
+	
 	if (current_lvl0_) {
 	    if (prec_lvl0_ && prec_lvl0_ != current_lvl0_) {
 	    	col_changed = true;
@@ -166,15 +168,15 @@ bool Neurosolver::topology_learning ()
 	}
 	prec_lvl1_ = current_lvl1_;
   	
-  	if (message != "") {
-		robot_.output_neuro (message);
+  	if (message.str () != "") {
+		Logger::log ("network", robot_.cpt_total_get (), message.str ());
 	}
   	return col_changed;	
 }
 
 void Neurosolver::correct_transition (bool bloque)
 {
-	string message="";
+	stringstream message;
 	if (!bloque) {
 		// cette variable est utilisee pour devaluer les poids une seule fois
 		correction_done_ = false;
@@ -184,14 +186,14 @@ void Neurosolver::correct_transition (bool bloque)
 			return;	
 		}
 		Action a (robot_.angle_get ());
-		Minicol* real_minicol = current_lvl0_->minicol_get (a);
+		Minicol* real_minicol = columns_.minicol_get (current_lvl0_->no_get (), a);
 		if (real_minicol) {
 	  		// on s'est cogne a un mur alors qu'on pouvait faire la transition
-	  		message += " wrong " + i2str (real_minicol->from_get().no_get())
-	  				+ " -> " + i2str (real_minicol->to_get().no_get());
-	  		string m = "";
+	  		message << "wrong " << real_minicol->from_get().no_get()
+	  				<< "->" << real_minicol->to_get().no_get();
+	  		stringstream m;
 	  		columns_.lateral_learning (const_cast<Column&>(real_minicol->from_get()), 
-	  									real_minicol->to_get(), 
+	  									const_cast<Column&>(real_minicol->to_get()), 
 	  									&(real_minicol->action_get()), false, m);
 	  		correction_done_ = true;
 		}
@@ -199,8 +201,8 @@ void Neurosolver::correct_transition (bool bloque)
 			//cout << "pas de minicol associée" << endl;	
 		}
 	}
-	if (message != "") {
-	  	robot_.output_neuro (message);
+	if (message.str () != "") {
+		Logger::log ("network", robot_.cpt_total_get (), message.str ());
 	}
 }
 
@@ -210,41 +212,6 @@ void Neurosolver::draw (ostream& os) const
   hippo_.draw (os);
   columns_.draw (os);
   os << "}" << endl;
-}
-
-void Neurosolver::log () const
-{
-	// si on est en mode echantillonage des activites, 
-	// on enregistre a chaque pas de temps
-	static const int RANDOM_MOVE = Params::get_int("RANDOM_MOVE");
-	static const int LOG = Params::get_int("LOG");
-	
-	if (LOG != 1) {
-		return;	
-	}
-
-	const string time_string = robot_.time_get (true);
-	const int step = robot_.cpt_total_get ();
-	const int day = robot_.day_get ();
-	const int trial = robot_.trial_get ();
-  	if (step % TIMESTEP_WEIGHTS == 0) {
-  		int nbcols = columns_.size ();
-  		for (int i = 0; i < nbcols; i++) {
-			columns_.col_get (i)->log_state_weights (time_string, day, trial);
-		}
-	}
-  	if ((RANDOM_MOVE && robot_.nb_trial_get() > 5) || (!RANDOM_MOVE && step % TIMESTEP_OUTPUTS == 0)) {
-  		int nbcols = columns_.size ();
-  		for (int i = 0; i < nbcols; i++) {
-  			columns_.col_get (i)->log (time_string, robot_.position_get (), robot_.angle_get (), day, trial);
-      	}
-	}
-	if ((RANDOM_MOVE && robot_.nb_trial_get() > 5) || (!RANDOM_MOVE && step % TIMESTEP_CELLS == 0)) {
-  		int nbcells = hippo_.size ();
-		for (int i = 0; i < nbcells; i++) {
-			hippo_.cell_get (i).log (time_string, robot_.position_get (), robot_.angle_get (), day, trial);
-    	}
-	}
 }
 
 double Neurosolver::inf_get (double angle) const
@@ -258,7 +225,7 @@ double Neurosolver::inf_get (double angle) const
 	// on regarde l'ensemble des états actifs pr calculer la qval
 	for (int i = 0; i < nbcols; i++) {
 		Minicol* m;
-		if (columns_.col_get (i)->spiking () && (m = columns_.col_get (i)->minicol_get (a))) {
+		if (columns_.col_get (i)->spiking () && (m = columns_.minicol_get(columns_.col_get (i)->no_get(), a))) {
 			qvals.push_back (m->activation ());	
 		}
 	}
@@ -282,7 +249,7 @@ void Neurosolver::learn_set (bool learn)
 {
 	learn_ = learn; 
 	if (learn == true) { 
-    	robot_.output_neuro ("apprentissage lieux-colonnes actif");
+    	Logger::log ("network", robot_.cpt_total_get (), "apprentissage lieux-colonnes actif");
     	// on stoppe l'ajout de cellules de lieux
     	hippo_.iadd_set (false);
 	} 

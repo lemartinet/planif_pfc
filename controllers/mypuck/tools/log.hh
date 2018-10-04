@@ -1,30 +1,30 @@
 #ifndef LOG_HH_
 #define LOG_HH_
 
+#include <vector>
 #include <string>
 #include <fstream>
+
+class ComputeUnit;
 
 using namespace std;
 
 class Log
 {
 public:
-	Log ();
-	Log (const string& dir, int no);
-	Log (const string& dir, int no1, int no2);
-	
+	Log (const string& type, bool wlog = false);
 	virtual ~Log();
 	
-	void log (int day, int trial, const string& message);
+	void log (int step) const;
+	void log (int step, const string& msg) const;
+	void add (const ComputeUnit* unit);
 	
 private:
-	string dir_;
-	int no1_;
-	int no2_;
-	bool twono_;
+	const string type_;
+	bool wlog_;
 	ofstream* file_;
-	int current_day_;
-	int current_trial_;
+	vector<ofstream*> wfile_;
+	vector<const ComputeUnit*> units_;
 };
 
 #endif /*LOG_HH_*/

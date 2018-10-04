@@ -4,8 +4,9 @@
 #include "neurosolver.hh"
 #include "device.hh"
 #include "obstacleavoidance.hh"
+#include <sstream>
 
-class Action;
+class Action;;
 
 class Behavior
 {
@@ -21,7 +22,7 @@ private:
 	void compute_next_action ();
 	void do_action ();
 	Action* select_action ();
-	void e_greedy (const vector<double>& dirs, double* pa);
+	void e_greedy (const vector<double>& dirs, double* pa, stringstream& s);
 	void q_greedy (const vector<double>& dirs, double* pa);
 	void softmax (const vector<double>& dirs, double* pa);
 	double qval (double angle) const;

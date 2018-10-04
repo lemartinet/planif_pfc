@@ -30,11 +30,6 @@ public:
 	const vector<ComputeUnit*>& pop_get () const { return cellmap_; }
 
 	void cell_add (Coord pos);
-	/**
-	* Compute hippocampus cells activities from rat position.
-	* @note Update neurons activities.
-	* @param ratpos Rat current position.
-	*/
 	bool synch (const Coord & signal);
 	int nb_spiking_cells () const;
 
@@ -45,7 +40,7 @@ private:
 	bool iadd_;      ///< incremental adding mode.
 	Cell* lastadded_;
 	Coord position_;
-	int cpt_; 
+	int nb_used_pc_; 
 
 signals:
 	void sig_addcell (int no);

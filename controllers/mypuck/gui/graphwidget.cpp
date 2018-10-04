@@ -48,10 +48,14 @@ GraphWidget::GraphWidget ()
     //setMinimumSize(400, 400);
     scene_ = scene;
     
-    // repere pour le monde de Webots : min (-0.64, -1.5), max (1.13, 0.0))
+    // repere pour le monde de Webots : min (-0.64, -1.5), max (1.13, 0.0)
+    double w_xmin = -0.64, w_ymin = -1.7, w_xmax = 1.13, w_ymax = 0.0;
+    Coord::webots_coord_set (w_xmin, w_ymin, w_xmax,  w_ymax);
 	// repere pour le gui : min (0, 0), max (600, 600)
- 	conv_ = new RepereConverter (-0.64, -1.70, 1.13,  0.0, 0, 0, 600, 600);
-	scene_->setSceneRect(conv_->x2min_get (), conv_->y2min_get (), fabs (conv_->x2max_get () - conv_->x2min_get ()), fabs (conv_->y2max_get () - conv_->y2min_get ()));
+	double g_xmin = 0, g_ymin = 0, g_xmax = 600, g_ymax = 600;
+	Coord::gui_coord_set (g_xmin, g_ymin, g_xmax, g_ymax);
+	// taille du graph
+	scene_->setSceneRect(g_xmin, g_ymin, fabs (g_xmax - g_xmin), fabs (g_ymax - g_ymin));
 }
 
 GraphWidget::~GraphWidget ()
@@ -59,7 +63,6 @@ GraphWidget::~GraphWidget ()
 	// supprime automatiquement tous les items de la scene
 	// (Edge, Node, ...) -> ne pas les supprimer ailleurs
 	delete scene_;
-	delete conv_;
 }
 
 void GraphWidget::itemMoved ()
@@ -100,7 +103,7 @@ Node* GraphWidget::add_node (NodeType type, int no, const Coord& coord_webots, i
   node->no_set (no);
   node->color_set (col);
   node->nodesize_set (size);
-  node->setPos ((int) conv_->convertx (coord_webots), (int)conv_->converty (coord_webots));
+  node->setPos ((int) Coord::convertx (coord_webots), (int)Coord::converty (coord_webots));
   scene_->addItem (node);
 
   return node;
@@ -187,4 +190,11 @@ void GraphWidget::scaleView(qreal scaleFactor)
 void GraphWidget::mouseMoveEvent (QMouseEvent* event)
 {
   mouse_pos_ = event->pos ();
+}
+
+void GraphWidget::trigger_sig_node_clicked (NodeType type, int no) 
+{
+	if (type == COL) { 
+		emit sig_node_clicked (no);
+	} 
 }

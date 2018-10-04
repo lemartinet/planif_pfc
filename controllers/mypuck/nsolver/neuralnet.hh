@@ -36,8 +36,8 @@ public:
 	 */
 	void synch ();
 
-	Neuron& add_neuron (int no_col, double ip_step, double ip_mu, double a, double b, int level);
-	Neuron& add_neuron_max (int no_col, int level);
+	Neuron& add_neuron (double ip_step, double ip_mu, double a, double b);
+	Neuron& add_neuron_max ();
 	
 	void draw_graph (ostream& os) const;
 

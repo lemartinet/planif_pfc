@@ -75,8 +75,8 @@ void Node::delEdge_pred (Edge *edge)
 
 void Node::move (const Coord& coord_webots)
 {
-  setPos ((int)graph->conv_get ().convertx (coord_webots), (int)graph->conv_get ().converty (coord_webots));
-  update_pos ();
+	setPos ((int)Coord::convertx (coord_webots), (int)Coord::converty (coord_webots));
+	update_pos ();
 }
 
 QList<Edge *> Node::edges_succ () const

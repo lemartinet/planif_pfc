@@ -6,7 +6,7 @@
 class DCell : public ComputeUnit
 {
 public:
-	DCell (double angle, bool can_rest = false) : ComputeUnit(-1), angle_(angle), can_rest_(can_rest), resting_(0) {}
+	DCell (double angle, bool can_rest = false) : angle_(angle), can_rest_(can_rest), resting_(0) {}
 	virtual ~DCell() {}
 	
 	void compute (double current_angle);

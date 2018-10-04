@@ -16,13 +16,12 @@ using namespace std;
 class Neuron : public ComputeUnit
 {
 public:
-	Neuron (int no_col, bool max, double ip_step, double ip_mu, double a, double b, int level);
+	Neuron (bool max = true, double ip_step = 0, double ip_mu = 0, double a = 0, double b = 0);
 	virtual ~Neuron ();
   
 	// Getting the number of synapses
 	int size () const { return synapses_.size (); }
 	Synapse* syn_get (const ComputeUnit& from) const;
-	int no_col_get () const { return no_col_; }
 	double a_get () const { return a_; }
 	double b_get () const { return b_; }
 	double pot_get () const { return pot_; }
@@ -61,7 +60,6 @@ private:
 	void update_IP ();
   
 private:
-	const int no_col_;
 	double thresh_; ///< Global spiking threshold value.
 	double pot_; ///< Membrane's current potential.
 	const bool max_;

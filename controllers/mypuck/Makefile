@@ -1,5 +1,5 @@
 QTDIR_INC = /usr/include/qt4
-MY_INC	  = -Icontroller -Igui -Igui/controlors -Igui/widgets/graphwidget -Insolver -Itools -Igui/widgets/boardwidget -I.
+MY_INC	  = -Icontroller -Igui -Insolver -Itools -I.
 QT_INC 	  = -I$(QTDIR_INC)/QtCore -I$(QTDIR_INC)/QtGui -I$(QTDIR_INC)
 
 CFLAGS    = -W $(QT_INC) $(MY_INC) -g -O2 
@@ -30,22 +30,19 @@ CC_SOURCES = \
 	tools/mystr.cc\
 	tools/params.cc\
 	tools/log.cc\
-	gui/repere_converter.cc\
-	gui/controlors/controlcols.cc\
-	gui/controlors/moc_controlcols.cc\
-	gui/controlors/controlrobot.cc\
-	gui/controlors/controlcells.cc\
-	gui/controlors/moc_controlcells.cc\
-	gui/widgets/boardwidget/boardwidget.cc\
-	gui/widgets/boardwidget/moc_boardwidget.cc\
+	tools/logger.cc\
+	gui/controlrobot.cc\
+	gui/moc_controlrobot.cc\
+	gui/boardwidget.cc\
+	gui/moc_boardwidget.cc\
 	gui/gui.cc\
 	mypuck.cc
 
 CPP_SOURCES = \
-	gui/widgets/graphwidget/edge.cpp\
-	gui/widgets/graphwidget/graphwidget.cpp\
-	gui/widgets/graphwidget/moc_graphwidget.cpp\
-	gui/widgets/graphwidget/node.cpp
+	gui/edge.cpp\
+	gui/node.cpp \
+	gui/graphwidget.cpp\
+	gui/moc_graphwidget.cpp
 
 include $(WEBOTS_HOME)/projects/default/controllers/Makefile.include
 
@@ -57,11 +54,10 @@ moc:
 	find . -name "moc*.c*[cp]" | xargs rm
 	moc-qt4 nsolver/columns.hh -o nsolver/moc_columns.cc
 	moc-qt4 nsolver/hippo.hh -o nsolver/moc_hippo.cc
-	moc-qt4 gui/controlors/controlcols.hh -o gui/controlors/moc_controlcols.cc
-	moc-qt4 gui/controlors/controlcells.hh -o gui/controlors/moc_controlcells.cc
-	moc-qt4 gui/widgets/boardwidget/boardwidget.hh -o gui/widgets/boardwidget/moc_boardwidget.cc
-	moc-qt4 gui/widgets/graphwidget/graphwidget.h -o gui/widgets/graphwidget/moc_graphwidget.cpp
+	moc-qt4 gui/controlrobot.hh -o gui/moc_controlrobot.cc
+	moc-qt4 gui/boardwidget.hh -o gui/moc_boardwidget.cc
+	moc-qt4 gui/graphwidget.h -o gui/moc_graphwidget.cpp
 	
 ui:
-	rm gui/widgets/boardwidget/boardwindow.hh
-	uic-qt4 gui/widgets/boardwidget/boardwindow.ui -o gui/widgets/boardwidget/boardwindow.hh
+	rm gui/boardwindow.hh
+	uic-qt4 gui/boardwindow.ui -o gui/boardwindow.hh

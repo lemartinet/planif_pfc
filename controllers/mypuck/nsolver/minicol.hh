@@ -3,7 +3,6 @@
 
 #include "action.hh"
 #include "neuron.hh"
-#include "log.hh"
 #include <string>
 
 class Column;
@@ -12,16 +11,19 @@ class Neuralnet;
 class Minicol
 {
 public:
-	Minicol (Neuralnet& net, Action* action, const Column& src, const Column& dest,
-				int no_col, int no, int level);
+	Minicol (Neuralnet& net, Action* action, Column& src, Column& dest,	int no, int level);
+	Minicol (Neuralnet& net, int no);
 	~Minicol ();
 	
+	void new_set (Action* action, Column& src, Column& dest, int level);
 	Neuron& sup_get () const { return sup_; }
 	Neuron& inf_get () const { return inf_; }
 	Action& action_get () const { return *action_; }
-	const Column& from_get () const { return src_; }
-	const Column& to_get () const { return dest_; }
+	const Column& from_get () const { return *src_; }
+	const Column& to_get () const { return *dest_; }
 	double mean_value_get () const { return mean_val_; }
+	int level_get () const { return level_; }
+	bool recruited_get () const { return recruited_; }
 	
 	double activation () const { return inf_.output (); }
 	double state_activation () const { return inf_.output (); }
@@ -29,7 +31,6 @@ public:
 	bool spiking () const { return inf_.spiking (); }
 	
 	void draw (ostream& os) const;
-	void log (const string& time_string, const Coord& position, double angle, int day, int trial);
 	
 	void update_value ();
 	void adapt_action (Action* action);
@@ -40,11 +41,11 @@ private:
 	Neuron& inf_;
 	Action* action_;
 	Neuralnet& net_;
-	const Column& src_;
-	const Column& dest_;
+	Column* src_;
+	Column* dest_;
 	double mean_val_; // utiliser pour moyenner l'activite basse
-	const int level_; // niveau de la minicolonne dans la carte
-	Log log_;
+	int level_; // niveau de la minicolonne dans la carte
+	bool recruited_;
 };
 
 #endif

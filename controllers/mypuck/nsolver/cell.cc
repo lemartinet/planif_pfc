@@ -1,18 +1,16 @@
 #include "cell.hh"
 #include "math.hh"
 #include "params.hh"
-#include <sstream>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/construct.hpp>
 
-using namespace std;
-using namespace boost::lambda;
 
-Cell::Cell (const Coord& pos) : ComputeUnit(-1), pos_(pos), log_(new Log("cells", no_)) 
+Cell::Cell () : pos_(Coord(100,100))
+{
+	// on a pris un centre de champ recepteur en dehors du maze
+}
+
+Cell::Cell (const Coord& pos) : pos_(pos)
 {
 }
 
@@ -21,7 +19,7 @@ bool sort_function (double* v1, double* v2)
 	return v1[0] < v2[0] || (v1[0] == v2[0] && v1[1] < v2[1]); 	
 }
 
-Cell::Cell (const string& filename, const Coord& pos) : ComputeUnit(-1), pos_(pos), log_(0) 
+Cell::Cell (const string& filename, const Coord& pos) : pos_(pos)
 {
 	ifstream file (filename.c_str ());
 	double x, y, r;
@@ -31,16 +29,10 @@ Cell::Cell (const string& filename, const Coord& pos) : ComputeUnit(-1), pos_(po
 	}
 	file.close ();
 	cout << "cell" << no_ << " loaded!" << endl;
-//	ostringstream fileout;
-//	fileout << Params::get_path () << "cells/" << no_ << ".txt";
-//	log_file_ = new ofstream (fileout.str ().c_str ());	
 }
 
 Cell::~Cell () 
 {
-	if (log_) {
-		delete log_;
-	}
 }
 
 void Cell::compute (const Coord& pos)
@@ -72,21 +64,13 @@ void Cell::compute (const Coord& pos)
 		}
 		output_ = r_[min];
 	}
+	if (output_ < 0.05) {
+		output_ = 0.05 + bruit(2 * 0.05);	
+	}
 }
 
 void Cell::draw (ostream& os) const
 {
 	double cell_output = output (); 
     os << "c" << &cell_output << " [label=\"" << no_ << ":" << output () << "\"]" << endl;
-}
-
-void Cell::log (const string& time_string, const Coord& position, double angle, int day, int trial) const
-{
-	if (log_ == 0) {
-		return;
-	}
-	ostringstream msg;
-	msg << "# " << time_string << endl;
-	msg << position.x_get () << " " << position.y_get () << " " << angle << " " << output () << endl << endl;
-	log_->log (day, trial, msg.str ());
 }
